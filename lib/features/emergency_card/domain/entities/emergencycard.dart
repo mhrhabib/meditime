@@ -1,0 +1,3 @@
+class EmergencyCard {
+  const EmergencyCard();
+}

@@ -1,0 +1,991 @@
+
+<style>
+:root {
+  --color-primary: #0B6E6E;
+  --color-primary-container: #B2EFEF;
+  --color-on-primary-container: #002020;
+  --color-secondary: #4A6363;
+  --color-secondary-container: #CCE8E8;
+  --color-tertiary: #4B607C;
+  --color-tertiary-container: #D3E4FF;
+  --color-error: #BA1A1A;
+  --color-error-container: #xFFFFDAD6;
+  --color-success: #1B6B3A;
+  --color-success-container: #B7F0CE;
+  --color-warning: #7A4F00;
+  --color-warning-container: #xFFFFDEAA;
+  --color-surface: #F4FBFB;
+  --color-surface-variant: #DAE5E5;
+  --color-outline: #6F7979;
+  --color-outline-variant: #BEC9C9;
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 28px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Nunito', sans-serif}
+body{background:#f0f4f4;color:var(--color-on-primary-container)}
+.app{display:flex;gap:0;min-height:700px;background:white;max-width:1200px;margin:20px auto;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.05);overflow:hidden}
+.sidebar{width:220px;flex-shrink:0;border-right:1px solid var(--color-outline-variant);padding:16px 10px;display:flex;flex-direction:column;gap:4px;background:var(--color-surface)}
+.sidebar-section{font-size:10px;color:var(--color-outline);text-transform:uppercase;letter-spacing:.1em;padding:12px 10px 4px;font-weight:700}
+.nb{display:flex;width:100%;text-align:left;padding:8px 12px;font-size:13px;border:none;background:none;border-radius:var(--border-radius-md);cursor:pointer;color:var(--color-secondary);align-items:center;gap:10px;transition:all 0.2s}
+.nb.active{background:var(--color-primary-container);color:var(--color-primary);font-weight:700}
+.nb:hover:not(.active){background:var(--color-secondary-container);color:var(--color-primary)}
+.nb .badge{margin-left:auto;font-size:9px;padding:2px 6px;border-radius:10px;background:var(--color-success-container);color:var(--color-success);font-weight:700}
+.nb .new{margin-left:auto;font-size:9px;padding:2px 6px;border-radius:10px;background:var(--color-warning-container);color:var(--color-warning);font-weight:700}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--color-outline-variant);background:white}
+.topbar-title{font-size:12px;color:var(--color-outline);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.improvement-tag{font-size:10px;padding:3px 10px;border-radius:10px;background:var(--color-success-container);color:var(--color-success);font-weight:700}
+.screen-container{flex:1;overflow-y:auto;padding:24px;background:#fafcfc}
+.screen{display:none;justify-content:flex-start;align-items:flex-start;gap:24px;flex-wrap:wrap;animation:fadeIn 0.3s ease-out}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+.screen.active{display:flex}
+.phone{width:280px;flex-shrink:0;border:8px solid #333;border-radius:36px;overflow:hidden;background:white;position:relative;box-shadow:0 20px 40px rgba(0,0,0,0.1)}
+.notes-panel{flex:1;min-width:250px;max-width:350px}
+.note-card{border:1px solid var(--color-outline-variant);border-radius:var(--border-radius-lg);padding:14px;margin-bottom:12px;background:white}
+.note-card.improved{border-left:4px solid var(--color-success);background:#f4f9f4}
+.note-card.new-screen{border-left:4px solid var(--color-warning);background:#fffaf2}
+.note-card.critical{border-left:4px solid var(--color-error);background:#fff5f5}
+.note-label{font-size:11px;font-weight:700;margin-bottom:6px;text-transform:uppercase}
+.note-label.improved{color:var(--color-success)}
+.note-label.new-screen{color:var(--color-warning)}
+.note-label.critical{color:var(--color-error)}
+.note-text{font-size:13px;color:var(--color-secondary);line-height:1.6}
+.sbar{background:white;padding:12px 18px 8px;display:flex;justify-content:space-between;font-size:11px;color:var(--color-outline);font-weight:700}
+.sbody{padding:16px 18px;min-height:420px;display:flex;flex-direction:column}
+.btn-p{display:block;width:100%;padding:12px;background:var(--color-primary);color:white;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px;text-align:center;transition:opacity 0.2s}
+.btn-p:hover{opacity:0.9}
+.btn-s{display:block;width:100%;padding:11px;background:none;color:var(--color-primary);border:1.5px solid var(--color-primary);border-radius:14px;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;text-align:center}
+.btn-danger{display:block;width:100%;padding:12px;background:var(--color-error-container);color:var(--color-error);border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px;text-align:center}
+.sh{font-size:15px;font-weight:700;color:var(--color-on-primary-container);margin-bottom:10px;margin-top:6px}
+.card{border:1px solid var(--color-outline-variant);border-radius:var(--border-radius-lg);padding:12px 14px;margin-bottom:10px;background:white}
+.pill{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.pi{background:var(--color-primary-container);color:var(--color-primary)}
+.ps{background:var(--color-success-container);color:var(--color-success)}
+.pw{background:var(--color-warning-container);color:var(--color-warning)}
+.pd{background:var(--color-error-container);color:var(--color-error)}
+.muted{color:var(--color-secondary);font-size:13px}
+.hint{color:var(--color-outline);font-size:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tl{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start}
+.tlt{font-size:11px;color:var(--color-outline);width:50px;flex-shrink:0;margin-top:4px;font-weight:700;text-align:right}
+.tld{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:6px;border:2px solid white;box-shadow:0 0 0 1px var(--color-outline-variant)}
+.tlc{flex:1}
+.av{width:36px;height:36px;border-radius:12px;background:var(--color-primary-container);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--color-primary);flex-shrink:0}
+.chip{display:inline-block;padding:5px 12px;border-radius:20px;font-size:12px;border:1px solid var(--color-outline-variant);background:white;color:var(--color-secondary);margin:3px;cursor:pointer;transition:all 0.2s}
+.chip.on{background:var(--color-primary);color:white;border-color:var(--color-primary)}
+.field{border:1px solid var(--color-outline-variant);border-radius:12px;padding:10px 14px;font-size:13px;color:var(--color-on-primary-container);background:var(--color-surface);width:100%;margin-bottom:6px;outline:none}
+.field:focus{border-color:var(--color-primary)}
+.lbl{font-size:11px;color:var(--color-secondary);margin-bottom:4px;margin-top:10px;font-weight:700}
+.bnav{display:flex;border-top:1px solid var(--color-outline-variant);padding:10px 0 8px;background:white}
+.bni{flex:1;text-align:center;font-size:10px;color:var(--color-outline);cursor:pointer;font-weight:700}
+.bni.on{color:var(--color-primary)}
+.bni-icon{font-size:18px;display:block;margin-bottom:2px}
+.switcher{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--color-outline-variant);border-radius:16px;background:var(--color-surface);margin-bottom:14px;cursor:pointer}
+.switcher-name{font-size:13px;font-weight:700;flex:1}
+.stat3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.stat-box{padding:10px;border-radius:12px;text-align:center}
+.stat-val{font-size:20px;font-weight:700}
+.stat-lbl{font-size:11px;margin-top:3px;font-weight:600}
+.divider{height:1px;background:var(--color-outline-variant);margin:12px 0}
+.seg{display:flex;background:var(--color-surface);border-radius:12px;padding:4px;margin-bottom:14px}
+.sg{flex:1;padding:8px 4px;font-size:11px;border:none;background:none;cursor:pointer;color:var(--color-outline);text-align:center;border-radius:8px;font-weight:700;transition:all 0.2s}
+.sg.on{background:white;color:var(--color-primary);box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.progress-bar{height:6px;background:var(--color-outline-variant);border-radius:10px;margin-bottom:16px;overflow:hidden}
+.progress-fill{height:100%;background:var(--color-primary);border-radius:10px}
+.onb-dots{display:flex;justify-content:center;gap:8px;margin:16px 0}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--color-outline-variant);transition:all 0.3s}
+.dot.on{background:var(--color-primary);width:24px}
+.streak{display:flex;gap:4px;margin-bottom:10px}
+.streak-day{flex:1;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.health-row{display:flex;gap:8px;margin-bottom:8px}
+.health-box{flex:1;background:var(--color-surface);border-radius:12px;padding:10px;text-align:center;border:1px solid var(--color-outline-variant)}
+.health-val{font-size:16px;font-weight:700;color:var(--color-primary)}
+.health-lbl{font-size:10px;color:var(--color-outline);margin-top:3px;font-weight:600}
+.reminder-opt{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--color-outline-variant)}
+.toggle{width:36px;height:20px;border-radius:10px;background:var(--color-primary);position:relative;flex-shrink:0;cursor:pointer}
+.toggle-off{background:var(--color-outline-variant)}
+.toggle::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:white;top:3px;right:3px}
+.toggle-off::after{right:auto;left:3px}
+.qr-box{width:80px;height:80px;background:var(--color-surface);border-radius:12px;border:1px solid var(--color-outline-variant);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--color-outline);text-align:center;line-height:1.4}
+.nav-badge{position:absolute;top:-4px;right:-4px;background:var(--color-error);color:white;font-size:9px;padding:2px 5px;border-radius:10px;font-weight:700}
+</style>
+
+<div class="app">
+<div class="sidebar">
+  <div class="sidebar-section">Core flow</div>
+  <button class="nb active" onclick="show('welcome')">👋 Welcome</button>
+  <button class="nb" onclick="show('onboard')">✨ Onboarding <span class="new">new</span></button>
+  <button class="nb" onclick="show('profile')">👤 Profile setup</button>
+  <button class="nb" onclick="show('home')">⌂ Home <span class="badge">improved</span></button>
+  <div class="sidebar-section">Medicines</div>
+  <button class="nb" onclick="show('addmed')">➕ Add medicine</button>
+  <button class="nb" onclick="show('medlist')">💊 Medicine list</button>
+  <button class="nb" onclick="show('missed')">⚠ Missed flow <span class="new">new</span></button>
+  <div class="sidebar-section">Records</div>
+  <button class="nb" onclick="show('rx')">📄 Prescriptions</button>
+  <button class="nb" onclick="show('history')">📊 History & stats</button>
+  <div class="sidebar-section">Safety</div>
+  <button class="nb" onclick="show('emergency')">🆘 Emergency card <span class="badge">improved</span></button>
+  <button class="nb" onclick="show('caregiver')">👨‍👩‍👧 Caregiver</button>
+  <div class="sidebar-section">Account</div>
+  <button class="nb" onclick="show('settings')">⚙ Settings <span class="new">new</span></button>
+  <button class="nb" onclick="show('reminders')">🔔 Reminders</button>
+  <button class="nb" onclick="show('premium')">⭐ Premium</button>
+</div>
+
+<div class="main">
+<div class="topbar">
+  <span class="topbar-title" id="screen-label">Onboarding — Welcome</span>
+  <span class="improvement-tag" id="screen-tag">original</span>
+</div>
+
+<div class="screen-container">
+
+<div class="screen active" id="s-welcome">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody">
+      <div style="text-align:center;padding:40px 0 24px">
+        <div style="width:64px;height:64px;background:var(--color-primary-container);border-radius:18px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:32px">💊</div>
+        <div style="font-size:24px;font-weight:700;color:var(--color-primary)">MediTime</div>
+        <div class="hint" style="margin-top:6px;font-weight:600">Smart Health Companion</div>
+      </div>
+      <div class="onb-dots"><div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <div style="margin:20px 0 32px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:22px;height:22px;border-radius:50%;background:var(--color-primary-container);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--color-primary);font-weight:700">✓</div><span class="muted">Never miss a medicine again</span></div>
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:22px;height:22px;border-radius:50%;background:var(--color-primary-container);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--color-primary);font-weight:700">✓</div><span class="muted">Manage family profiles easily</span></div>
+        <div style="display:flex;align-items:center;gap:12px"><div style="width:22px;height:22px;border-radius:50%;background:var(--color-primary-container);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--color-primary);font-weight:700">✓</div><span class="muted">Refill alerts & smart reminders</span></div>
+      </div>
+      <button class="btn-p">Get started</button>
+      <button class="btn-s">Sign in / restore backup</button>
+      <div style="margin-top:20px;text-align:center"><span class="hint" style="font-weight:700;text-decoration:underline;cursor:pointer">Skip for now</span></div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card improved"><div class="note-label improved">Theme Alignment</div><div class="note-text">Updated colors to use the Teal-Medical theme (#0B6E6E). Added a cleaner layout with better spacing.</div></div>
+    <div class="note-card improved"><div class="note-label improved">Improvement</div><div class="note-text">Added dot indicators — users can see there are onboarding slides before this. The "Skip for now" link reduces friction for returning users.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-onboard">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><span class="hint" style="cursor:pointer">Skip</span></div>
+      <div style="background:#E6F1FB;border-radius:14px;padding:24px 16px;text-align:center;margin-bottom:14px">
+        <div style="font-size:40px;margin-bottom:8px">👨‍👩‍👧</div>
+        <div style="font-size:14px;font-weight:500;color:#0C447C;margin-bottom:6px">One app for the whole family</div>
+        <div style="font-size:12px;color:#185FA5;line-height:1.5">Add profiles for parents, children, or spouse. Switch in one tap from the home screen.</div>
+      </div>
+      <div class="onb-dots"><div class="dot"></div><div class="dot on"></div><div class="dot"></div><div class="dot"></div></div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="btn-s" style="flex:1;margin:0">Back</button>
+        <button class="btn-p" style="flex:2;margin:0">Next</button>
+      </div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card new-screen"><div class="note-label new-screen">New screen added</div><div class="note-text">4 onboarding slides before the CTA. Each slide covers one core value prop with an icon, headline, and 1-sentence description. Swipeable + skip option.</div></div>
+    <div class="note-card improved"><div class="note-label improved">Slide topics (4 total)</div><div class="note-text">1. Never miss a dose<br>2. Family profiles (shown here)<br>3. Refill & stock alerts<br>4. Emergency card & caregiver</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-profile">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody">
+      <div class="progress-bar"><div class="progress-fill" style="width:33%"></div></div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:2px">Set up your profile</div>
+      <div class="hint" style="margin-bottom:12px;font-weight:600">Step 1 of 3 — your details</div>
+      <div class="lbl">Full name</div>
+      <div class="field">Rafiq Ahmed</div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><div class="lbl">Age</div><div class="field">34</div></div>
+        <div style="flex:1"><div class="lbl">Gender</div><div class="field" style="padding:10px 14px;font-size:13px">Male ▾</div></div>
+      </div>
+      <div class="lbl">Health conditions</div>
+      <div style="margin-top:4px">
+        <span class="chip on">Diabetes</span><span class="chip on">Hypertension</span>
+        <span class="chip">Asthma</span><span class="chip">Heart</span>
+        <span class="chip">Thyroid</span><span class="chip">+ Custom</span>
+      </div>
+      <div class="lbl" style="margin-top:10px">Blood group</div>
+      <div class="field" style="font-size:13px">B+ ▾</div>
+      <div class="lbl">Allergies (optional)</div>
+      <div class="field">Penicillin, Sulfa drugs</div>
+      <button class="btn-p" style="margin-top:14px">Next: Add dependents →</button>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card improved"><div class="note-label improved">Data Integration</div><div class="note-text">Added blood group and allergies fields here — they feed directly into the Emergency Card without needing a second setup step.</div></div>
+    <div class="note-card improved"><div class="note-label improved">Progress Visualization</div><div class="note-text">3-step progress bar at top. Step 1 = Your details, Step 2 = Dependents, Step 3 = Summary. Reduces abandonment anxiety.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-profile2">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody">
+      <div class="progress-bar"><div class="progress-fill" style="width:66%"></div></div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:2px">Add dependents</div>
+      <div class="hint" style="margin-bottom:12px;font-weight:600">Step 2 of 3 — family members</div>
+      
+      <div class="card" style="padding:12px">
+        <div class="row">
+          <div class="av">SA</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700">Sadia Ahmed</div>
+            <div class="hint">Daughter · Age 12</div>
+          </div>
+          <button style="border:none;background:none;color:var(--color-error);font-size:12px;font-weight:700">Remove</button>
+        </div>
+      </div>
+
+      <div class="card" style="padding:12px;border-style:dashed;background:var(--color-surface);text-align:center;cursor:pointer">
+        <div style="font-size:20px;color:var(--color-primary);margin-bottom:4px">+</div>
+        <div style="font-size:12px;font-weight:700;color:var(--color-primary)">Add another dependent</div>
+      </div>
+
+      <div style="margin-top:auto">
+        <div style="padding:12px;background:var(--color-success-container);border-radius:12px;margin-bottom:12px">
+          <div style="font-size:12px;color:var(--color-success);line-height:1.4">
+            <b>Pro Tip:</b> Adding dependents lets you manage their medications and get alerts on their behalf.
+          </div>
+        </div>
+        <button class="btn-p">Next: Summary →</button>
+        <button class="btn-s">Back</button>
+      </div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card new-screen"><div class="note-label new-screen">New screen: Dependents</div><div class="note-text">Dedicated step for family members. List view with quick "Add" and "Remove" actions. Explains the benefit of adding dependents inline.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-profile3">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody">
+      <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:16px">Profile Summary</div>
+      
+      <div class="sh" style="font-size:12px;color:var(--color-outline)">YOUR DETAILS</div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="row">
+          <div style="font-size:13px;font-weight:700">Rafiq Ahmed</div>
+          <div class="pill pi">Me</div>
+        </div>
+        <div class="hint" style="margin-top:4px">34 years · Male · Blood B+</div>
+        <div class="hint">Allergies: Penicillin</div>
+      </div>
+
+      <div class="sh" style="font-size:12px;color:var(--color-outline)">DEPENDENTS</div>
+      <div class="card">
+        <div class="row">
+          <div style="font-size:13px;font-weight:700">Sadia Ahmed</div>
+          <div class="hint">Daughter</div>
+        </div>
+      </div>
+
+      <div style="margin-top:auto;text-align:center">
+        <div style="font-size:12px;color:var(--color-secondary);margin-bottom:16px">By finishing, you agree to our Health Data Privacy Policy.</div>
+        <button class="btn-p">Complete Setup</button>
+      </div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card new-screen"><div class="note-label new-screen">New screen: Summary</div><div class="note-text">Final review before entering the app. Confirms all data entered and handles legal/privacy consent.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-home">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody" style="padding:10px 12px">
+      <div class="switcher">
+        <div class="av">RA</div>
+        <span class="switcher-name">Rafiq (me)</span>
+        <span class="hint">Mum · Son</span>
+        <span class="switcher-arr">▾</span>
+      </div>
+      <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:8px">Saturday, 14 March — 3 medicines today</div>
+      <div class="stat3">
+        <div class="stat-box" style="background:#E6F1FB"><div class="stat-val" style="color:#185FA5">3</div><div class="stat-lbl" style="color:#185FA5">Remaining</div></div>
+        <div class="stat-box" style="background:#EAF3DE"><div class="stat-val" style="color:#27500A">2</div><div class="stat-lbl" style="color:#27500A">Taken</div></div>
+        <div class="stat-box" style="background:#FAEEDA"><div class="stat-val" style="color:#633806">1</div><div class="stat-lbl" style="color:#633806">Low stock</div></div>
+      </div>
+      <div style="background:#FAEEDA;border-radius:8px;padding:7px 10px;font-size:11px;color:#633806;margin-bottom:10px">Paracetamol stock low — 3 days left</div>
+      <div class="sh" style="font-size:12px">Today's schedule</div>
+      <div class="tl">
+        <div class="tlt">8:00 AM</div>
+        <div class="tld" style="background:#639922"></div>
+        <div class="tlc"><div style="font-size:12px;font-weight:500">Metformin 500mg <span class="pill ps">Taken</span></div><div class="hint">After breakfast · Tablet</div></div>
+      </div>
+      <div class="tl">
+        <div class="tlt">1:00 PM</div>
+        <div class="tld" style="background:#888780"></div>
+        <div class="tlc">
+          <div style="font-size:12px;font-weight:500">Vitamin D3</div>
+          <div class="hint">After lunch · Capsule</div>
+          <div class="quick-action" style="margin-top:5px">
+            <button class="qa-btn qa-take" style="font-size:10px;padding:5px 4px">Take now</button>
+            <button class="qa-btn qa-skip" style="font-size:10px;padding:5px 4px">Skip</button>
+            <button class="qa-btn qa-snooze" style="font-size:10px;padding:5px 4px">+30 min</button>
+          </div>
+        </div>
+      </div>
+      <div class="tl">
+        <div class="tlt">7:00 PM</div>
+        <div class="tld" style="background:#E24B4A"></div>
+        <div class="tlc"><div style="font-size:12px;font-weight:500">BP Tablet <span class="pill pd">Missed</span></div><div class="hint">After dinner · Tap to resolve</div></div>
+      </div>
+      <div style="margin-top:4px">
+        <div class="streak">
+          <div class="streak-day" style="background:#EAF3DE;color:#27500A">M</div>
+          <div class="streak-day" style="background:#EAF3DE;color:#27500A">T</div>
+          <div class="streak-day" style="background:#FCEBEB;color:#791F1F">W</div>
+          <div class="streak-day" style="background:#EAF3DE;color:#27500A">T</div>
+          <div class="streak-day" style="background:#EAF3DE;color:#27500A">F</div>
+          <div class="streak-day" style="background:#FAEEDA;color:#633806">S</div>
+          <div class="streak-day" style="background:var(--color-background-secondary);color:var(--color-text-tertiary)">S</div>
+        </div>
+        <div class="hint" style="text-align:center">4-day streak this week</div>
+      </div>
+    </div>
+    <div class="bnav">
+      <div class="bni on"><span class="bni-icon">⌂</span>Home</div>
+      <div class="bni"><span class="bni-icon">💊</span>Meds</div>
+      <div class="bni"><span class="bni-icon">📋</span>History</div>
+      <div class="bni"><span class="bni-icon">📄</span>Rx</div>
+      <div class="bni"><span class="bni-icon">⚙</span>Settings</div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card improved"><div class="note-label improved">Profile switcher added</div><div class="note-text">The dropdown at the very top shows current profile + dependents in one row. Tap to switch. Solves the missing family context problem.</div></div>
+    <div class="note-card improved"><div class="note-label improved">Weekly streak tracker</div><div class="note-text">7-day strip at the bottom of the timeline. Green = all taken, red = missed, amber = partial. Adds motivation and habit-forming psychology.</div></div>
+    <div class="note-card improved"><div class="note-label improved">Inline quick actions</div><div class="note-text">Take / Skip / +30min appear directly on the pending dose card — no need to navigate away. Reduces taps from 3 to 1.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-addmed">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody">
+      <div class="progress-bar"><div class="progress-fill" style="width:25%"></div></div>
+      <div class="sh">Add medicine</div>
+      <div class="hint" style="margin-bottom:12px;font-weight:600">Step 1 of 4 — basic info</div>
+      <div class="lbl">Search medicine name</div>
+      <div class="field">Glucovance 500mg/5mg ▾</div>
+      <div class="lbl">Who is it for?</div>
+      <div class="switcher"><div class="av">R</div><div class="switcher-name">Me (Rafiq)</div><div style="font-size:12px">▾</div></div>
+      <div class="lbl">Form</div>
+      <div class="row">
+        <div class="chip on">💊 Pill</div><div class="chip">💧 Drop</div><div class="chip">💉 Inj.</div>
+      </div>
+      <div class="lbl">Dose strength</div>
+      <div class="field">1 tablet (500mg)</div>
+      <button class="btn-p" style="margin-top:20px">Next: Set schedule →</button>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card improved"><div class="note-label improved">UX Detail</div><div class="note-text">Added "Who is it for?" early in the flow. This avoids the mistake of adding a medicine to the wrong profile and having to delete it later.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-addmed2">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody">
+      <div class="progress-bar"><div class="progress-fill" style="width:50%"></div></div>
+      <div class="sh">Set schedule</div>
+      <div class="hint" style="margin-bottom:12px;font-weight:600">Step 2 of 4 — when to take</div>
+      
+      <div class="lbl">Frequency</div>
+      <div class="field">Every day ▾</div>
+      
+      <div class="lbl">Times per day</div>
+      <div class="seg">
+        <button class="sg">1x</button>
+        <button class="sg on">2x</button>
+        <button class="sg">3x</button>
+        <button class="sg">4x</button>
+      </div>
+
+      <div class="lbl">Reminder times</div>
+      <div class="card" style="padding:10px">
+        <div class="row">
+          <span style="font-size:13px;font-weight:700">Morning</span>
+          <span class="pill pi" style="font-size:13px">08:00 AM</span>
+        </div>
+      </div>
+      <div class="card" style="padding:10px">
+        <div class="row">
+          <span style="font-size:13px;font-weight:700">Evening</span>
+          <span class="pill pi" style="font-size:13px">08:00 PM</span>
+        </div>
+      </div>
+
+      <div class="lbl">Relation to food</div>
+      <div class="row">
+        <div class="chip">Before</div>
+        <div class="chip on">With food</div>
+        <div class="chip">After</div>
+      </div>
+
+      <div style="margin-top:auto">
+        <button class="btn-p">Next: Reminders →</button>
+        <button class="btn-s">Back</button>
+      </div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card new-screen"><div class="note-label new-screen">New screen: Schedule</div><div class="note-text">Flexible scheduling system. Handles "Times per day" versus custom intervals. Includes food relations which are critical for medical efficacy.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-addmed3">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody">
+      <div class="progress-bar"><div class="progress-fill" style="width:75%"></div></div>
+      <div class="sh">Reminder settings</div>
+      <div class="hint" style="margin-bottom:12px;font-weight:600">Step 3 of 4 — notifications</div>
+      
+      <div class="reminder-opt">
+        <div>
+          <div style="font-size:13px;font-weight:700">Push notification</div>
+          <div class="hint">Send alert to this device</div>
+        </div>
+        <div class="toggle"></div>
+      </div>
+
+      <div class="reminder-opt">
+        <div>
+          <div style="font-size:13px;font-weight:700">Critical alerts</div>
+          <div class="hint">Override Silent/DND mode</div>
+        </div>
+        <div class="toggle toggle-off"></div>
+      </div>
+
+      <div class="lbl">Notification sound</div>
+      <div class="field">Standard Chime ▾</div>
+
+      <div class="lbl">Reminder message</div>
+      <div class="field">Time to take your Glucovance</div>
+
+      <div style="margin-top:auto">
+        <button class="btn-p">Next: Stock tracking →</button>
+        <button class="btn-s">Back</button>
+      </div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card new-screen"><div class="note-label new-screen">New screen: Notifications</div><div class="note-text">Separates logical schedule from visual/auditory notification settings. Critical alerts are a key feature for life-saving medication.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-addmed4">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody">
+      <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+      <div class="sh">Inventory & Refills</div>
+      <div class="hint" style="margin-bottom:12px;font-weight:600">Step 4 of 4 — stock tracking</div>
+      
+      <div class="lbl">Current stock level</div>
+      <div class="field">30 tablets</div>
+      
+      <div class="reminder-opt">
+        <div>
+          <div style="font-size:13px;font-weight:700">Refill reminders</div>
+          <div class="hint">Get notified when stock is low</div>
+        </div>
+        <div class="toggle"></div>
+      </div>
+
+      <div class="lbl">Remind me when I have</div>
+      <div class="field">5 tablets left</div>
+
+      <div class="card" style="margin-top:20px;background:var(--color-primary-container);border:none">
+        <div style="font-size:12px;color:var(--color-on-primary-container);line-height:1.5">
+          <b>Summary:</b> Taking 2 tablets/day. Your current stock will last for <b>15 days</b>. Refill reminder set for 12 days from now.
+        </div>
+      </div>
+
+      <div style="margin-top:auto">
+        <button class="btn-p">Finish & Add</button>
+        <button class="btn-s">Back</button>
+      </div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card new-screen"><div class="note-label new-screen">New screen: Stock</div><div class="note-text">Intelligent stock math. Tells the user exactly how many days their medicine will last based on the schedule set in Step 2.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-medlist">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody">
+      <div class="sh">Your medicines</div>
+      <div class="seg">
+        <button class="sg on">Active</button>
+        <button class="sg">Finished</button>
+      </div>
+      <div class="card" onclick="show('meddetail')" style="cursor:pointer">
+        <div class="row">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700">Metformin 500mg</div>
+            <div class="hint">Next: 8:00 PM · 2x daily</div>
+          </div>
+          <div class="pill ps">In stock</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700">Vitamin D3</div>
+            <div class="hint">Next: Tomorrow 1:00 PM</div>
+          </div>
+          <div class="pill pw">Low (3 left)</div>
+        </div>
+      </div>
+      <div class="card" style="opacity:0.6">
+        <div class="row">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700">Paracetamol</div>
+            <div class="hint">As needed (PRN)</div>
+          </div>
+          <div class="pill pd">Empty</div>
+        </div>
+      </div>
+      <button class="btn-p" style="margin-top:auto" onclick="show('addmed')">+ Add another</button>
+    </div>
+    <div class="bnav">
+      <div class="bni" onclick="show('home')"><span class="bni-icon">⌂</span>Home</div>
+      <div class="bni on"><span class="bni-icon">💊</span>Meds</div>
+      <div class="bni" onclick="show('history')"><span class="bni-icon">📋</span>History</div>
+      <div class="bni" onclick="show('rx')"><span class="bni-icon">📄</span>Rx</div>
+      <div class="bni" onclick="show('settings')"><span class="bni-icon">⚙</span>Settings</div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card improved"><div class="note-label improved">Inventory integration</div><div class="note-text">Stock status is shown directly on the list. No need to dig into details to know you're running low.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-meddetail">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button onclick="show('medlist')" style="border:none;background:none;font-size:20px;cursor:pointer">←</button>
+        <div style="font-size:16px;font-weight:700">Metformin 500mg</div>
+      </div>
+      
+      <div class="card" style="background:var(--color-primary);color:white;border:none">
+        <div style="font-size:12px;opacity:0.9">Next dose in</div>
+        <div style="font-size:24px;font-weight:700;margin:4px 0">02:15:40</div>
+        <div style="font-size:12px;opacity:0.9">Today at 8:00 PM</div>
+      </div>
+
+      <div class="sh" style="font-size:12px;color:var(--color-outline);margin-top:20px">MEDICINE INFO</div>
+      <div class="card">
+        <div class="row"><span class="muted">Patient</span><span style="font-weight:700">Rafiq Ahmed</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="muted">Schedule</span><span style="font-weight:700">2x Daily (8am, 8pm)</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="muted">Instructions</span><span style="font-weight:700">Take with food</span></div>
+      </div>
+
+      <div class="sh" style="font-size:12px;color:var(--color-outline)">INVENTORY</div>
+      <div class="card">
+        <div class="row">
+          <span class="muted">Stock level</span>
+          <span style="font-weight:700">24 tablets left</span>
+        </div>
+        <div class="progress-bar" style="margin:10px 0 4px"><div class="progress-fill" style="width:80%"></div></div>
+        <div style="font-size:11px;color:var(--color-outline)">Lasts for approx. 12 more days</div>
+      </div>
+
+      <div style="margin-top:auto;display:flex;gap:10px">
+        <button class="btn-s" style="flex:1" onclick="show('addmed')">Edit</button>
+        <button class="btn-danger" style="flex:1;margin-top:8px">Delete</button>
+      </div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card new-screen"><div class="note-label new-screen">New screen: Med Detail</div><div class="note-text">Deep dive into a specific medication. Shows real-time countdown to next dose and inventory visualization.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-settings">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody">
+      <div class="sh" style="margin-top:0">Settings</div>
+      
+      <div class="card" style="padding:16px;display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <div class="av">RA</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700">Rafiq Ahmed</div>
+          <div class="hint">Premium Member</div>
+        </div>
+        <div style="color:var(--color-primary)">Edit</div>
+      </div>
+
+      <div class="sh" style="font-size:12px;color:var(--color-outline)">PREFERENCES</div>
+      <div class="card" style="padding:0">
+        <div class="reminder-opt" style="padding:12px 14px;border:none">
+          <span style="font-size:13px;font-weight:600">🔔 Notifications</span>
+          <span style="color:var(--color-outline)">▾</span>
+        </div>
+        <div class="divider" style="margin:0"></div>
+        <div class="reminder-opt" style="padding:12px 14px;border:none">
+          <span style="font-size:13px;font-weight:600">🛡 Security & Biometrics</span>
+          <span style="color:var(--color-outline)">▾</span>
+        </div>
+      </div>
+
+      <div class="sh" style="font-size:12px;color:var(--color-outline);margin-top:16px">SUPPORT</div>
+      <div class="card" style="padding:0">
+        <div class="reminder-opt" style="padding:12px 14px;border:none">
+          <span style="font-size:13px;font-weight:600">❓ Help Center</span>
+          <span style="color:var(--color-outline)">▾</span>
+        </div>
+        <div class="divider" style="margin:0"></div>
+        <div class="reminder-opt" style="padding:12px 14px;border:none">
+          <span style="font-size:13px;font-weight:600">📄 Privacy Policy</span>
+          <span style="color:var(--color-outline)">▾</span>
+        </div>
+      </div>
+
+      <div style="margin-top:auto">
+        <button class="btn-s" style="color:var(--color-error);border-color:var(--color-error)">Sign Out</button>
+        <div style="text-align:center;margin-top:12px">
+          <div style="font-size:10px;color:var(--color-outline)">MediTime v2.1.0 (Build 342)</div>
+        </div>
+      </div>
+    </div>
+    <div class="bnav">
+      <div class="bni" onclick="show('home')"><span class="bni-icon">⌂</span>Home</div>
+      <div class="bni" onclick="show('medlist')"><span class="bni-icon">💊</span>Meds</div>
+      <div class="bni" onclick="show('history')"><span class="bni-icon">📋</span>History</div>
+      <div class="bni" onclick="show('rx')"><span class="bni-icon">📄</span>Rx</div>
+      <div class="bni on"><span class="bni-icon">⚙</span>Settings</div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card new-screen"><div class="note-label new-screen">New screen: Settings</div><div class="note-text">Comprehensive app settings. Centralizes account management, security (biometrics), and legal info. Essential for a production-ready app.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-missed">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody" style="padding:0">
+      <div class="miss-overlay">
+        <div class="miss-modal">
+          <div style="font-size:14px;font-weight:500;margin-bottom:4px">Missed dose</div>
+          <div class="hint" style="margin-bottom:12px">BP Tablet · scheduled 7:00 PM (2 hrs ago)</div>
+          <div class="divider"></div>
+          <div style="font-size:12px;font-weight:500;margin:10px 0 8px">What happened?</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+            <button style="text-align:left;padding:9px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:none;font-size:12px;cursor:pointer;color:var(--color-text-primary)">I took it late — log it now</button>
+            <button style="text-align:left;padding:9px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:none;font-size:12px;cursor:pointer;color:var(--color-text-primary)">I forgot — mark as skipped</button>
+            <button style="text-align:left;padding:9px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:none;font-size:12px;cursor:pointer;color:var(--color-text-primary)">Side effects — I chose to skip</button>
+            <button style="text-align:left;padding:9px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:none;font-size:12px;cursor:pointer;color:var(--color-text-primary)">Medicine finished — refill needed</button>
+          </div>
+          <div class="divider"></div>
+          <div style="font-size:11px;color:var(--color-text-tertiary);margin:8px 0 10px;line-height:1.5">This helps track your adherence accurately. Caregiver will not be notified if you log it yourself.</div>
+          <button class="btn-s" style="margin:0;font-size:12px">Dismiss</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card new-screen"><div class="note-label new-screen">New screen — missed dose flow</div><div class="note-text">This modal appears when a user taps a missed dose on the timeline. 4 reason options capture why it was missed — critical for accurate adherence tracking.</div></div>
+    <div class="note-card improved"><div class="note-label improved">Why this matters</div><div class="note-text">"I forgot" vs "side effects" vs "ran out" are very different outcomes. Giving users 4 options creates better data for health history and reduces guilt about missing doses.</div></div>
+    <div class="note-card improved"><div class="note-label improved">Caregiver privacy note</div><div class="note-text">The small text "Caregiver will not be notified if you log it yourself" reduces anxiety and encourages honest logging rather than ignoring the prompt.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-rx">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody" style="padding:10px 12px">
+      <div class="row" style="margin-bottom:10px">
+        <div style="font-size:14px;font-weight:500">Prescriptions</div>
+        <button style="background:#E6F1FB;color:#0C447C;border:none;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer">+ Scan / Upload</button>
+      </div>
+      <div class="seg"><button class="sg on">By date</button><button class="sg">By doctor</button><button class="sg">By disease</button></div>
+      <div class="card" style="padding:10px 12px">
+        <div class="row" style="align-items:flex-start">
+          <div style="width:42px;height:50px;background:var(--color-background-secondary);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📄</div>
+          <div style="flex:1;padding-left:10px">
+            <div style="font-size:12px;font-weight:500">Dr. Rahman</div>
+            <div class="hint">10 Mar 2026 · Diabetes</div>
+            <div style="margin-top:4px"><span class="chip on" style="font-size:10px;padding:2px 7px">Metformin</span><span class="chip" style="font-size:10px;padding:2px 7px">+2 more</span></div>
+          </div>
+          <span class="pill ps">Scanned</span>
+        </div>
+      </div>
+      <div class="card" style="padding:10px 12px">
+        <div class="row" style="align-items:flex-start">
+          <div style="width:42px;height:50px;background:var(--color-background-secondary);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🖼</div>
+          <div style="flex:1;padding-left:10px">
+            <div style="font-size:12px;font-weight:500">Dr. Hossain</div>
+            <div class="hint">2 Jan 2026 · BP followup</div>
+            <button style="margin-top:5px;padding:3px 8px;background:#FAEEDA;color:#633806;border:0.5px solid#FAC775;border-radius:4px;font-size:10px;cursor:pointer">Extract medicines (OCR)</button>
+          </div>
+          <span class="pill pw">Pending</span>
+        </div>
+      </div>
+      <div style="background:var(--color-background-secondary);border-radius:8px;padding:10px;text-align:center;margin-top:4px">
+        <div style="font-size:12px;color:var(--color-text-secondary)">Scan a new prescription</div>
+        <div class="hint" style="margin-top:2px">Photo or PDF — OCR extracts medicines automatically</div>
+        <button class="btn-p" style="margin-top:8px;padding:8px">Open camera</button>
+      </div>
+    </div>
+    <div class="bnav">
+      <div class="bni"><span class="bni-icon">⌂</span>Home</div>
+      <div class="bni"><span class="bni-icon">💊</span>Meds</div>
+      <div class="bni"><span class="bni-icon">📋</span>History</div>
+      <div class="bni on"><span class="bni-icon">📄</span>Rx</div>
+      <div class="bni"><span class="bni-icon">⚙</span>Settings</div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card improved"><div class="note-label improved">Improvement</div><div class="note-text">Medicine chips extracted from each prescription are shown inline on the card. Users can see what was prescribed without opening the full prescription.</div></div>
+    <div class="note-card improved"><div class="note-label improved">Improvement</div><div class="note-text">Pending OCR prescriptions show an inline "Extract medicines" button. Actionable state — not just a status badge.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-history">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody" style="padding:10px 12px">
+      <div class="row" style="margin-bottom:10px">
+        <div style="font-size:14px;font-weight:500">History</div>
+        <div style="display:flex;gap:4px"><span class="chip on" style="font-size:10px;padding:3px 8px">This month</span><span class="chip" style="font-size:10px;padding:3px 8px">All time</span></div>
+      </div>
+      <div class="stat3">
+        <div class="stat-box" style="background:#EAF3DE"><div class="stat-val" style="color:#27500A;font-size:16px">78%</div><div class="stat-lbl" style="color:#27500A">Adherence</div></div>
+        <div class="stat-box" style="background:#FCEBEB"><div class="stat-val" style="color:#791F1F;font-size:16px">14</div><div class="stat-lbl" style="color:#791F1F">Missed</div></div>
+        <div class="stat-box" style="background:#E6F1FB"><div class="stat-val" style="color:#185FA5;font-size:16px">52</div><div class="stat-lbl" style="color:#185FA5">Taken</div></div>
+      </div>
+      <div style="font-size:12px;font-weight:500;margin-bottom:6px">Adherence by medicine</div>
+      <div class="card" style="padding:8px 10px">
+        <div class="row"><span style="font-size:12px">Metformin 500mg</span><span style="font-size:12px;font-weight:500;color:#27500A">91%</span></div>
+        <div style="height:4px;background:var(--color-border-tertiary);border-radius:4px;margin-top:4px;overflow:hidden"><div style="height:100%;width:91%;background:#639922;border-radius:4px"></div></div>
+      </div>
+      <div class="card" style="padding:8px 10px">
+        <div class="row"><span style="font-size:12px">BP Tablet</span><span style="font-size:12px;font-weight:500;color:#E24B4A">64%</span></div>
+        <div style="height:4px;background:var(--color-border-tertiary);border-radius:4px;margin-top:4px;overflow:hidden"><div style="height:100%;width:64%;background:#E24B4A;border-radius:4px"></div></div>
+      </div>
+      <div class="card" style="padding:8px 10px">
+        <div class="row"><span style="font-size:12px">Vitamin D3</span><span style="font-size:12px;font-weight:500;color:#27500A">87%</span></div>
+        <div style="height:4px;background:var(--color-border-tertiary);border-radius:4px;margin-top:4px;overflow:hidden"><div style="height:100%;width:87%;background:#97C459;border-radius:4px"></div></div>
+      </div>
+      <div class="health-row">
+        <div class="health-box"><div class="health-val">120/80</div><div class="health-lbl">Blood pressure</div></div>
+        <div class="health-box"><div class="health-val">6.1</div><div class="health-lbl">HbA1c</div></div>
+        <div class="health-box"><div class="health-val">98</div><div class="health-lbl">SpO2 %</div></div>
+      </div>
+      <button class="btn-s" style="font-size:11px;margin-top:4px">Export PDF / CSV (Premium)</button>
+    </div>
+    <div class="bnav">
+      <div class="bni"><span class="bni-icon">⌂</span>Home</div>
+      <div class="bni"><span class="bni-icon">💊</span>Meds</div>
+      <div class="bni on"><span class="bni-icon">📋</span>History</div>
+      <div class="bni"><span class="bni-icon">📄</span>Rx</div>
+      <div class="bni"><span class="bni-icon">⚙</span>Settings</div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card improved"><div class="note-label improved">Per-medicine adherence</div><div class="note-text">Instead of just one total % number, each medicine gets its own adherence bar. This tells users which specific medicine they're struggling with.</div></div>
+    <div class="note-card improved"><div class="note-label improved">Health vitals row</div><div class="note-text">Quick vitals row (BP, HbA1c, SpO2) ties the medicine history to health outcomes — making the app feel like a health companion, not just a reminder tool.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-emergency">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody" style="padding:10px 12px">
+      <div class="row" style="margin-bottom:10px">
+        <div style="font-size:14px;font-weight:500">Emergency card</div>
+        <span class="pill pd">Share</span>
+      </div>
+      <div class="emcard">
+        <div class="row" style="margin-bottom:8px">
+          <div class="av" style="background:#F5C4B3;color:#993C1D;width:36px;height:36px;font-size:12px">RA</div>
+          <div style="flex:1;padding-left:8px"><div class="emcard-head">Rafiq Ahmed, 34 · B+</div><div style="font-size:11px;color:#712B13">Last updated: 14 Mar 2026</div></div>
+        </div>
+        <div class="divider" style="background:#F0997B"></div>
+        <div class="emcard-row">Allergies<div class="emcard-val">Penicillin, Sulfa drugs</div></div>
+        <div class="emcard-row">Conditions<div class="emcard-val">Type 2 Diabetes · Hypertension</div></div>
+        <div class="emcard-row">Current medicines<div class="emcard-val">Metformin 500mg · Amlodipine 5mg</div></div>
+        <div class="emcard-row" style="margin-bottom:0">Emergency contact<div class="emcard-val">Sadia Ahmed — 017XXXXXXXX</div></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <div class="qr-box">QR<br>code</div>
+        <div style="flex:1">
+          <button class="btn-p" style="margin-top:0;padding:8px;font-size:12px">Share as PDF</button>
+          <button class="btn-s" style="font-size:12px;padding:7px">Copy shareable link</button>
+          <div class="hint" style="margin-top:4px;line-height:1.4">QR opens this card without app login</div>
+        </div>
+      </div>
+      <div style="background:#FAEEDA;border-radius:8px;padding:8px 10px;margin-top:8px">
+        <div style="font-size:11px;color:#633806;font-weight:500;margin-bottom:2px">Lock screen access</div>
+        <div style="font-size:11px;color:#633806">Add this card as a lock screen widget in Settings → Security so first responders can access it without unlocking the phone.</div>
+      </div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card improved"><div class="note-label improved">QR code added</div><div class="note-text">The QR code links to a web-hosted version of the card that opens without app authentication. Anyone with a phone camera can read it — including paramedics.</div></div>
+    <div class="note-card improved"><div class="note-label improved">Lock screen widget prompt</div><div class="note-text">Amber banner explains how to add a lock screen widget. This is the only way to guarantee access in a real emergency when the phone is locked.</div></div>
+    <div class="note-card improved"><div class="note-label improved">Last updated timestamp</div><div class="note-text">Shows when data was last updated. A responder will know whether the medicines listed are current — critical for trauma situations.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-caregiver">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody" style="padding:10px 12px">
+      <div style="font-size:14px;font-weight:500;margin-bottom:10px">Caregiver access</div>
+      <div style="background:#FAEEDA;border-radius:8px;padding:8px 10px;font-size:11px;color:#633806;margin-bottom:10px">Premium — upgrade to share access with family</div>
+      <div class="card">
+        <div class="row">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="av">SA</div>
+            <div><div style="font-size:12px;font-weight:500">Sadia (Daughter)</div><div class="hint">View · Alerts on miss</div></div>
+          </div>
+          <span class="pill ps">Active</span>
+        </div>
+      </div>
+      <button class="btn-s" style="font-size:12px;margin-bottom:12px">+ Invite caregiver by link</button>
+      <div style="font-size:12px;font-weight:500;margin-bottom:6px">Sadia's permissions</div>
+      <div class="reminder-opt"><span style="font-size:12px">View medicines</span><div class="toggle"></div></div>
+      <div class="reminder-opt"><span style="font-size:12px">Edit medicines</span><div class="toggle toggle-off"></div></div>
+      <div class="reminder-opt"><span style="font-size:12px">Missed dose alerts</span><div class="toggle"></div></div>
+      <div class="reminder-opt" style="border-bottom:none"><span style="font-size:12px">Daily summary (8 AM)</span><div class="toggle"></div></div>
+      <div style="background:var(--color-background-secondary);border-radius:8px;padding:8px 10px;margin-top:10px">
+        <div style="font-size:11px;font-weight:500;margin-bottom:2px">Caregiver view</div>
+        <div class="hint" style="line-height:1.4">Sadia sees a simplified read-only dashboard. Open via invite link — no app install required.</div>
+      </div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card improved"><div class="note-label improved">Invite by link</div><div class="note-text">Caregiver gets a web link, not an app install requirement. Huge friction reduction — elderly parents or busy family members won't need to download anything.</div></div>
+    <div class="note-card improved"><div class="note-label improved">Toggle controls</div><div class="note-text">Each permission is a toggle — clear on/off state. Edit permission is off by default to protect the patient's medicine schedule.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-reminders">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody" style="padding:10px 12px">
+      <div style="font-size:14px;font-weight:500;margin-bottom:12px">Reminder settings</div>
+      <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:6px">Notification behaviour</div>
+      <div class="reminder-opt"><div><div style="font-size:12px">Sound + vibration</div><div class="hint">Plays alarm tone</div></div><div class="toggle"></div></div>
+      <div class="reminder-opt"><div><div style="font-size:12px">Auto-repeat if no response</div><div class="hint">Repeats every 5 min until confirmed</div></div><div class="toggle"></div></div>
+      <div class="reminder-opt" style="border-bottom:none"><div><div style="font-size:12px">Lock screen notification</div><div class="hint">Show dose on lock screen</div></div><div class="toggle"></div></div>
+      <div class="divider" style="margin:12px 0"></div>
+      <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:6px">Snooze & timing</div>
+      <div class="reminder-opt"><span style="font-size:12px">Snooze duration</span><span style="font-size:12px;color:var(--color-text-secondary)">10 min ›</span></div>
+      <div class="reminder-opt" style="border-bottom:none"><span style="font-size:12px">Max snooze count</span><span style="font-size:12px;color:var(--color-text-secondary)">3 times ›</span></div>
+      <div class="divider" style="margin:12px 0"></div>
+      <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:6px">Quiet hours</div>
+      <div class="reminder-opt"><span style="font-size:12px">Do not disturb</span><div class="toggle toggle-off"></div></div>
+      <div class="reminder-opt" style="border-bottom:none"><span style="font-size:12px">Quiet hours: 11 PM – 6 AM</span><span style="font-size:12px;color:var(--color-text-secondary)">Edit ›</span></div>
+      <div style="background:#E6F1FB;border-radius:8px;padding:8px 10px;margin-top:10px">
+        <div style="font-size:11px;color:#0C447C;line-height:1.4">Critical medicines (e.g. insulin) will still ring during quiet hours unless you disable them individually.</div>
+      </div>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card new-screen"><div class="note-label new-screen">New screen added</div><div class="note-text">Reminder settings were buried in a generic Settings page. Given how critical notifications are for this app, they deserve their own dedicated screen.</div></div>
+    <div class="note-card improved"><div class="note-label improved">Quiet hours</div><div class="note-text">Quiet hours with a critical medicine override is an important edge case. A 2 AM insulin alarm is very different from a vitamin reminder — the app should know the difference.</div></div>
+    <div class="note-card improved"><div class="note-label improved">Max snooze count</div><div class="note-text">Unlimited snoozing defeats the purpose. A hard cap of 3 snoozes then escalates to "missed" — honest tracking and caregiver alerts still trigger correctly.</div></div>
+  </div>
+</div>
+
+<div class="screen" id="s-premium">
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><span>100%</span></div>
+    <div class="sbody" style="padding:10px 12px;text-align:center">
+      <div style="font-size:28px;margin-bottom:6px">⭐</div>
+      <div style="font-size:15px;font-weight:500;margin-bottom:4px">Unlock Total Health Management</div>
+      <div class="hint" style="margin-bottom:14px">3-day free trial · cancel anytime</div>
+      <div style="text-align:left;display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:18px;height:18px;border-radius:50%;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:10px;color:#185FA5;flex-shrink:0">✓</div><span class="muted">Unlimited family profiles</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:18px;height:18px;border-radius:50%;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:10px;color:#185FA5;flex-shrink:0">✓</div><span class="muted">Caregiver sharing & alerts</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:18px;height:18px;border-radius:50%;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:10px;color:#185FA5;flex-shrink:0">✓</div><span class="muted">OCR prescription scanning</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:18px;height:18px;border-radius:50%;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:10px;color:#185FA5;flex-shrink:0">✓</div><span class="muted">Export history PDF / CSV</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:18px;height:18px;border-radius:50%;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:10px;color:#185FA5;flex-shrink:0">✓</div><span class="muted">AI medicine photo recognition</span></div>
+        <div style="display:flex;align-items:center;gap:8px"><div style="width:18px;height:18px;border-radius:50%;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:10px;color:#185FA5;flex-shrink:0">✓</div><span class="muted">Ad-free + priority support</span></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;text-align:center">
+        <div style="flex:1;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:10px 6px">
+          <div class="hint" style="font-size:10px">Monthly</div>
+          <div style="font-size:18px;font-weight:500;margin-top:2px">৳99</div>
+          <div class="hint" style="font-size:10px">/month</div>
+        </div>
+        <div style="flex:1;border:2px solid #378ADD;border-radius:var(--border-radius-lg);padding:10px 6px;position:relative">
+          <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#378ADD;color:white;font-size:9px;padding:2px 10px;border-radius:20px;white-space:nowrap">Best value · 40% off</div>
+          <div class="hint" style="font-size:10px">Yearly</div>
+          <div style="font-size:18px;font-weight:500;color:#185FA5;margin-top:2px">৳699</div>
+          <div class="hint" style="font-size:10px">৳58/month</div>
+        </div>
+      </div>
+      <button class="btn-p" style="margin:0 0 6px">Start free 3-day trial</button>
+      <div class="hint" style="margin-bottom:8px">No charge for 3 days. Cancel anytime.</div>
+      <button class="btn-s" style="font-size:11px">Restore purchase</button>
+    </div>
+  </div>
+  <div class="notes-panel">
+    <div class="note-card improved"><div class="note-label improved">BDT pricing + per-month breakdown</div><div class="note-text">৳699/year broken down to ৳58/month makes it feel cheaper than the monthly plan. "Best value" label + blue border draws the eye immediately.</div></div>
+    <div class="note-card improved"><div class="note-label improved">No-charge reassurance</div><div class="note-text">The small text under the CTA ("No charge for 3 days. Cancel anytime.") removes the biggest hesitation for users who are afraid of accidental charges.</div></div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+const labels={
+  welcome:['Onboarding — Welcome','original'],
+  onboard:['Onboarding slides (new)','new'],
+  profile:['Profile setup','improved'],
+  home:['Home dashboard','improved'],
+  addmed:['Add medicine — step 1','improved'],
+  medlist:['Medicine list','improved'],
+  missed:['Missed dose flow (new)','new'],
+  rx:['Prescriptions','improved'],
+  history:['History & stats','improved'],
+  emergency:['Emergency card','improved'],
+  caregiver:['Caregiver module','improved'],
+  reminders:['Reminder settings (new)','new'],
+  premium:['Premium paywall','improved'],
+};
+const tagColors={
+  original:'background:var(--color-background-secondary);color:var(--color-text-secondary)',
+  improved:'background:var(--color-background-success);color:var(--color-text-success)',
+  new:'background:var(--color-background-warning);color:var(--color-text-warning)',
+};
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+  document.querySelector('[onclick="show(\''+id+'\')"]').classList.add('active');
+  const [label,tag]=labels[id]||[id,'original'];
+  document.getElementById('screen-label').textContent=label;
+  const el=document.getElementById('screen-tag');
+  el.textContent=tag==='new'?'new screen':tag==='improved'?'improved':'original';
+  el.style.cssText=tagColors[tag]||tagColors.original;
+  el.style.fontSize='10px';el.style.padding='2px 8px';el.style.borderRadius='10px';
+}
+</script>

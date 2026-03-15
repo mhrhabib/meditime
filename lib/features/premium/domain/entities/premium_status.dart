@@ -1,0 +1,3 @@
+class PremiumStatus {
+  const PremiumStatus();
+}
