@@ -37,7 +37,8 @@ class PrescriptionsScreen extends StatelessWidget {
                 indicatorWeight: 3,
                 labelColor: cs.primary,
                 unselectedLabelColor: cs.onSurfaceVariant,
-                labelStyle: tt.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+                labelStyle:
+                    tt.labelLarge?.copyWith(fontWeight: FontWeight.w700),
                 unselectedLabelStyle: tt.labelLarge,
                 tabs: const [
                   Tab(text: 'By Date'),
@@ -55,9 +56,12 @@ class PrescriptionsScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.description_outlined, size: 64, color: cs.outlineVariant),
+                    Icon(Icons.description_outlined,
+                        size: 64, color: cs.outlineVariant),
                     const SizedBox(height: 16),
-                    Text('No prescriptions found', style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant)),
+                    Text('No prescriptions found',
+                        style:
+                            tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant)),
                     const SizedBox(height: 24),
                     FilledButton.icon(
                       onPressed: () {},
@@ -89,13 +93,7 @@ class PrescriptionsScreen extends StatelessWidget {
             );
           },
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {},
-          icon: const Icon(Icons.add_rounded),
-          label: const Text('New RX'),
-        ),
       ),
     );
   }
 }
-

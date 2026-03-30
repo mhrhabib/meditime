@@ -21,10 +21,12 @@ class HomeScreen extends StatelessWidget {
           SliverAppBar(
             expandedHeight: 180,
             pinned: true,
+            // title: const Text('MediTime'),
+            centerTitle: true,
             stretch: true,
             backgroundColor: cs.primary,
             elevation: 0,
-            scrolledUnderElevation: 0,
+            scrolledUnderElevation: 1,
             flexibleSpace: FlexibleSpaceBar(
               stretchModes: const [StretchMode.zoomBackground],
               background: Container(
@@ -34,7 +36,9 @@ class HomeScreen extends StatelessWidget {
                     end: Alignment.bottomRight,
                     colors: [
                       cs.primary,
-                      isDark ? const Color(0xFF004040) : const Color(0xFF0B8E8E),
+                      isDark
+                          ? const Color(0xFF004040)
+                          : const Color(0xFF0B8E8E),
                     ],
                   ),
                 ),
@@ -61,7 +65,9 @@ class HomeScreen extends StatelessWidget {
                                     shape: BoxShape.circle,
                                   ),
                                   child: IconButton(
-                                    icon: const Icon(Icons.notifications_none_rounded, color: Colors.white),
+                                    icon: const Icon(
+                                        Icons.notifications_none_rounded,
+                                        color: Colors.white),
                                     onPressed: () {},
                                   ),
                                 ),
@@ -115,7 +121,8 @@ class HomeScreen extends StatelessWidget {
                         child: StatCard(
                           value: '2',
                           label: 'Taken',
-                          containerColor: StatusColors.getTakenContainer(context),
+                          containerColor:
+                              StatusColors.getTakenContainer(context),
                           contentColor: StatusColors.getTaken(context),
                           icon: Icons.check_circle_rounded,
                         ),
@@ -125,7 +132,8 @@ class HomeScreen extends StatelessWidget {
                         child: StatCard(
                           value: '1',
                           label: 'Low stock',
-                          containerColor: StatusColors.getLowStockContainer(context),
+                          containerColor:
+                              StatusColors.getLowStockContainer(context),
                           contentColor: StatusColors.getLowStock(context),
                           icon: Icons.inventory_2_rounded,
                         ),
@@ -145,10 +153,9 @@ class HomeScreen extends StatelessWidget {
 
                   // Timeline
                   SectionHeader(
-                    title: "Today's schedule",
-                    action: 'See all', 
-                    onAction: () {}
-                  ),
+                      title: "Today's schedule",
+                      action: 'See all',
+                      onAction: () {}),
 
                   BlocBuilder<MedicineCubit, MedicineState>(
                     builder: (context, state) {
@@ -158,15 +165,18 @@ class HomeScreen extends StatelessWidget {
                           child: Center(
                             child: Column(
                               children: [
-                                Icon(Icons.medication_outlined, size: 48, color: cs.outlineVariant),
+                                Icon(Icons.medication_outlined,
+                                    size: 48, color: cs.outlineVariant),
                                 const SizedBox(height: 12),
-                                Text('No medicines scheduled today', style: tt.bodyMedium?.copyWith(color: cs.outline)),
+                                Text('No medicines scheduled today',
+                                    style: tt.bodyMedium
+                                        ?.copyWith(color: cs.outline)),
                               ],
                             ),
                           ),
                         );
                       }
-                      
+
                       return ListView.builder(
                         padding: EdgeInsets.zero,
                         shrinkWrap: true,
@@ -175,18 +185,23 @@ class HomeScreen extends StatelessWidget {
                         itemBuilder: (context, index) {
                           final med = state.medicines[index];
                           MedicineStatus status = MedicineStatus.pending;
-                          if (med.name.contains('Metformin')) status = MedicineStatus.taken;
-                          if (med.name.contains('Amlodipine')) status = MedicineStatus.missed;
+                          if (med.name.contains('Metformin'))
+                            status = MedicineStatus.taken;
+                          if (med.name.contains('Amlodipine'))
+                            status = MedicineStatus.missed;
 
                           return MedicineTile(
-                            time: '8:00 AM', 
+                            time: '8:00 AM',
                             name: med.name,
-                            dose: '1 ${med.type}', 
-                            instruction: med.schedule.split('·').last.trim(), 
+                            dose: '1 ${med.type}',
+                            instruction: med.schedule.split('·').last.trim(),
                             status: status,
-                            onTake: status == MedicineStatus.pending ? () {} : null,
-                            onSkip: status == MedicineStatus.pending ? () {} : null,
-                            onSnooze: status == MedicineStatus.pending ? () {} : null,
+                            onTake:
+                                status == MedicineStatus.pending ? () {} : null,
+                            onSkip:
+                                status == MedicineStatus.pending ? () {} : null,
+                            onSnooze:
+                                status == MedicineStatus.pending ? () {} : null,
                           );
                         },
                       );
@@ -195,9 +210,9 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // Weekly streak
-                  SectionHeader(title: 'This week performance'),
-                  StreakRow(
-                    days: const [
+                  const SectionHeader(title: 'This week performance'),
+                  const StreakRow(
+                    days: [
                       StreakDay('M', DayStatus.taken),
                       StreakDay('T', DayStatus.taken),
                       StreakDay('W', DayStatus.missed),

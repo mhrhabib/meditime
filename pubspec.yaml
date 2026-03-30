@@ -49,6 +49,7 @@ dependencies:
   dio: ^5.4.0
   flutter_bloc: ^9.1.1
   equatable: ^2.0.8
+  solar_icons: ^0.0.5
 
 dev_dependencies:
   flutter_test:

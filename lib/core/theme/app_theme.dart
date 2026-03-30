@@ -154,14 +154,14 @@ class AppTheme {
           if (states.contains(WidgetState.selected)) {
             return const TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w700,
               color: primary,
             );
           }
           return const TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: FontWeight.w500,
             color: outline,
           );
@@ -317,14 +317,14 @@ class AppTheme {
           if (states.contains(WidgetState.selected)) {
             return const TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w700,
               color: darkPrimary,
             );
           }
           return const TextStyle(
             fontFamily: 'Nunito',
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: FontWeight.w500,
             color: outlineVariant,
           );

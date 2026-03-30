@@ -1,8 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:go_router/go_router.dart';
 import 'package:meditime/app/app_shell.dart';
-import 'package:meditime/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:meditime/features/onboarding/presentation/screens/on_boarding_test.dart';
 import 'package:meditime/features/onboarding/presentation/screens/splash_screen.dart';
 
 class AppRouter {
