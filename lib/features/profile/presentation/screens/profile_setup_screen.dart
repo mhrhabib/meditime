@@ -36,8 +36,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             Text(
               'Let\'s build your medical profile for accurate reminders.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
-              ),
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
             ),
             const SizedBox(height: 32),
             TextField(
@@ -54,14 +54,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   child: DropdownButtonFormField<String>(
                     value: _selectedGender,
                     decoration: const InputDecoration(labelText: 'Gender'),
-                    items: ['Male', 'Female', 'Other']
-                        .map((g) => DropdownMenuItem(value: g, child: Text(g)))
-                        .toList(),
+                    items: ['Male', 'Female', 'Other'].map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
                     onChanged: (v) => setState(() => _selectedGender = v!),
                   ),
                 ),
                 const SizedBox(width: 16),
-                 Expanded(
+                Expanded(
                   child: DropdownButtonFormField<String>(
                     value: _selectedBlood,
                     decoration: const InputDecoration(labelText: 'Blood Group'),
@@ -95,22 +93,27 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: FilledButton(
-            onPressed: _isSaving ? null : () async {
-              setState(() => _isSaving = true);
-              
-              final name = _nameController.text.trim();
-              if (name.isNotEmpty) {
-                 final initials = name.length > 1 ? name.substring(0,2).toUpperCase() : name.toUpperCase();
-                 context.read<ProfileCubit>().switchProfile(name, initials);
-              }
+            onPressed: _isSaving
+                ? null
+                : () async {
+                    setState(() => _isSaving = true);
 
-              // Simulate network/db delay
-              await Future.delayed(const Duration(milliseconds: 600));
-              widget.onComplete();
-            },
-            child: _isSaving 
-              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : const Text('Save Profile'),
+                    final name = _nameController.text.trim();
+                    if (name.isNotEmpty) {
+                      final initials = name.length > 1 ? name.substring(0, 2).toUpperCase() : name.toUpperCase();
+                      context.read<ProfileCubit>().switchProfile(
+                            name,
+                          );
+                    }
+
+                    // Simulate network/db delay
+                    await Future.delayed(const Duration(milliseconds: 600));
+                    widget.onComplete();
+                  },
+            child: _isSaving
+                ? const SizedBox(
+                    height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                : const Text('Save Profile'),
           ),
         ),
       ),

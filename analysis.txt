@@ -1,0 +1,154 @@
+Analyzing meditime...                                           
+
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/app/app_shell.dart:54:36 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/app/app_shell.dart:55:36 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/app/app_shell.dart:59:38 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/app/app_shell.dart:60:38 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/app/app_shell.dart:65:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/app/app_shell.dart:127:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/app/app_shell.dart:154:44 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/widgets/components.dart:41:38 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/widgets/components.dart:153:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/widgets/components.dart:222:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/widgets/components.dart:244:36 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/widgets/components.dart:440:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/widgets/components.dart:460:36 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/widgets/components.dart:469:38 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/widgets/components.dart:606:48 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/core/widgets/components.dart:887:64 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/features/caregiver/presentation/screens/caregiver_screen.dart:123:13 • deprecated_member_use
+   info • Field overrides a field inherited from 'EmergencyCard' • lib/features/emergency_card/data/models/emergencycard_model.dart:11:16 • overridden_fields
+   info • Field overrides a field inherited from 'EmergencyCard' • lib/features/emergency_card/data/models/emergencycard_model.dart:15:16 • overridden_fields
+   info • Field overrides a field inherited from 'EmergencyCard' • lib/features/emergency_card/data/models/emergencycard_model.dart:19:16 • overridden_fields
+   info • Field overrides a field inherited from 'EmergencyCard' • lib/features/emergency_card/data/models/emergencycard_model.dart:23:16 • overridden_fields
+   info • Field overrides a field inherited from 'EmergencyCard' • lib/features/emergency_card/data/models/emergencycard_model.dart:27:16 • overridden_fields
+   info • Field overrides a field inherited from 'EmergencyCard' • lib/features/emergency_card/data/models/emergencycard_model.dart:31:16 • overridden_fields
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/emergency_card/presentation/screens/emergency_screen.dart:43:61 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/emergency_card/presentation/screens/emergency_screen.dart:51:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/history/presentation/screens/history_screen.dart:45:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/history/presentation/screens/history_screen.dart:81:57 • deprecated_member_use
+   info • Use 'const' with the constructor to improve performance • lib/features/history/presentation/screens/history_screen.dart:121:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/history/presentation/screens/history_screen.dart:124:22 • prefer_const_constructors
+   info • Use 'const' literals as arguments to constructors of '@immutable' classes • lib/features/history/presentation/screens/history_screen.dart:125:27 • prefer_const_literals_to_create_immutables
+   info • Use 'const' with the constructor to improve performance • lib/features/history/presentation/screens/history_screen.dart:126:19 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/history/presentation/screens/history_screen.dart:134:19 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/history/presentation/screens/history_screen.dart:142:19 • prefer_const_constructors
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/history/presentation/screens/history_screen.dart:199:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/history/presentation/screens/history_screen.dart:241:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/history/presentation/screens/history_screen.dart:249:28 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/history/presentation/screens/history_screen.dart:270:42 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/home/presentation/screens/home_screen.dart:64:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/home/presentation/screens/home_screen.dart:87:53 • deprecated_member_use
+   info • Statements in an if should be enclosed in a block • lib/features/home/presentation/screens/home_screen.dart:189:29 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/features/home/presentation/screens/home_screen.dart:191:29 • curly_braces_in_flow_control_structures
+   info • Field overrides a field inherited from 'DoseEvent' • lib/features/medicines/data/models/dose_event_model.dart:11:16 • overridden_fields
+   info • Field overrides a field inherited from 'DoseEvent' • lib/features/medicines/data/models/dose_event_model.dart:15:16 • overridden_fields
+   info • Field overrides a field inherited from 'DoseEvent' • lib/features/medicines/data/models/dose_event_model.dart:19:18 • overridden_fields
+   info • Field overrides a field inherited from 'DoseEvent' • lib/features/medicines/data/models/dose_event_model.dart:23:19 • overridden_fields
+   info • Field overrides a field inherited from 'DoseEvent' • lib/features/medicines/data/models/dose_event_model.dart:27:20 • overridden_fields
+   info • Field overrides a field inherited from 'DoseEvent' • lib/features/medicines/data/models/dose_event_model.dart:31:17 • overridden_fields
+   info • Field overrides a field inherited from 'DoseEvent' • lib/features/medicines/data/models/dose_event_model.dart:35:17 • overridden_fields
+   info • Field overrides a field inherited from 'Medicine' • lib/features/medicines/data/models/medicine_model.dart:11:16 • overridden_fields
+   info • Field overrides a field inherited from 'Medicine' • lib/features/medicines/data/models/medicine_model.dart:15:16 • overridden_fields
+   info • Field overrides a field inherited from 'Medicine' • lib/features/medicines/data/models/medicine_model.dart:19:16 • overridden_fields
+   info • Field overrides a field inherited from 'Medicine' • lib/features/medicines/data/models/medicine_model.dart:23:16 • overridden_fields
+   info • Field overrides a field inherited from 'Medicine' • lib/features/medicines/data/models/medicine_model.dart:27:13 • overridden_fields
+   info • Field overrides a field inherited from 'Medicine' • lib/features/medicines/data/models/medicine_model.dart:31:13 • overridden_fields
+   info • Field overrides a field inherited from 'Medicine' • lib/features/medicines/data/models/medicine_model.dart:35:13 • overridden_fields
+   info • Field overrides a field inherited from 'Medicine' • lib/features/medicines/data/models/medicine_model.dart:39:14 • overridden_fields
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicines/presentation/screens/add_medicine_screen.dart:90:84 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/features/medicines/presentation/screens/add_medicine_screen.dart:248:17 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/features/medicines/presentation/screens/add_medicine_screen.dart:276:11 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicines/presentation/screens/add_medicine_screen.dart:329:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicines/presentation/screens/add_medicine_screen.dart:335:35 • deprecated_member_use
+   info • Use 'const' with the constructor to improve performance • lib/features/medicines/presentation/screens/add_medicine_screen.dart:385:9 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/medicines/presentation/screens/add_medicine_screen.dart:392:9 • prefer_const_constructors
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/features/medicines/presentation/screens/add_medicine_screen.dart:412:11 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicines/presentation/screens/add_medicine_screen.dart:427:42 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicines/presentation/screens/add_medicine_screen.dart:472:40 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicines/presentation/screens/add_medicine_screen.dart:474:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicines/presentation/screens/add_medicine_screen.dart:488:71 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicines/presentation/screens/add_medicine_screen.dart:579:53 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/features/medicines/presentation/screens/add_medicine_screen.dart:584:9 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicines/presentation/screens/add_medicine_screen.dart:614:42 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicines/presentation/screens/add_medicine_screen.dart:616:52 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicines/presentation/screens/add_medicine_screen.dart:616:89 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/features/medicines/presentation/screens/add_medicine_screen.dart:622:81 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicines/presentation/screens/add_medicine_screen.dart:645:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicines/presentation/screens/add_medicine_screen.dart:652:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/medicines/presentation/widgets/missed_dose_sheet.dart:147:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:229:48 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:239:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:250:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:256:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:292:61 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:323:46 • deprecated_member_use
+   info • Statements in an if should be enclosed in a block • lib/features/onboarding/presentation/screens/on_boarding_test.dart:397:19 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/features/onboarding/presentation/screens/on_boarding_test.dart:532:21 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/features/onboarding/presentation/screens/on_boarding_test.dart:534:21 • curly_braces_in_flow_control_structures
+   info • 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion • lib/features/onboarding/presentation/screens/on_boarding_test.dart:696:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:696:56 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion • lib/features/onboarding/presentation/screens/on_boarding_test.dart:699:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:699:60 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:759:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:764:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:879:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:881:54 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:1073:42 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:1199:61 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:1218:58 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:1296:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/on_boarding_test.dart:1422:40 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/splash_screen.dart:50:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/splash_screen.dart:60:61 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/onboarding/presentation/screens/splash_screen.dart:101:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/premium/presentation/screens/paywall_screen.dart:64:62 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/premium/presentation/screens/paywall_screen.dart:122:74 • deprecated_member_use
+   info • Field overrides a field inherited from 'Prescription' • lib/features/prescriptions/data/models/prescription_model.dart:11:16 • overridden_fields
+   info • Field overrides a field inherited from 'Prescription' • lib/features/prescriptions/data/models/prescription_model.dart:15:16 • overridden_fields
+   info • Field overrides a field inherited from 'Prescription' • lib/features/prescriptions/data/models/prescription_model.dart:19:18 • overridden_fields
+   info • Field overrides a field inherited from 'Prescription' • lib/features/prescriptions/data/models/prescription_model.dart:23:16 • overridden_fields
+   info • Field overrides a field inherited from 'Prescription' • lib/features/prescriptions/data/models/prescription_model.dart:27:17 • overridden_fields
+   info • Field overrides a field inherited from 'Prescription' • lib/features/prescriptions/data/models/prescription_model.dart:31:22 • overridden_fields
+  error • The argument type 'DateTime' can't be assigned to the parameter type 'String'.  • lib/features/prescriptions/presentation/screens/prescriptions_screen.dart:85:27 • argument_type_not_assignable
+  error • The getter 'isScanned' isn't defined for the type 'Prescription' • lib/features/prescriptions/presentation/screens/prescriptions_screen.dart:88:35 • undefined_getter
+  error • The getter 'isScanned' isn't defined for the type 'Prescription' • lib/features/prescriptions/presentation/screens/prescriptions_screen.dart:89:32 • undefined_getter
+   info • Field overrides a field inherited from 'Profile' • lib/features/profile/data/models/profile_model.dart:11:16 • overridden_fields
+   info • Field overrides a field inherited from 'Profile' • lib/features/profile/data/models/profile_model.dart:15:16 • overridden_fields
+   info • Field overrides a field inherited from 'Profile' • lib/features/profile/data/models/profile_model.dart:19:16 • overridden_fields
+   info • Field overrides a field inherited from 'Profile' • lib/features/profile/data/models/profile_model.dart:23:22 • overridden_fields
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/features/profile/presentation/screens/profile_setup_screen.dart:55:21 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/features/profile/presentation/screens/profile_setup_screen.dart:64:21 • deprecated_member_use
+warning • The value of the local variable 'initials' isn't used • lib/features/profile/presentation/screens/profile_setup_screen.dart:103:29 • unused_local_variable
+   info • Field overrides a field inherited from 'ReminderSettings' • lib/features/reminders/data/models/reminder_settings_model.dart:11:14 • overridden_fields
+   info • Field overrides a field inherited from 'ReminderSettings' • lib/features/reminders/data/models/reminder_settings_model.dart:15:13 • overridden_fields
+   info • Field overrides a field inherited from 'ReminderSettings' • lib/features/reminders/data/models/reminder_settings_model.dart:19:16 • overridden_fields
+   info • Field overrides a field inherited from 'ReminderSettings' • lib/features/reminders/data/models/reminder_settings_model.dart:23:14 • overridden_fields
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/features/reminders/presentation/screens/reminders_screen.dart:41:15 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/features/reminders/presentation/screens/reminders_screen.dart:50:15 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/features/reminders/presentation/screens/reminders_screen.dart:59:15 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/features/reminders/presentation/screens/reminders_screen.dart:68:15 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/features/reminders/presentation/screens/reminders_screen.dart:82:15 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/features/reminders/presentation/screens/reminders_screen.dart:125:15 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/reminders/presentation/screens/reminders_screen.dart:189:22 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/reminders/presentation/screens/reminders_screen.dart:227:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/reminders/presentation/screens/reminders_screen.dart:240:59 • deprecated_member_use
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/screens/settings_screen.dart:26:11 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/screens/settings_screen.dart:73:11 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/screens/settings_screen.dart:89:11 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/screens/settings_screen.dart:103:11 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/screens/settings_screen.dart:104:11 • prefer_const_constructors
+   info • Unnecessary 'const' keyword • lib/features/settings/presentation/screens/settings_screen.dart:130:19 • unnecessary_const
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/settings/presentation/screens/settings_screen.dart:190:31 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/settings/presentation/screens/settings_screen.dart:206:58 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/settings/presentation/screens/settings_screen.dart:220:73 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/settings/presentation/screens/settings_screen.dart:234:35 • deprecated_member_use
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/screens/settings_screen.dart:240:17 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/screens/settings_screen.dart:242:17 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/features/settings/presentation/screens/settings_screen.dart:244:17 • prefer_const_constructors
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/settings/presentation/screens/settings_screen.dart:264:58 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/settings/presentation/screens/settings_screen.dart:273:64 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/settings/presentation/screens/settings_screen.dart:323:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/settings/presentation/screens/settings_screen.dart:330:37 • deprecated_member_use
+
+150 issues found. (ran in 2.2s)

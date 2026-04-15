@@ -14,7 +14,7 @@ Meditime is a Flutter medication reminder app (Material 3, Bloc/Cubit, go_router
 
 ## P0 — Blockers (ship these first; nothing else matters)
 
-### 1. Wire real local notifications end-to-end
+### 1. Wire real local notifications end-to-end [DONE]
 
 **Why:** The entire product promise is "reminders that ring." Today reminders are UI theater.
 
@@ -36,7 +36,7 @@ Meditime is a Flutter medication reminder app (Material 3, Bloc/Cubit, go_router
 
 ---
 
-### 2. Persist everything with Hive
+### 2. Persist everything with Hive [DONE]
 
 **Why:** Users add meds, close app, data vanishes. No trust = no retention.
 
@@ -53,7 +53,7 @@ Meditime is a Flutter medication reminder app (Material 3, Bloc/Cubit, go_router
 
 ---
 
-### 3. Missed-dose reason modal
+### 3. Missed-dose reason modal [IN PROGRESS]
 
 **Why:** Already in your wireframe. Turns a negative event (missed dose) into structured data + an engagement moment.
 
@@ -71,7 +71,7 @@ Meditime is a Flutter medication reminder app (Material 3, Bloc/Cubit, go_router
 
 ## P1 — Retention mechanics (do these next)
 
-### 4. Refill prediction with CTA
+### 4. Refill prediction with CTA [NOT STARTED]
 
 **Why:** A static "low stock" bar is passive. "You'll run out Thursday" is actionable.
 
@@ -88,7 +88,7 @@ Meditime is a Flutter medication reminder app (Material 3, Bloc/Cubit, go_router
 
 ---
 
-### 5. Weekly adherence insight notification
+### 5. Weekly adherence insight notification [NOT STARTED]
 
 **Why:** Passive re-engagement. "You hit 94% this week, up from 81%" brings users back without nagging.
 
@@ -103,7 +103,7 @@ Meditime is a Flutter medication reminder app (Material 3, Bloc/Cubit, go_router
 
 ---
 
-### 6. Onboarding "aha moment"
+### 6. Onboarding "aha moment" [NOT STARTED]
 
 **Why:** Current onboarding is 4 slides of marketing. Users should feel value in <60 seconds.
 
@@ -125,13 +125,13 @@ Meditime is a Flutter medication reminder app (Material 3, Bloc/Cubit, go_router
 
 ---
 
-### 7. Fix empty states
+### 7. Fix empty states [DONE]
 
 **Why:** "No medicines scheduled" with no CTA is a dead end.
 
 **Touch:**
-- Home timeline empty state → illustrated, with "Add your first medicine" primary button.
-- Prescriptions empty → "Scan your prescription" primary + "Add manually" secondary.
+- Home timeline empty state → illustrated, with "Add your first medicine" primary button. [FIXED]
+- Prescriptions empty → "Scan your prescription" primary + "Add manually" secondary. [FIXED]
 - History empty → "Log your first dose to start tracking."
 
 Keep the existing empty-state widgets but add a primary CTA button to each.
@@ -140,7 +140,7 @@ Keep the existing empty-state widgets but add a primary CTA button to each.
 
 ## P2 — Differentiation (ship after P0/P1 are stable)
 
-### 8. Reposition the paywall
+### 8. Reposition the paywall [NOT STARTED]
 
 **Why:** Gating OCR + PDF + unlimited profiles before free tier works is backwards. Let people succeed, then upsell the *family* angle — which is the real moat vs Medisafe/MyTherapy.
 
@@ -157,7 +157,7 @@ Keep the existing empty-state widgets but add a primary CTA button to each.
 
 ---
 
-### 9. Caregiver read-only web view (true moat)
+### 9. Caregiver read-only web view (true moat) [NOT STARTED]
 
 **Why:** "Caregiver invite link, no app install required" is your killer feature — and it's currently just a screen with no backend.
 
@@ -177,7 +177,7 @@ Keep the existing empty-state widgets but add a primary CTA button to each.
 
 ---
 
-### 10. Doctor/clinic export
+### 10. Doctor/clinic export [NOT STARTED]
 
 **Why:** Natural extension of emergency card PDF. Doctors asking "are you taking your meds?" is the moment users wish they had this.
 
@@ -214,13 +214,13 @@ Each task is complete only when:
 
 Work strictly in this order — do not skip ahead:
 
-1. Task 2 (Hive persistence) — everything else depends on data surviving.
-2. Task 1 (Notifications) — the core product.
-3. Task 3 (Missed-dose modal) — depends on 1 + 2.
-4. Task 7 (Empty states) — small, ship while P1 is in flight.
-5. Task 6 (Onboarding aha) — depends on 1.
+1. Task 2 (Hive persistence) — **DONE**
+2. Task 1 (Notifications) — **DONE**
+3. Task 3 (Missed-dose modal) — **IN PROGRESS**
+4. Task 7 (Empty states) — **DONE**
+5. Task 6 (Onboarding aha) — **NEXT**
 6. Task 4 (Refill prediction) → Task 5 (Weekly insights).
-7. Task 8 (Paywall repositioning) — pure UI/copy, can ship anytime after P0.
+7. Task 8 (Paywall repositioning).
 8. Task 9 (Caregiver web view) → Task 10 (Doctor export).
 
 Stop after each task, run the acceptance checks, commit, then proceed.

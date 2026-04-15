@@ -1,5 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+const _kOnboardingComplete = 'has_completed_onboarding';
 
 class OnboardingState extends Equatable {
   final bool hasCompletedOnboarding;
@@ -58,7 +61,17 @@ class OnboardingState extends Equatable {
 }
 
 class OnboardingCubit extends Cubit<OnboardingState> {
-  OnboardingCubit() : super(const OnboardingState());
+  OnboardingCubit() : super(const OnboardingState()) {
+    _loadOnboardingState();
+  }
+
+  Future<void> _loadOnboardingState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final completed = prefs.getBool(_kOnboardingComplete) ?? false;
+    if (completed) {
+      emit(state.copyWith(hasCompletedOnboarding: true));
+    }
+  }
 
   void updateUserInfo({String? name, int? age, String? gender, String? goal}) {
     emit(state.copyWith(
@@ -85,7 +98,9 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     emit(state.copyWith(isPremium: isPremium));
   }
 
-  void completeOnboarding() {
+  Future<void> completeOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kOnboardingComplete, true);
     emit(state.copyWith(hasCompletedOnboarding: true));
   }
 }

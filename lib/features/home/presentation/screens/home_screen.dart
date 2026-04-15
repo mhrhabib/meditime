@@ -171,6 +171,12 @@ class HomeScreen extends StatelessWidget {
                                 Text('No medicines scheduled today',
                                     style: tt.bodyMedium
                                         ?.copyWith(color: cs.outline)),
+                                const SizedBox(height: 24),
+                                FilledButton.icon(
+                                  onPressed: () {}, // TODO: Navigate to add med
+                                  icon: const Icon(Icons.add_rounded),
+                                  label: const Text('Add your first medicine'),
+                                ),
                               ],
                             ),
                           ),

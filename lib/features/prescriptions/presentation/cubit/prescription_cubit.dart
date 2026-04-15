@@ -1,23 +1,9 @@
-// lib/cubits/prescription_cubit.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-class Prescription {
-  final String id;
-  final String doctorName;
-  final String date;
-  final String reason;
-  final List<String> medicines;
-  final bool isScanned;
-
-  Prescription({
-    required this.id,
-    required this.doctorName,
-    required this.date,
-    required this.reason,
-    required this.medicines,
-    required this.isScanned,
-  });
-}
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:meditime/core/storage/hive_boxes.dart';
+import 'package:meditime/features/prescriptions/domain/entities/prescription.dart';
+import 'package:meditime/features/prescriptions/data/models/prescription_model.dart';
+import 'dart:async';
 
 class PrescriptionState {
   final List<Prescription> prescriptions;
@@ -25,36 +11,66 @@ class PrescriptionState {
 }
 
 class PrescriptionCubit extends Cubit<PrescriptionState> {
-  PrescriptionCubit() : super(PrescriptionState(prescriptions: _mockPrescriptions));
+  final Box<PrescriptionModel> _prescriptionBox = Hive.box<PrescriptionModel>(HiveBoxes.prescriptions);
+  StreamSubscription? _boxSubscription;
 
-  static final List<Prescription> _mockPrescriptions = [
-    Prescription(
-      id: 'p1',
-      doctorName: 'Dr. Rahman',
-      date: '10 Mar 2026',
-      reason: 'Diabetes checkup',
-      medicines: ['Metformin', 'Vitamin D3', 'Amlodipine'],
-      isScanned: true,
-    ),
-    Prescription(
-      id: 'p2',
-      doctorName: 'Dr. Hossain',
-      date: '2 Jan 2026',
-      reason: 'BP followup',
-      medicines: [],
-      isScanned: false,
-    ),
-    Prescription(
-      id: 'p3',
-      doctorName: 'Dr. Alam',
-      date: '5 Nov 2025',
-      reason: 'General checkup',
-      medicines: ['Paracetamol'],
-      isScanned: true,
-    ),
-  ];
+  PrescriptionCubit() : super(const PrescriptionState()) {
+    _loadPrescriptions();
+    _boxSubscription = _prescriptionBox.watch().listen((_) {
+      _loadPrescriptions();
+    });
+  }
+
+  void _loadPrescriptions() {
+    final prescriptions = _prescriptionBox.values.toList();
+    if (prescriptions.isEmpty) {
+      _loadMockPrescriptions();
+    } else {
+      emit(PrescriptionState(prescriptions: prescriptions));
+    }
+  }
+
+  void _loadMockPrescriptions() {
+    final mocks = [
+      PrescriptionModel(
+        id: 'p1',
+        doctorName: 'Dr. Rahman',
+        date: DateTime(2026, 3, 10),
+        reason: 'Diabetes checkup',
+        medicines: const ['Metformin', 'Vitamin D3', 'Amlodipine'],
+      ),
+      PrescriptionModel(
+        id: 'p2',
+        doctorName: 'Dr. Hossain',
+        date: DateTime(2026, 1, 2),
+        reason: 'BP followup',
+        medicines: const [],
+      ),
+      PrescriptionModel(
+        id: 'p3',
+        doctorName: 'Dr. Alam',
+        date: DateTime(2025, 11, 5),
+        reason: 'General checkup',
+        medicines: const ['Paracetamol'],
+      ),
+    ];
+    for (var mock in mocks) {
+      _prescriptionBox.put(mock.id, mock);
+    }
+  }
 
   void addPrescription(Prescription rx) {
-    emit(PrescriptionState(prescriptions: List.from(state.prescriptions)..add(rx)));
+    final model = PrescriptionModel.fromEntity(rx);
+    _prescriptionBox.put(model.id, model);
+  }
+
+  void deletePrescription(String id) {
+    _prescriptionBox.delete(id);
+  }
+
+  @override
+  Future<void> close() {
+    _boxSubscription?.cancel();
+    return super.close();
   }
 }

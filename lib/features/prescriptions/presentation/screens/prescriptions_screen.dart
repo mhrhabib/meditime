@@ -82,7 +82,7 @@ class PrescriptionsScreen extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 12.0),
                   child: PrescriptionCard(
                     doctorName: rx.doctorName,
-                    date: rx.date,
+                    date: _formatDate(rx.date),
                     reason: rx.reason,
                     medicines: rx.medicines,
                     isScanned: rx.isScanned,
@@ -95,5 +95,13 @@ class PrescriptionsScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }
