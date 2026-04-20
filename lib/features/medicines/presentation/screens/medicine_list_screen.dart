@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:meditime/core/widgets/components.dart';
 import 'package:meditime/features/medicines/presentation/cubit/medicine_cubit.dart';
 
@@ -12,6 +13,15 @@ class MedicineListScreen extends StatefulWidget {
 }
 
 class _MedicineListScreenState extends State<MedicineListScreen> {
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -21,40 +31,71 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
       length: 4,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('My Medicines'),
+          title: Text('My Medicines', style: TextStyle(fontSize: 20.sp)),
           centerTitle: false,
           elevation: 0,
           scrolledUnderElevation: 2,
+          actions: [
+            IconButton(
+              icon: Icon(Icons.sort_rounded, size: 24.r),
+              onPressed: () {},
+            ),
+          ],
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(48),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: TabBar(
-                isScrollable: true,
-                tabAlignment: TabAlignment.start,
-                dividerColor: Colors.transparent,
-                indicatorSize: TabBarIndicatorSize.label,
-                indicatorWeight: 3,
-                labelColor: cs.primary,
-                unselectedLabelColor: cs.onSurfaceVariant,
-                labelStyle: tt.labelLarge?.copyWith(fontWeight: FontWeight.w700),
-                unselectedLabelStyle: tt.labelLarge,
-                tabs: const [
-                  Tab(text: 'All'),
-                  Tab(text: 'Active'),
-                  Tab(text: 'Low Stock'),
-                  Tab(text: 'Completed'),
-                ],
-              ),
+            preferredSize: Size.fromHeight(108.h),
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 12.h),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (v) => setState(() => _searchQuery = v),
+                    style: TextStyle(fontSize: 14.sp),
+                    decoration: InputDecoration(
+                      hintText: 'Search medicines...',
+                      hintStyle: TextStyle(fontSize: 14.sp),
+                      prefixIcon: Icon(Icons.search_rounded, size: 20.r),
+                      filled: true,
+                      fillColor: cs.surfaceContainerHigh,
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(vertical: 10.h),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14.r),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TabBar(
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.start,
+                    dividerColor: Colors.transparent,
+                    indicatorSize: TabBarIndicatorSize.label,
+                    indicatorWeight: 3.h,
+                    labelColor: cs.primary,
+                    unselectedLabelColor: cs.onSurfaceVariant,
+                    labelStyle: tt.labelLarge?.copyWith(fontWeight: FontWeight.w700, fontSize: 13.sp),
+                    unselectedLabelStyle: tt.labelLarge?.copyWith(fontSize: 13.sp),
+                    tabs: const [
+                      Tab(text: 'All'),
+                      Tab(text: 'Active'),
+                      Tab(text: 'Low Stock'),
+                      Tab(text: 'Completed'),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        body: const TabBarView(
+        body: TabBarView(
           children: [
-            _MedicineListTab(filter: 'all'),
-            _MedicineListTab(filter: 'running'),
-            _MedicineListTab(filter: 'low'),
-            _MedicineListTab(filter: 'done'),
+            _MedicineListTab(filter: 'all', searchQuery: _searchQuery),
+            _MedicineListTab(filter: 'running', searchQuery: _searchQuery),
+            _MedicineListTab(filter: 'low', searchQuery: _searchQuery),
+            _MedicineListTab(filter: 'done', searchQuery: _searchQuery),
           ],
         ),
       ),
@@ -64,13 +105,17 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
 
 class _MedicineListTab extends StatelessWidget {
   final String filter;
-  const _MedicineListTab({this.filter = 'all'});
+  final String searchQuery;
+  const _MedicineListTab({this.filter = 'all', this.searchQuery = ''});
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MedicineCubit, MedicineState>(
       builder: (context, state) {
         final filteredMeds = state.medicines.where((med) {
+          final matchesSearch = med.name.toLowerCase().contains(searchQuery.toLowerCase());
+          if (!matchesSearch) return false;
+
           if (filter == 'running') return med.stockRemaining > 0 && !med.isLowStock;
           if (filter == 'low') return med.isLowStock;
           if (filter == 'done') return med.stockRemaining == 0;
@@ -78,19 +123,24 @@ class _MedicineListTab extends StatelessWidget {
         }).toList();
 
         if (filteredMeds.isEmpty) {
-          return const Center(child: Text('No medicines found.'));
+          return Center(
+            child: Text(
+              'No medicines found.',
+              style: TextStyle(fontSize: 14.sp, color: Theme.of(context).colorScheme.outline),
+            ),
+          );
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: filteredMeds.length + 1, // +1 for bottom padding
+          padding: EdgeInsets.all(16.r),
+          itemCount: filteredMeds.length + 1,
           itemBuilder: (context, index) {
             if (index == filteredMeds.length) {
-              return const SizedBox(height: 80);
+              return SizedBox(height: 80.h);
             }
             final med = filteredMeds[index];
             return Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
+              padding: EdgeInsets.only(bottom: 12.h),
               child: MedicineCard(
                 name: med.name,
                 type: med.type,
@@ -99,8 +149,24 @@ class _MedicineListTab extends StatelessWidget {
                 stockTotal: med.stockTotal,
                 daysLeft: med.daysLeft,
                 isLowStock: med.isLowStock,
-                onEdit: () {},
-                onRefill: med.isLowStock ? () {} : null,
+                onEdit: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Edit flow for ${med.name} coming soon!')));
+                },
+                onRefill: med.isLowStock
+                    ? () {
+                        context.read<MedicineCubit>().updateMedicine(med.copyWith(
+                            stockRemaining: med.stockRemaining + 30,
+                            isLowStock: false));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text('✅ Refilled ${med.name} (+30 units)')));
+                      }
+                    : null,
+                onDelete: () {
+                  context.read<MedicineCubit>().deleteMedicine(med.id);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('🗑️ Removed ${med.name} from schedule')));
+                },
               ),
             );
           },
@@ -109,4 +175,3 @@ class _MedicineListTab extends StatelessWidget {
     );
   }
 }
-

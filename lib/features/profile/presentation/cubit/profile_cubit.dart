@@ -1,9 +1,9 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:meditime/core/storage/hive_boxes.dart';
-import 'package:meditime/features/profile/domain/entities/profile.dart';
-import 'package:meditime/features/profile/data/models/profile_model.dart';
 import 'dart:async';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:meditime/features/profile/data/repositories/profile_repository_impl.dart';
+import 'package:meditime/features/profile/domain/entities/profile.dart';
+import 'package:meditime/features/profile/domain/repositories/profile_repository.dart';
 
 class ProfileState {
   final Profile? activeProfile;
@@ -14,59 +14,49 @@ class ProfileState {
     this.profiles = const [],
   });
 
-  // Getters for legacy compatibility if needed
   String get activeProfileName => activeProfile?.name ?? 'Guest';
   String get initials => activeProfile?.initials ?? 'G';
   List<String> get dependents => activeProfile?.dependents ?? [];
 }
 
 class ProfileCubit extends Cubit<ProfileState> {
-  final Box<ProfileModel> _profileBox = Hive.box<ProfileModel>(HiveBoxes.profiles);
-  StreamSubscription? _boxSubscription;
+  final ProfileRepository _repo;
+  StreamSubscription? _sub;
 
-  ProfileCubit() : super(const ProfileState()) {
-    _loadProfiles();
-    _boxSubscription = _profileBox.watch().listen((_) {
-      _loadProfiles();
-    });
+  ProfileCubit({ProfileRepository? repo})
+      : _repo = repo ?? ProfileRepositoryImpl.instance,
+        super(const ProfileState()) {
+    _sub = _repo.watchAll().listen(_onProfiles);
   }
 
-  void _loadProfiles() {
-    final profiles = _profileBox.values.toList();
+  void _onProfiles(List<Profile> profiles) {
     if (profiles.isEmpty) {
-      _loadMockProfile();
-    } else {
-      // For now, assume the first profile is active
-      emit(ProfileState(
-        activeProfile: profiles.first,
-        profiles: profiles,
-      ));
+      emit(const ProfileState());
+      return;
     }
+    final activeId = state.activeProfile?.id ?? profiles.first.id;
+    final active = profiles.firstWhere((p) => p.id == activeId,
+        orElse: () => profiles.first);
+    emit(ProfileState(activeProfile: active, profiles: profiles));
   }
 
-  void _loadMockProfile() {
-    const defaultProfile = ProfileModel(
-      id: 'default',
-      name: 'Rafiq (me)',
-      initials: 'RA',
-      dependents: ['Mum', 'Son'],
-    );
-    _profileBox.put(defaultProfile.id, defaultProfile);
+  Future<void> addProfile(String name) async {
+    final id = DateTime.now().millisecondsSinceEpoch.toString();
+    final initials = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'P';
+    await _repo.upsert(Profile(id: id, name: name, initials: initials));
   }
 
-  void switchProfile(String id) {
-    final profile = _profileBox.get(id);
-    if (profile != null) {
-      emit(ProfileState(
-        activeProfile: profile,
-        profiles: state.profiles,
-      ));
-    }
+  Future<void> switchProfile(String id) async {
+    final profiles = await _repo.getAll();
+    if (profiles.isEmpty) return;
+    final active = profiles.firstWhere((p) => p.id == id,
+        orElse: () => profiles.first);
+    emit(ProfileState(activeProfile: active, profiles: profiles));
   }
 
   @override
   Future<void> close() {
-    _boxSubscription?.cancel();
+    _sub?.cancel();
     return super.close();
   }
 }

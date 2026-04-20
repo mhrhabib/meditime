@@ -7,6 +7,7 @@ class NotificationChannels {
   static const String medsCritical = 'meds_critical';
   static const String refillAlerts = 'refill_alerts';
   static const String weeklyInsights = 'weekly_insights';
+  static const String emergencyCard = 'emergency_card';
 
   /// All channels — register these on Android at startup.
   static List<AndroidNotificationChannel> get all => [
@@ -38,6 +39,13 @@ class NotificationChannels {
           'Weekly Adherence Insights',
           description: 'Your weekly medication adherence summary.',
           importance: Importance.low,
+        ),
+        const AndroidNotificationChannel(
+          emergencyCard,
+          'Emergency Card (Persistent)',
+          description: 'Fast access to your vital medical info from the lock screen.',
+          importance: Importance.low,
+          showBadge: false,
         ),
       ];
 }

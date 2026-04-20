@@ -1,9 +1,9 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:meditime/core/storage/hive_boxes.dart';
-import 'package:meditime/features/prescriptions/domain/entities/prescription.dart';
-import 'package:meditime/features/prescriptions/data/models/prescription_model.dart';
 import 'dart:async';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:meditime/features/prescriptions/data/repositories/prescription_repository_impl.dart';
+import 'package:meditime/features/prescriptions/domain/entities/prescription.dart';
+import 'package:meditime/features/prescriptions/domain/repositories/prescription_repository.dart';
 
 class PrescriptionState {
   final List<Prescription> prescriptions;
@@ -11,66 +11,32 @@ class PrescriptionState {
 }
 
 class PrescriptionCubit extends Cubit<PrescriptionState> {
-  final Box<PrescriptionModel> _prescriptionBox = Hive.box<PrescriptionModel>(HiveBoxes.prescriptions);
-  StreamSubscription? _boxSubscription;
+  final PrescriptionRepository _repo;
+  StreamSubscription? _sub;
 
-  PrescriptionCubit() : super(const PrescriptionState()) {
-    _loadPrescriptions();
-    _boxSubscription = _prescriptionBox.watch().listen((_) {
-      _loadPrescriptions();
+  PrescriptionCubit({PrescriptionRepository? repo})
+      : _repo = repo ?? PrescriptionRepositoryImpl.instance,
+        super(const PrescriptionState()) {
+    _sub = _repo.watchAll().listen((prescriptions) {
+      emit(PrescriptionState(prescriptions: prescriptions));
     });
   }
 
-  void _loadPrescriptions() {
-    final prescriptions = _prescriptionBox.values.toList();
-    if (prescriptions.isEmpty) {
-      _loadMockPrescriptions();
-    } else {
-      emit(PrescriptionState(prescriptions: prescriptions));
-    }
+  Future<void> addPrescription(Prescription rx) async {
+    await _repo.upsert(rx);
   }
 
-  void _loadMockPrescriptions() {
-    final mocks = [
-      PrescriptionModel(
-        id: 'p1',
-        doctorName: 'Dr. Rahman',
-        date: DateTime(2026, 3, 10),
-        reason: 'Diabetes checkup',
-        medicines: const ['Metformin', 'Vitamin D3', 'Amlodipine'],
-      ),
-      PrescriptionModel(
-        id: 'p2',
-        doctorName: 'Dr. Hossain',
-        date: DateTime(2026, 1, 2),
-        reason: 'BP followup',
-        medicines: const [],
-      ),
-      PrescriptionModel(
-        id: 'p3',
-        doctorName: 'Dr. Alam',
-        date: DateTime(2025, 11, 5),
-        reason: 'General checkup',
-        medicines: const ['Paracetamol'],
-      ),
-    ];
-    for (var mock in mocks) {
-      _prescriptionBox.put(mock.id, mock);
-    }
+  Future<void> updatePrescription(Prescription rx) async {
+    await _repo.upsert(rx);
   }
 
-  void addPrescription(Prescription rx) {
-    final model = PrescriptionModel.fromEntity(rx);
-    _prescriptionBox.put(model.id, model);
-  }
-
-  void deletePrescription(String id) {
-    _prescriptionBox.delete(id);
+  Future<void> deletePrescription(String id) async {
+    await _repo.delete(id);
   }
 
   @override
   Future<void> close() {
-    _boxSubscription?.cancel();
+    _sub?.cancel();
     return super.close();
   }
 }

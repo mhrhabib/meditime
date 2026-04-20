@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:meditime/features/profile/presentation/cubit/profile_cubit.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
@@ -19,50 +20,67 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Setup Profile'),
+        title: Text('Setup Profile', style: TextStyle(fontSize: 20.sp)),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(24.r),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Personal Details',
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: tt.headlineSmall?.copyWith(fontSize: 20.sp, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Text(
               'Let\'s build your medical profile for accurate reminders.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
+              style: tt.bodyMedium?.copyWith(
+                    color: cs.outline,
+                    fontSize: 14.sp,
                   ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32.h),
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
+              style: TextStyle(fontSize: 15.sp),
+              decoration: InputDecoration(
                 labelText: 'Full Name',
-                prefixIcon: Icon(Icons.person),
+                labelStyle: TextStyle(fontSize: 14.sp),
+                prefixIcon: Icon(Icons.person, size: 24.r),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h),
             Row(
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: _selectedGender,
-                    decoration: const InputDecoration(labelText: 'Gender'),
+                    style: TextStyle(fontSize: 14.sp, color: cs.onSurface),
+                    decoration: InputDecoration(
+                      labelText: 'Gender',
+                      labelStyle: TextStyle(fontSize: 14.sp),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                    ),
                     items: ['Male', 'Female', 'Other'].map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
                     onChanged: (v) => setState(() => _selectedGender = v!),
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16.w),
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: _selectedBlood,
-                    decoration: const InputDecoration(labelText: 'Blood Group'),
+                    style: TextStyle(fontSize: 14.sp, color: cs.onSurface),
+                    decoration: InputDecoration(
+                      labelText: 'Blood Group',
+                      labelStyle: TextStyle(fontSize: 14.sp),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                    ),
                     items: ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-']
                         .map((g) => DropdownMenuItem(value: g, child: Text(g)))
                         .toList(),
@@ -71,19 +89,25 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            const TextField(
+            SizedBox(height: 20.h),
+            TextField(
+              style: TextStyle(fontSize: 15.sp),
               decoration: InputDecoration(
                 labelText: 'Health Conditions (e.g. Diabetes, BP)',
-                prefixIcon: Icon(Icons.medical_information),
+                labelStyle: TextStyle(fontSize: 14.sp),
+                prefixIcon: Icon(Icons.medical_information, size: 24.r),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
               ),
               maxLines: 2,
             ),
-            const SizedBox(height: 20),
-            const TextField(
+            SizedBox(height: 20.h),
+            TextField(
+              style: TextStyle(fontSize: 15.sp),
               decoration: InputDecoration(
                 labelText: 'Allergies',
-                prefixIcon: Icon(Icons.warning_amber),
+                labelStyle: TextStyle(fontSize: 14.sp),
+                prefixIcon: Icon(Icons.warning_amber, size: 24.r),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
               ),
             ),
           ],
@@ -91,7 +115,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.all(24.r),
           child: FilledButton(
             onPressed: _isSaving
                 ? null
@@ -100,20 +124,20 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
                     final name = _nameController.text.trim();
                     if (name.isNotEmpty) {
-                      final initials = name.length > 1 ? name.substring(0, 2).toUpperCase() : name.toUpperCase();
-                      context.read<ProfileCubit>().switchProfile(
-                            name,
-                          );
+                      await context.read<ProfileCubit>().addProfile(name);
                     }
 
-                    // Simulate network/db delay
                     await Future.delayed(const Duration(milliseconds: 600));
                     widget.onComplete();
                   },
+            style: FilledButton.styleFrom(
+              minimumSize: Size(double.infinity, 56.h),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+            ),
             child: _isSaving
-                ? const SizedBox(
-                    height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : const Text('Save Profile'),
+                ? SizedBox(
+                    height: 20.r, width: 20.r, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                : Text('Save Profile', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
           ),
         ),
       ),

@@ -3,19 +3,89 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz_data;
+import '../storage/app_database.dart';
+import '../storage/data_mappers.dart';
+import '../../features/medicines/domain/entities/medicine.dart';
+import '../../features/history/domain/entities/dose_log.dart';
+import '../../features/medicines/domain/refill_predictor.dart';
 import 'notification_channels.dart';
 
 /// Callback for handling notification taps — must be top-level.
 @pragma('vm:entry-point')
 void onDidReceiveNotificationResponse(NotificationResponse response) {
-  // Will be wired to router / dose-event handler later.
-  debugPrint('[NotificationService] tapped: ${response.payload}');
+  _handleNotificationAction(response.actionId, response.payload);
 }
 
 /// Callback for background notification actions (Take / Snooze / Skip).
 @pragma('vm:entry-point')
 void onDidReceiveBackgroundNotificationResponse(NotificationResponse response) {
-  debugPrint('[NotificationService] background action: ${response.actionId} | ${response.payload}');
+  _handleNotificationAction(response.actionId, response.payload);
+}
+
+/// Process identifying which medicine and what action to take.
+void _handleNotificationAction(String? actionId, String? payload) async {
+  if (payload == null) return;
+
+  final db = AppDatabase.instance;
+  
+  // Payload format: "medicineId|doseIdx|scheduledTimeIso"
+  final parts = payload.split('|');
+  final medId = parts[0];
+  final scheduledStr = parts.length > 2 ? parts[2] : (parts.length > 1 ? parts[1] : null);
+
+  debugPrint('[NotificationService] Action: $actionId for Medicine: $medId');
+
+  if (actionId == 'take') {
+    final allMeds = await db.getAllMedicines();
+    final medData = allMeds.firstWhere((m) => m.id == medId, orElse: () => throw Exception('Medicine not found'));
+    final med = DataMappers.medicineFromTable(medData);
+
+    if (med != null) {
+      // 1. Decrement stock
+      final newStock = (med.stockRemaining - 1).clamp(0, med.stockTotal);
+
+      // 2. Predict refill
+      final dosesPerDay = RefillPredictor.parseDosesPerDay(med.schedule);
+      final prediction = RefillPredictor.predict(currentStock: newStock, dosesPerDay: dosesPerDay);
+
+      final updatedMed = med.copyWith(
+        stockRemaining: newStock,
+        daysLeft: prediction.daysRemaining,
+        isLowStock: prediction.isWarning,
+      );
+      await db.insertMedicine(DataMappers.medicineToTable(updatedMed));
+
+      // 3. Log event
+      final log = DoseLog(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        medicineId: medId,
+        medicineName: med.name,
+        dateTime: DateTime.now(),
+        status: DoseStatus.taken,
+      );
+      await db.insertDoseLog(DataMappers.doseLogToTable(log));
+      debugPrint('[NotificationService] Recorded dose for $medId');
+
+      // 4. Fire Refill Alert if hit threshold
+      if (prediction.daysRemaining == 3 || prediction.daysRemaining == 1 || newStock == 0) {
+        await NotificationService.instance.showNow(
+          id: medId.hashCode + 999,
+          title: '⚠️ Refill Reminder: ${med.name}',
+          body: prediction.message,
+          channelId: NotificationChannels.refillAlerts,
+        );
+      }
+    }
+  } else if (actionId == 'skip') {
+    final log = DoseLog(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      medicineId: medId,
+      medicineName: 'Unknown', // Ideally we'd fetch it, but skipping is often quick
+      dateTime: DateTime.now(),
+      status: DoseStatus.skipped,
+    );
+    await db.insertDoseLog(DataMappers.doseLogToTable(log));
+  }
 }
 
 /// Singleton wrapper around flutter_local_notifications.
@@ -88,6 +158,15 @@ class NotificationService {
       return granted ?? false;
     }
     return false;
+  }
+
+  /// Request exact-alarm permission (required on Android 12+ for reliable
+  /// scheduled reminders). No-op on iOS.
+  Future<bool> requestExactAlarmsPermission() async {
+    if (!Platform.isAndroid) return true;
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final granted = await androidPlugin?.requestExactAlarmsPermission();
+    return granted ?? false;
   }
 
   /// Schedule a notification at an exact time (uses zonedSchedule).
@@ -178,6 +257,48 @@ class NotificationService {
   /// Cancel a single notification by ID.
   Future<void> cancel(int id) async {
     await _plugin.cancel(id);
+  }
+
+  /// Show a persistent notification for the Emergency Card.
+  Future<void> showEmergencyCard({
+    required String name,
+    required String bloodType,
+    required String emergencyContact,
+  }) async {
+    final androidDetails = AndroidNotificationDetails(
+      NotificationChannels.emergencyCard,
+      'Emergency Card (Persistent)',
+      importance: Importance.low,
+      priority: Priority.low,
+      ongoing: true, // Persistent
+      autoCancel: false,
+      showWhen: false,
+      category: AndroidNotificationCategory.status,
+      styleInformation: BigTextStyleInformation(
+        'Blood Type: $bloodType\nEmergency Contact: $emergencyContact',
+        contentTitle: '🚑 Emergency Medical Card: $name',
+        summaryText: 'Swipe down for full details',
+      ),
+    );
+
+    const darwinDetails = DarwinNotificationDetails(
+      presentAlert: false,
+      presentBadge: false,
+      presentSound: false,
+    );
+
+    final details = NotificationDetails(
+      android: androidDetails,
+      iOS: darwinDetails,
+    );
+
+    await _plugin.show(
+      888, // Constant ID for emergency card
+      '🚑 Emergency Medical Card: $name',
+      'Blood Type: $bloodType · Contact: $emergencyContact',
+      details,
+      payload: 'emergency_card',
+    );
   }
 
   /// Cancel all notifications.

@@ -1,11 +1,16 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:meditime/core/storage/hive_boxes.dart';
-import 'package:meditime/features/medicines/domain/entities/medicine.dart';
-import 'package:meditime/features/medicines/data/models/medicine_model.dart';
-import 'package:meditime/features/medicines/data/medicine_scheduler.dart';
 import 'dart:async';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:meditime/core/notifications/notification_channels.dart';
+import 'package:meditime/core/notifications/notification_service.dart';
+import 'package:meditime/features/history/data/repositories/history_repository_impl.dart';
+import 'package:meditime/features/history/domain/entities/dose_log.dart';
+import 'package:meditime/features/history/domain/repositories/history_repository.dart';
+import 'package:meditime/features/medicines/data/medicine_scheduler.dart';
+import 'package:meditime/features/medicines/data/repositories/medicine_repository_impl.dart';
+import 'package:meditime/features/medicines/domain/entities/medicine.dart';
+import 'package:meditime/features/medicines/domain/refill_predictor.dart';
+import 'package:meditime/features/medicines/domain/repositories/medicine_repository.dart';
 
 class MedicineState {
   final List<Medicine> medicines;
@@ -13,91 +18,92 @@ class MedicineState {
 }
 
 class MedicineCubit extends Cubit<MedicineState> {
-  final Box<MedicineModel> _medicineBox = Hive.box<MedicineModel>(HiveBoxes.medicines);
-  StreamSubscription? _boxSubscription;
+  final MedicineRepository _repo;
+  final HistoryRepository _historyRepo;
+  StreamSubscription? _sub;
+  String _currentProfileId = 'me';
 
-  MedicineCubit() : super(const MedicineState()) {
-    _loadMedicines();
-    _boxSubscription = _medicineBox.watch().listen((_) {
-      _loadMedicines();
-    });
+  MedicineCubit({
+    MedicineRepository? repo,
+    HistoryRepository? historyRepo,
+  })  : _repo = repo ?? MedicineRepositoryImpl.instance,
+        _historyRepo = historyRepo ?? HistoryRepositoryImpl.instance,
+        super(const MedicineState()) {
+    _sub = _repo.watchAll().listen(_onMedicines);
   }
 
-  void _loadMedicines() async {
-    final medicines = _medicineBox.values.toList();
-    if (medicines.isEmpty) {
-      final prefs = await SharedPreferences.getInstance();
-      final seeded = prefs.getBool('meds_seeded') ?? false;
-      if (!seeded) {
-        await prefs.setBool('meds_seeded', true);
-        _loadMockData();
-        return;
-      }
-    }
-    emit(MedicineState(medicines: medicines));
+  void setProfile(String profileId) async {
+    _currentProfileId = profileId;
+    final all = await _repo.getAll();
+    _onMedicines(all);
   }
 
-  void _loadMockData() {
-    final mocks = [
-        const MedicineModel(
-          id: '1',
-          name: 'Metformin 500mg',
-          type: 'tablet',
-          schedule: 'Daily · 3× · After meal',
-          stockRemaining: 21,
-          stockTotal: 30,
-          daysLeft: 7,
-          isLowStock: false,
-        ),
-        const MedicineModel(
-          id: '2',
-          name: 'Paracetamol 650mg',
-          type: 'tablet',
-          schedule: 'Daily · 2× · After meal',
-          stockRemaining: 6,
-          stockTotal: 30,
-          daysLeft: 3,
-          isLowStock: true,
-        ),
-        const MedicineModel(
-          id: '3',
-          name: 'Vitamin D3',
-          type: 'tablet',
-          schedule: 'Daily · 1× · After lunch',
-          stockRemaining: 30,
-          stockTotal: 30,
-          daysLeft: 30,
-          isLowStock: false,
-        ),
-      ];
-      for (var mock in mocks) {
-        _medicineBox.put(mock.id, mock);
-      }
+  void _onMedicines(List<Medicine> all) {
+    final filtered = all
+        .where((m) => (m.profileId ?? 'me') == _currentProfileId)
+        .toList();
+    emit(MedicineState(medicines: filtered));
   }
 
   Future<void> addMedicine(Medicine med) async {
-    final model = MedicineModel.fromEntity(med);
-    await _medicineBox.put(model.id, model);
+    await _repo.upsert(med);
     await MedicineScheduler.scheduleForMedicine(med);
   }
 
   Future<void> updateMedicine(Medicine med) async {
-    final model = MedicineModel.fromEntity(med);
-    await _medicineBox.put(model.id, model);
+    await _repo.upsert(med);
     await MedicineScheduler.rescheduleForMedicine(med);
   }
 
   Future<void> deleteMedicine(String id) async {
-    final med = _medicineBox.get(id);
+    final med = await _repo.getById(id);
     if (med != null) {
       await MedicineScheduler.cancelForMedicine(med);
     }
-    await _medicineBox.delete(id);
+    await _repo.delete(id);
+  }
+
+  Future<void> takeDose(String medicineId, {DateTime? scheduledTime}) async {
+    final med = await _repo.getById(medicineId);
+    if (med == null) return;
+
+    final newStock = (med.stockRemaining - 1).clamp(0, med.stockTotal);
+    final dosesPerDay = RefillPredictor.parseDosesPerDay(med.schedule);
+    final prediction = RefillPredictor.predict(
+      currentStock: newStock,
+      dosesPerDay: dosesPerDay,
+    );
+
+    final updated = med.copyWith(
+      stockRemaining: newStock,
+      daysLeft: prediction.daysRemaining,
+      isLowStock: prediction.isWarning,
+    );
+    await _repo.upsert(updated);
+
+    await _historyRepo.add(DoseLog(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      medicineId: medicineId,
+      medicineName: med.name,
+      dateTime: DateTime.now(),
+      status: DoseStatus.taken,
+    ));
+
+    if (prediction.daysRemaining == 3 ||
+        prediction.daysRemaining == 1 ||
+        newStock == 0) {
+      await NotificationService.instance.showNow(
+        id: medicineId.hashCode + 999,
+        title: '⚠️ Refill Reminder: ${med.name}',
+        body: prediction.message,
+        channelId: NotificationChannels.refillAlerts,
+      );
+    }
   }
 
   @override
   Future<void> close() {
-    _boxSubscription?.cancel();
+    _sub?.cancel();
     return super.close();
   }
 }

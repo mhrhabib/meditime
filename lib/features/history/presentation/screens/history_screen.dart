@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:meditime/core/theme/app_theme.dart';
 import 'package:meditime/core/widgets/components.dart';
+import 'package:meditime/features/history/presentation/cubit/history_cubit.dart';
+import 'package:meditime/features/profile/presentation/cubit/profile_cubit.dart';
 
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
@@ -10,268 +14,208 @@ class HistoryScreen extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('History & Stats'),
-        centerTitle: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.calendar_month_outlined),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Time Period Toggle ──────────────────────────────────
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: cs.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: cs.primary,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: cs.primary.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      alignment: Alignment.center,
-                      child: const Text('This month', 
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
-                    ),
-                  ),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () {},
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        alignment: Alignment.center,
-                        child: Text('All time', 
-                          style: TextStyle(color: cs.onSurfaceVariant, fontWeight: FontWeight.w700, fontSize: 13)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+        appBar: AppBar(
+          title: Text('History & Stats', style: TextStyle(fontSize: 20.sp)),
+          centerTitle: false,
+          actions: [
+            IconButton(
+              icon: Icon(Icons.picture_as_pdf_rounded, size: 24.r),
+              onPressed: () {
+                final profileName = context.read<ProfileCubit>().state.activeProfileName;
+                context.read<HistoryCubit>().exportPdfReport(profileName);
+              },
             ),
-            const SizedBox(height: 24),
-            
-            // ── Key Stats ──────────────────────────────────────────
-            Row(
-              children: [
-                Expanded(
-                  child: StatCard(
-                    value: '92%',
-                    label: 'Adherence',
-                    icon: Icons.analytics_rounded,
-                    containerColor: cs.primaryContainer.withOpacity(0.6),
-                    contentColor: cs.primary,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: StatCard(
-                    value: '84',
-                    label: 'Taken',
-                    icon: Icons.check_circle_rounded,
-                    containerColor: StatusColors.getTakenContainer(context),
-                    contentColor: StatusColors.getTaken(context),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: StatCard(
-                    value: '3',
-                    label: 'Missed',
-                    icon: Icons.cancel_rounded,
-                    containerColor: StatusColors.getMissedContainer(context),
-                    contentColor: StatusColors.getMissed(context),
-                  ),
-                ),
-              ],
+            IconButton(
+              icon: Icon(Icons.calendar_month_outlined, size: 24.r),
+              onPressed: () {},
             ),
-            const SizedBox(height: 32),
-            
-            // ── Per-medicine adherence ──────────────────────────────
-            const SectionHeader(title: 'Per-medicine adherence'),
-            const SizedBox(height: 8),
-            _buildAdherenceBar(context, 'Metformin 500mg', 0.95),
-            _buildAdherenceBar(context, 'Amlodipine 5mg', 0.88),
-            _buildAdherenceBar(context, 'Vitamin D3', 0.65),
-
-            const SizedBox(height: 32),
-
-            // ── Health Vitals ────────────────────────────────────────
-            SectionHeader(title: 'Health Vitals', action: '+ Add log', onAction: () {}),
-            const SizedBox(height: 12),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              clipBehavior: Clip.none,
-              child: Row(
-                children: [
-                  _VitalCard(
-                    title: 'Blood sugar', 
-                    value: '5.4', 
-                    unit: 'mmol/L', 
-                    status: 'Normal', 
-                    icon: Icons.water_drop_rounded, 
-                    color: Colors.orange
-                  ),
-                  _VitalCard(
-                    title: 'Blood pressure', 
-                    value: '120/80', 
-                    unit: 'mmHg', 
-                    status: 'Normal', 
-                    icon: Icons.favorite_rounded, 
-                    color: Colors.red
-                  ),
-                  _VitalCard(
-                    title: 'Weight', 
-                    value: '72.5', 
-                    unit: 'kg', 
-                    status: '-1.2kg', 
-                    icon: Icons.monitor_weight_rounded, 
-                    color: Colors.blue
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 48),
           ],
         ),
-      ),
+        body: BlocBuilder<HistoryCubit, HistoryState>(
+          builder: (context, state) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.all(16.r),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Time Period Toggle ──────────────────────────────────
+                  Container(
+                    padding: EdgeInsets.all(4.r),
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(24.r),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => context.read<HistoryCubit>().setFilter(HistoryFilter.month),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              padding: EdgeInsets.symmetric(vertical: 10.h),
+                              decoration: BoxDecoration(
+                                color: state.filter == HistoryFilter.month ? cs.primary : Colors.transparent,
+                                borderRadius: BorderRadius.circular(20.r),
+                                boxShadow: state.filter == HistoryFilter.month
+                                    ? [
+                                        BoxShadow(
+                                          color: cs.primary.withValues(alpha: 0.3),
+                                          blurRadius: 8.r,
+                                          offset: Offset(0, 2.h),
+                                        ),
+                                      ]
+                                    : [],
+                              ),
+                              alignment: Alignment.center,
+                              child: Text('This month',
+                                  style: TextStyle(
+                                      color: state.filter == HistoryFilter.month ? Colors.white : cs.onSurfaceVariant,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 13.sp)),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => context.read<HistoryCubit>().setFilter(HistoryFilter.all),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              padding: EdgeInsets.symmetric(vertical: 10.h),
+                              decoration: BoxDecoration(
+                                color: state.filter == HistoryFilter.all ? cs.primary : Colors.transparent,
+                                borderRadius: BorderRadius.circular(20.r),
+                                boxShadow: state.filter == HistoryFilter.all
+                                    ? [
+                                        BoxShadow(
+                                          color: cs.primary.withValues(alpha: 0.3),
+                                          blurRadius: 8.r,
+                                          offset: Offset(0, 2.h),
+                                        ),
+                                      ]
+                                    : [],
+                              ),
+                              alignment: Alignment.center,
+                              child: Text('All time',
+                                  style: TextStyle(
+                                      color: state.filter == HistoryFilter.all ? Colors.white : cs.onSurfaceVariant,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 13.sp)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+
+                  // ── Key Stats ──────────────────────────────────────────
+                  Row(
+                    children: [
+                      Expanded(
+                        child: StatCard(
+                          value: '${(state.adherenceRate * 100).toInt()}%',
+                          label: 'Adherence',
+                          icon: Icons.analytics_rounded,
+                          containerColor: cs.primaryContainer.withValues(alpha: 0.6),
+                          contentColor: cs.primary,
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: StatCard(
+                          value: state.takenCount.toString(),
+                          label: 'Taken',
+                          icon: Icons.check_circle_rounded,
+                          containerColor: StatusColors.getTakenContainer(context),
+                          contentColor: StatusColors.getTaken(context),
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: StatCard(
+                          value: state.missedCount.toString(),
+                          label: 'Missed',
+                          icon: Icons.cancel_rounded,
+                          containerColor: StatusColors.getMissedContainer(context),
+                          contentColor: StatusColors.getMissed(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 32.h),
+
+                  // ── Per-medicine adherence ──────────────────────────────
+                  const SectionHeader(title: 'Per-medicine adherence'),
+                  SizedBox(height: 8.h),
+                  if (state.perMedicineAdherence.isEmpty)
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20.h),
+                      child: Center(
+                        child: Text('No data yet', style: TextStyle(color: cs.outlineVariant, fontSize: 14.sp)),
+                      ),
+                    )
+                  else
+                    ...state.perMedicineAdherence.entries.map((e) => _buildAdherenceBar(context, e.key, e.value)),
+
+                  SizedBox(height: 32.h),
+
+                  SizedBox(height: 48.h),
+                ],
+              ),
+            );
+          },
+        ),
     );
   }
 
   Widget _buildAdherenceBar(BuildContext context, String name, double percentage) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20.0),
+      padding: EdgeInsets.only(bottom: 20.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(name, style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-              Text('${(percentage * 100).toInt()}%', 
-                style: TextStyle(color: cs.primary, fontWeight: FontWeight.w800, fontSize: 13)),
+              Text(name, style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontSize: 14.sp)),
+              Text('${(percentage * 100).toInt()}%',
+                  style: TextStyle(color: cs.primary, fontWeight: FontWeight.w800, fontSize: 13.sp)),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10.h),
           Stack(
             children: [
               Container(
-                height: 10,
+                height: 10.h,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: cs.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(5),
+                  borderRadius: BorderRadius.circular(5.r),
                 ),
               ),
               FractionallySizedBox(
-                widthFactor: percentage,
+                widthFactor: percentage.clamp(0.01, 1.0),
                 child: Container(
-                  height: 10,
+                  height: 10.h,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [cs.primary, cs.secondary],
                     ),
-                    borderRadius: BorderRadius.circular(5),
+                    borderRadius: BorderRadius.circular(5.r),
                     boxShadow: [
                       BoxShadow(
-                        color: cs.primary.withOpacity(0.2),
+                        color: cs.primary.withValues(alpha: 0.2),
                         blurRadius: 4,
-                        offset: const Offset(0, 2),
+                        offset: Offset(0, 2.h),
                       ),
                     ],
                   ),
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _VitalCard extends StatelessWidget {
-  final String title, value, unit, status;
-  final IconData icon;
-  final Color color;
-
-  const _VitalCard({
-    required this.title, 
-    required this.value, 
-    required this.unit, 
-    required this.status, 
-    required this.icon, 
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    
-    return Container(
-      width: 150,
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(height: 16),
-          Text(title, style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
-          const SizedBox(height: 4),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(value, style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-              const SizedBox(width: 4),
-              Text(unit, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: cs.primaryContainer.withOpacity(0.4),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(status, 
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: cs.primary)),
           ),
         ],
       ),

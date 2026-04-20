@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:meditime/core/theme/app_theme.dart';
+import 'package:meditime/features/profile/domain/entities/profile.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS — theme-adaptive color shortcuts
@@ -18,50 +20,86 @@ extension _ThemeX on BuildContext {
 class ProfileSwitcher extends StatelessWidget {
   final String name;
   final String initials;
-  final List<String> dependents;
-  final VoidCallback onTap;
+  final List<Profile> profiles;
+  final Function(String) onSwitch;
 
   const ProfileSwitcher({
     super.key,
     required this.name,
     required this.initials,
-    required this.dependents,
-    required this.onTap,
+    required this.profiles,
+    required this.onSwitch,
   });
 
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
+    final otherProfiles = profiles.where((p) => p.name != name).toList();
+
+    return PopupMenuButton<String>(
+      onSelected: onSwitch,
+      offset: Offset(0, 40.h),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+      itemBuilder: (context) => [
+        ...profiles.map((p) => PopupMenuItem(
+              value: p.id,
+              child: Row(
+                children: [
+                  _Avatar(initials: p.initials, size: 24.r),
+                  SizedBox(width: 12.w),
+                  Text(p.name,
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontWeight: p.name == name ? FontWeight.w800 : FontWeight.w600,
+                        color: p.name == name ? cs.primary : cs.onSurface,
+                        fontSize: 14.sp,
+                      )),
+                  if (p.name == name) ...[
+                    const Spacer(),
+                    Icon(Icons.check_circle_rounded, size: 16.r, color: cs.primary),
+                  ],
+                ],
+              ),
+            )),
+        const PopupMenuDivider(),
+        PopupMenuItem(
+          value: 'add',
+          child: Row(
+            children: [
+              Icon(Icons.add_circle_outline_rounded, size: 20.r, color: cs.secondary),
+              SizedBox(width: 12.w),
+              Text('Add Member', style: TextStyle(fontFamily: 'Nunito', fontSize: 13.sp)),
+            ],
+          ),
+        ),
+      ],
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: cs.primaryContainer.withOpacity(0.4),
-          borderRadius: BorderRadius.circular(24),
+          color: cs.primaryContainer.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(24.r),
           border: Border.all(color: cs.outlineVariant),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _Avatar(initials: initials, size: 32),
-            const SizedBox(width: 8),
-            Text(name,
-                style: context.tt.labelLarge?.copyWith(color: cs.primary)),
-            if (dependents.isNotEmpty) ...[
-              const SizedBox(width: 6),
-              Container(width: 1, height: 16, color: cs.outlineVariant),
-              const SizedBox(width: 6),
+            _Avatar(initials: initials, size: 32.r),
+            SizedBox(width: 8.w),
+            Text(name, style: context.tt.labelLarge?.copyWith(color: cs.primary, fontSize: 14.sp)),
+            if (otherProfiles.isNotEmpty) ...[
+              SizedBox(width: 6.w),
+              Container(width: 1, height: 16.h, color: cs.outlineVariant),
+              SizedBox(width: 6.w),
               Text(
-                dependents.join(' · '),
-                style:
-                    context.tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                otherProfiles.take(1).map((p) => p.name).join(''),
+                style: context.tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 11.sp),
               ),
+              if (otherProfiles.length > 1)
+                Text(' +${otherProfiles.length - 1}',
+                    style: context.tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 11.sp)),
             ],
-            const SizedBox(width: 4),
-            Icon(Icons.expand_more_rounded,
-                size: 18, color: cs.onSurfaceVariant),
+            SizedBox(width: 4.w),
+            Icon(Icons.expand_more_rounded, size: 18.r, color: cs.onSurfaceVariant),
           ],
         ),
       ),
@@ -90,7 +128,7 @@ class _Avatar extends StatelessWidget {
         initials,
         style: TextStyle(
           fontFamily: 'Nunito',
-          fontSize: size * 0.35,
+          fontSize: (size * 0.35).sp,
           fontWeight: FontWeight.w700,
           color: cs.onPrimaryContainer,
         ),
@@ -122,38 +160,151 @@ class StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
       decoration: BoxDecoration(
         color: containerColor,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(18.r),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 20, color: contentColor),
-          const SizedBox(height: 8),
+          Icon(icon, size: 20.r, color: contentColor),
+          SizedBox(height: 8.h),
           Text(
             value,
             style: TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 28,
+              fontSize: 28.sp,
               fontWeight: FontWeight.w800,
               color: contentColor,
               height: 1,
             ),
           ),
-          const SizedBox(height: 2),
+          SizedBox(height: 2.h),
           Text(
             label,
             style: TextStyle(
               fontFamily: 'Nunito',
-              fontSize: 12,
+              fontSize: 12.sp,
               fontWeight: FontWeight.w600,
-              color: contentColor.withOpacity(0.75),
+              color: contentColor.withValues(alpha: 0.75),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Calendar Strip
+// ─────────────────────────────────────────────────────────────────────────────
+
+class CalendarStrip extends StatefulWidget {
+  final Function(DateTime selectedDate) onDateSelected;
+  const CalendarStrip({super.key, required this.onDateSelected});
+
+  @override
+  State<CalendarStrip> createState() => _CalendarStripState();
+}
+
+class _CalendarStripState extends State<CalendarStrip> {
+  DateTime _selectedDate = DateTime.now();
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          350, // Center roughly
+          duration: const Duration(seconds: 1),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.cs;
+    final tt = context.tt;
+    final today = DateTime.now();
+
+    final days = List.generate(14, (index) {
+      return today.subtract(const Duration(days: 3)).add(Duration(days: index));
+    });
+
+    return SizedBox(
+      height: 90,
+      child: ListView.builder(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: days.length,
+        itemBuilder: (context, index) {
+          final date = days[index];
+          final isSelected = DateUtils.isSameDay(date, _selectedDate);
+          final isToday = DateUtils.isSameDay(date, today);
+
+          return GestureDetector(
+            onTap: () {
+              setState(() => _selectedDate = date);
+              widget.onDateSelected(date);
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 58,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                color: isSelected ? cs.primary : cs.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected ? cs.primary : cs.outlineVariant.withValues(alpha: 0.3),
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: cs.primary.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        )
+                      ]
+                    : null,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][date.weekday - 1],
+                    style: tt.labelSmall?.copyWith(
+                      color: isSelected ? Colors.white.withValues(alpha: 0.8) : cs.outline,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    date.day.toString(),
+                    style: tt.titleMedium?.copyWith(
+                      color: isSelected ? Colors.white : cs.onSurface,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  if (isToday && !isSelected)
+                    Container(
+                      margin: const EdgeInsets.only(top: 4),
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -197,61 +348,48 @@ class MedicineTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 52,
+            width: 52.w,
             child: Text(
               time,
-              style:
-                  context.tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+              style: context.tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 11.sp),
               textAlign: TextAlign.right,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Column(
             children: [
-              const SizedBox(height: 4),
+              SizedBox(height: 4.h),
               Container(
-                width: 10,
-                height: 10,
+                width: 10.r,
+                height: 10.r,
                 decoration: BoxDecoration(
                   color: colors.dot,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                      color: cs.surface, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                        color: colors.dot.withOpacity(0.4),
-                        blurRadius: 4,
-                        spreadRadius: 1)
-                  ],
+                  border: Border.all(color: cs.surface, width: 2.r),
+                  boxShadow: [BoxShadow(color: colors.dot.withValues(alpha: 0.4), blurRadius: 4.r, spreadRadius: 1.r)],
                 ),
               ),
-              if (isPending)
-                Container(
-                    width: 2, height: 72, color: cs.outlineVariant),
+              if (isPending) Container(width: 2.w, height: 72.h, color: cs.outlineVariant),
             ],
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Expanded(
             child: Container(
-              margin: const EdgeInsets.only(bottom: 4),
-              padding: const EdgeInsets.all(14),
+              margin: EdgeInsets.only(bottom: 4.h),
+              padding: EdgeInsets.all(14.r),
               decoration: BoxDecoration(
                 color: isPending ? cs.surface : colors.bg,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(16.r),
                 border: Border.all(
-                  color: isPending
-                      ? cs.outlineVariant
-                      : colors.dot.withOpacity(0.3),
-                  width: isPending ? 1.5 : 1,
+                  color: isPending ? cs.outlineVariant : colors.dot.withValues(alpha: 0.3),
+                  width: isPending ? 1.5.w : 1.w,
                 ),
                 boxShadow: isPending
                     ? [
                         BoxShadow(
-                            color: context.isDark
-                                ? Colors.black26
-                                : const Color(0x0D000000),
+                            color: context.isDark ? Colors.black26 : const Color(0x0D000000),
                             blurRadius: 8,
-                            offset: const Offset(0, 2))
+                            offset: Offset(0, 2.h))
                       ]
                     : null,
               ),
@@ -265,17 +403,17 @@ class MedicineTile extends StatelessWidget {
                           name,
                           style: context.tt.titleSmall?.copyWith(
                             color: isPending ? cs.onSurface : colors.text,
+                            fontSize: 14.sp,
                           ),
                         ),
                       ),
                       _StatusChip(status: status, context: context),
                     ],
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2.h),
                   Text(
                     '$dose · $instruction',
-                    style: context.tt.bodySmall
-                        ?.copyWith(color: cs.onSurfaceVariant),
+                    style: context.tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 11.sp),
                   ),
                   if (isPending) ...[
                     const SizedBox(height: 10),
@@ -370,12 +508,7 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
-      child: Text(label,
-          style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: fg)),
+      child: Text(label, style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w700, color: fg)),
     );
   }
 }
@@ -388,8 +521,7 @@ class _ActionBtn extends StatelessWidget {
   final String label;
   final Color color, bg;
   final VoidCallback? onTap;
-  const _ActionBtn(
-      {required this.label, required this.color, required this.bg, this.onTap});
+  const _ActionBtn({required this.label, required this.color, required this.bg, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -397,14 +529,9 @@ class _ActionBtn extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration:
-            BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
+        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
         child: Text(label,
-            style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: color)),
+            style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w700, color: color)),
       ),
     );
   }
@@ -421,11 +548,7 @@ class StockBar extends StatelessWidget {
   final int total;
   final int daysLeft;
 
-  const StockBar(
-      {super.key,
-      required this.remaining,
-      required this.total,
-      required this.daysLeft});
+  const StockBar({super.key, required this.remaining, required this.total, required this.daysLeft});
 
   @override
   Widget build(BuildContext context) {
@@ -437,7 +560,7 @@ class StockBar extends StatelessWidget {
         : (isMid ? StatusColors.getPending(context) : StatusColors.getTaken(context));
     final bgColor = isLow
         ? StatusColors.getMissedContainer(context)
-        : StatusColors.getTakenContainer(context).withOpacity(0.4);
+        : StatusColors.getTakenContainer(context).withValues(alpha: 0.4);
 
     return Container(
       padding: const EdgeInsets.all(10),
@@ -448,16 +571,9 @@ class StockBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('$remaining left',
-                  style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: color)),
+                  style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w600, color: color)),
               Text('$daysLeft day${daysLeft == 1 ? '' : 's'} supply',
-                  style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 12,
-                      color: color.withOpacity(0.75))),
+                  style: TextStyle(fontFamily: 'Nunito', fontSize: 12, color: color.withValues(alpha: 0.75))),
             ],
           ),
           const SizedBox(height: 6),
@@ -466,7 +582,7 @@ class StockBar extends StatelessWidget {
             child: LinearProgressIndicator(
               value: ratio,
               minHeight: 6,
-              backgroundColor: color.withOpacity(0.15),
+              backgroundColor: color.withValues(alpha: 0.15),
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
@@ -496,8 +612,7 @@ class StreakRow extends StatelessWidget {
         Center(
           child: Text(
             '${days.where((d) => d.status == DayStatus.taken).length}-day streak this week 🔥',
-            style: context.tt.labelSmall
-                ?.copyWith(color: context.cs.onSurfaceVariant),
+            style: context.tt.labelSmall?.copyWith(color: context.cs.onSurfaceVariant),
           ),
         ),
       ],
@@ -512,34 +627,18 @@ class _StreakCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (day.status) {
-      DayStatus.taken => (
-          StatusColors.getTakenContainer(context),
-          StatusColors.getTaken(context)
-        ),
-      DayStatus.missed => (
-          StatusColors.getMissedContainer(context),
-          StatusColors.getMissed(context)
-        ),
-      DayStatus.partial => (
-          StatusColors.getPendingContainer(context),
-          StatusColors.getPending(context)
-        ),
-      DayStatus.future => (
-          context.cs.surfaceContainerHighest,
-          context.cs.onSurfaceVariant
-        ),
+      DayStatus.taken => (StatusColors.getTakenContainer(context), StatusColors.getTaken(context)),
+      DayStatus.missed => (StatusColors.getMissedContainer(context), StatusColors.getMissed(context)),
+      DayStatus.partial => (StatusColors.getPendingContainer(context), StatusColors.getPending(context)),
+      DayStatus.future => (context.cs.surfaceContainerHighest, context.cs.onSurfaceVariant),
     };
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 2),
       height: 36,
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(10)),
       alignment: Alignment.center,
-      child: Text(day.label,
-          style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: fg)),
+      child:
+          Text(day.label, style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
     );
   }
 }
@@ -566,6 +665,7 @@ class MedicineCard extends StatelessWidget {
   final bool isLowStock;
   final VoidCallback? onEdit;
   final VoidCallback? onRefill;
+  final VoidCallback? onDelete;
 
   const MedicineCard({
     super.key,
@@ -578,6 +678,7 @@ class MedicineCard extends StatelessWidget {
     this.isLowStock = false,
     this.onEdit,
     this.onRefill,
+    this.onDelete,
   });
 
   @override
@@ -603,7 +704,7 @@ class MedicineCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: cs.primaryContainer.withOpacity(0.6),
+                    color: cs.primaryContainer.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(_typeIcon(type), size: 22, color: cs.primary),
@@ -614,33 +715,22 @@ class MedicineCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(name, style: context.tt.titleSmall),
-                      Text(schedule,
-                          style: context.tt.bodySmall
-                              ?.copyWith(color: cs.onSurfaceVariant)),
+                      Text(schedule, style: context.tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
                     ],
                   ),
                 ),
                 if (isLowStock)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                        color: lowContainer,
-                        borderRadius: BorderRadius.circular(20)),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(color: lowContainer, borderRadius: BorderRadius.circular(20)),
                     child: Text('Low stock',
                         style: TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: lowColor)),
+                            fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w700, color: lowColor)),
                   ),
               ],
             ),
             const SizedBox(height: 12),
-            StockBar(
-                remaining: stockRemaining,
-                total: stockTotal,
-                daysLeft: daysLeft),
+            StockBar(remaining: stockRemaining, total: stockTotal, daysLeft: daysLeft),
             if (isLowStock) ...[
               const SizedBox(height: 10),
               SizedBox(
@@ -651,14 +741,10 @@ class MedicineCard extends StatelessWidget {
                     backgroundColor: StatusColors.getPendingContainer(context),
                     foregroundColor: StatusColors.getPending(context),
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   child: const Text('Mark as refilled',
-                      style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13)),
+                      style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 13)),
                 ),
               ),
             ],
@@ -671,22 +757,14 @@ class MedicineCard extends StatelessWidget {
                   label: const Text('Edit'),
                   style: TextButton.styleFrom(
                       foregroundColor: cs.secondary,
-                      textStyle: const TextStyle(
-                          fontFamily: 'Nunito',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13)),
+                      textStyle: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w600, fontSize: 13)),
                 ),
                 const SizedBox(width: 4),
-                TextButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.pause_outlined, size: 16),
-                  label: const Text('Pause'),
-                  style: TextButton.styleFrom(
-                      foregroundColor: cs.onSurfaceVariant,
-                      textStyle: const TextStyle(
-                          fontFamily: 'Nunito',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13)),
+                const Spacer(),
+                IconButton(
+                  onPressed: onDelete,
+                  icon: Icon(Icons.delete_outline_rounded, size: 18, color: cs.error.withValues(alpha: 0.8)),
+                  tooltip: 'Delete medicine',
                 ),
               ],
             ),
@@ -759,22 +837,13 @@ class AlertBanner extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
               child: Text(message,
-                  style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: fg))),
+                  style: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w600, color: fg))),
           if (onAction != null && actionLabel != null)
             TextButton(
               onPressed: onAction,
-              style: TextButton.styleFrom(
-                  foregroundColor: fg,
-                  padding: const EdgeInsets.symmetric(horizontal: 8)),
+              style: TextButton.styleFrom(foregroundColor: fg, padding: const EdgeInsets.symmetric(horizontal: 8)),
               child: Text(actionLabel!,
-                  style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13)),
+                  style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 13)),
             ),
         ],
       ),
@@ -793,8 +862,7 @@ class SectionHeader extends StatelessWidget {
   final String? action;
   final VoidCallback? onAction;
 
-  const SectionHeader(
-      {super.key, required this.title, this.action, this.onAction});
+  const SectionHeader({super.key, required this.title, this.action, this.onAction});
 
   @override
   Widget build(BuildContext context) {
@@ -810,10 +878,7 @@ class SectionHeader extends StatelessWidget {
               style: TextButton.styleFrom(
                 foregroundColor: context.cs.primary,
                 padding: const EdgeInsets.symmetric(horizontal: 8),
-                textStyle: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13),
+                textStyle: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 13),
               ),
               child: Text(action!),
             ),
@@ -861,8 +926,7 @@ class PrescriptionCard extends StatelessWidget {
                 color: cs.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.description_outlined,
-                  color: cs.onSurfaceVariant, size: 26),
+              child: Icon(Icons.description_outlined, color: cs.onSurfaceVariant, size: 26),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -870,9 +934,7 @@ class PrescriptionCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(doctorName, style: context.tt.titleSmall),
-                  Text('$date · $reason',
-                      style: context.tt.bodySmall
-                          ?.copyWith(color: cs.onSurfaceVariant)),
+                  Text('$date · $reason', style: context.tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
                   const SizedBox(height: 6),
                   if (isScanned)
                     Wrap(
@@ -881,10 +943,9 @@ class PrescriptionCard extends StatelessWidget {
                       children: medicines
                           .take(2)
                           .map((m) => Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
-                                    color: cs.primaryContainer.withOpacity(0.5),
+                                    color: cs.primaryContainer.withValues(alpha: 0.5),
                                     borderRadius: BorderRadius.circular(20)),
                                 child: Text(m,
                                     style: TextStyle(
@@ -897,16 +958,11 @@ class PrescriptionCard extends StatelessWidget {
                         ..addAll(medicines.length > 2
                             ? [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
-                                      color: cs.surfaceContainerHighest,
-                                      borderRadius: BorderRadius.circular(20)),
+                                      color: cs.surfaceContainerHighest, borderRadius: BorderRadius.circular(20)),
                                   child: Text('+${medicines.length - 2} more',
-                                      style: TextStyle(
-                                          fontFamily: 'Nunito',
-                                          fontSize: 11,
-                                          color: cs.onSurfaceVariant)),
+                                      style: TextStyle(fontFamily: 'Nunito', fontSize: 11, color: cs.onSurfaceVariant)),
                                 )
                               ]
                             : []),
@@ -915,18 +971,14 @@ class PrescriptionCard extends StatelessWidget {
                     OutlinedButton.icon(
                       onPressed: onScan,
                       icon: const Icon(Icons.document_scanner_outlined, size: 14),
-                      label: const Text('Extract medicines (OCR)',
-                          style: TextStyle(fontSize: 12)),
+                      label: const Text('Extract medicines (OCR)', style: TextStyle(fontSize: 12)),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: StatusColors.getPending(context),
-                        side: BorderSide(
-                            color: StatusColors.getPendingContainer(context)),
+                        side: BorderSide(color: StatusColors.getPendingContainer(context)),
                         backgroundColor: StatusColors.getPendingContainer(context),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         minimumSize: Size.zero,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
                     ),
                 ],
@@ -936,9 +988,7 @@ class PrescriptionCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: isScanned
-                    ? StatusColors.getTakenContainer(context)
-                    : StatusColors.getPendingContainer(context),
+                color: isScanned ? StatusColors.getTakenContainer(context) : StatusColors.getPendingContainer(context),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -947,9 +997,7 @@ class PrescriptionCard extends StatelessWidget {
                   fontFamily: 'Nunito',
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: isScanned
-                      ? StatusColors.getTaken(context)
-                      : StatusColors.getPending(context),
+                  color: isScanned ? StatusColors.getTaken(context) : StatusColors.getPending(context),
                 ),
               ),
             ),
@@ -1009,8 +1057,7 @@ class EmergencyCardWidget extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: headerColor,
-              borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(19), topRight: Radius.circular(19)),
+              borderRadius: const BorderRadius.only(topLeft: Radius.circular(19), topRight: Radius.circular(19)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1028,11 +1075,7 @@ class EmergencyCardWidget extends StatelessWidget {
                             letterSpacing: 0.5)),
                   ],
                 ),
-                Text(lastUpdated,
-                    style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 11,
-                        color: subtitleColor)),
+                Text(lastUpdated, style: TextStyle(fontFamily: 'Nunito', fontSize: 11, color: subtitleColor)),
               ],
             ),
           ),
@@ -1055,10 +1098,7 @@ class EmergencyCardWidget extends StatelessWidget {
                       child: Text(
                         name.split(' ').map((n) => n[0]).take(2).join(),
                         style: TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: subtitleColor),
+                            fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w800, color: subtitleColor),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1067,15 +1107,9 @@ class EmergencyCardWidget extends StatelessWidget {
                       children: [
                         Text(name,
                             style: TextStyle(
-                                fontFamily: 'Nunito',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                color: titleColor)),
+                                fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w800, color: titleColor)),
                         Text('Age $age · Blood: $bloodGroup',
-                            style: TextStyle(
-                                fontFamily: 'Nunito',
-                                fontSize: 13,
-                                color: subtitleColor)),
+                            style: TextStyle(fontFamily: 'Nunito', fontSize: 13, color: subtitleColor)),
                       ],
                     ),
                   ],
@@ -1083,10 +1117,21 @@ class EmergencyCardWidget extends StatelessWidget {
                 const SizedBox(height: 14),
                 Divider(color: borderColor),
                 const SizedBox(height: 10),
-                _EmRow(label: 'Allergies', value: allergies.join(', '), labelColor: subtitleColor, textColor: textColor),
-                _EmRow(label: 'Conditions', value: conditions.join(' · '), labelColor: subtitleColor, textColor: textColor),
-                _EmRow(label: 'Medicines', value: medicines.join(' · '), labelColor: subtitleColor, textColor: textColor),
-                _EmRow(label: 'Emergency contact', value: emergencyContact, isLast: true, labelColor: subtitleColor, textColor: textColor),
+                _EmRow(
+                    label: 'Allergies', value: allergies.join(', '), labelColor: subtitleColor, textColor: textColor),
+                _EmRow(
+                    label: 'Conditions',
+                    value: conditions.join(' · '),
+                    labelColor: subtitleColor,
+                    textColor: textColor),
+                _EmRow(
+                    label: 'Medicines', value: medicines.join(' · '), labelColor: subtitleColor, textColor: textColor),
+                _EmRow(
+                    label: 'Emergency contact',
+                    value: emergencyContact,
+                    isLast: true,
+                    labelColor: subtitleColor,
+                    textColor: textColor),
               ],
             ),
           ),
@@ -1102,7 +1147,12 @@ class _EmRow extends StatelessWidget {
   final bool isLast;
   final Color labelColor;
   final Color textColor;
-  const _EmRow({required this.label, required this.value, this.isLast = false, required this.labelColor, required this.textColor});
+  const _EmRow(
+      {required this.label,
+      required this.value,
+      this.isLast = false,
+      required this.labelColor,
+      required this.textColor});
 
   @override
   Widget build(BuildContext context) {
@@ -1112,18 +1162,10 @@ class _EmRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
-              style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: labelColor)),
+              style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w700, color: labelColor)),
           const SizedBox(height: 2),
           Text(value,
-              style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: textColor)),
+              style: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w600, color: textColor)),
         ],
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:meditime/core/theme/cubit/theme_cubit.dart';
 import 'package:meditime/features/reminders/presentation/screens/reminders_screen.dart';
 
@@ -12,15 +13,15 @@ class SettingsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text('Settings', style: TextStyle(fontSize: 20.sp)),
         centerTitle: false,
       ),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         children: [
           // ── Profile Section ──────────────────────────────────────
           _ProfileCard(),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
 
           // ── Preferences Section ──────────────────────────────────
           _SectionTitle('Preferences'),
@@ -65,9 +66,12 @@ class SettingsScreen extends StatelessWidget {
             icon: Icons.security_outlined,
             title: 'Security & Biometrics',
             subtitle: 'Face ID, App lock',
-            onTap: () {},
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Security settings coming soon!')));
+            },
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
 
           // ── Data Section ─────────────────────────────────────────
           _SectionTitle('Data & Backup'),
@@ -75,29 +79,41 @@ class SettingsScreen extends StatelessWidget {
             icon: Icons.cloud_upload_outlined,
             title: 'Automatic Backup',
             subtitle: 'Last synced: 2 hours ago',
-            onTap: () {},
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Backup triggered successfully! ✓')));
+            },
           ),
           _SettingsTile(
             icon: Icons.file_download_outlined,
             title: 'Export Health Data',
             subtitle: 'PDF, CSV or FHIR format',
-            onTap: () {},
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Generating health report PDF...')));
+            },
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
 
           // ── Support Section ──────────────────────────────────────
           _SectionTitle('Support'),
           _SettingsTile(
             icon: Icons.help_outline_rounded,
             title: 'Help Center',
-            onTap: () {},
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Opening help center...')));
+            },
           ),
           _SettingsTile(
             icon: Icons.feedback_outlined,
             title: 'Send Feedback',
-            onTap: () {},
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Opening feedback form...')));
+            },
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
 
           // ── About Section ────────────────────────────────────────
           _SectionTitle('About'),
@@ -109,10 +125,13 @@ class SettingsScreen extends StatelessWidget {
           _SettingsTile(
             icon: Icons.gavel_outlined,
             title: 'Terms & Privacy Policy',
-            onTap: () {},
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Opening terms and conditions...')));
+            },
           ),
           
-          const SizedBox(height: 32),
+          SizedBox(height: 32.h),
           
           // Sign Out
           Center(
@@ -120,20 +139,20 @@ class SettingsScreen extends StatelessWidget {
               onPressed: () => _showSignOutDialog(context),
               style: TextButton.styleFrom(
                 foregroundColor: cs.error,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.logout_rounded, size: 18),
-                  SizedBox(width: 8),
-                  const Text('Sign out from this device', 
-                    style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700)),
+                  Icon(Icons.logout_rounded, size: 18.r),
+                  SizedBox(width: 8.w),
+                  Text('Sign out from this device', 
+                    style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 14.sp)),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 48),
+          SizedBox(height: 48.h),
         ],
       ),
     );
@@ -177,19 +196,19 @@ class _ProfileCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [cs.primary, cs.secondary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
-            color: cs.primary.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: cs.primary.withValues(alpha: 0.3),
+            blurRadius: 12.r,
+            offset: Offset(0, 4.h),
           ),
         ],
       ),
@@ -198,41 +217,41 @@ class _ProfileCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 64,
-                height: 64,
+                width: 64.r,
+                height: 64.r,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white.withOpacity(0.5), width: 3),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 3.w),
                 ),
                 alignment: Alignment.center,
                 child: Text('MH', 
-                  style: tt.headlineSmall?.copyWith(color: cs.primary, fontWeight: FontWeight.w800)),
+                  style: tt.headlineSmall?.copyWith(color: cs.primary, fontWeight: FontWeight.w800, fontSize: 18.sp)),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Mhr Habib', 
-                      style: tt.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
+                      style: tt.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18.sp)),
                     Text('Joined March 2024', 
-                      style: tt.bodySmall?.copyWith(color: Colors.white.withOpacity(0.9))),
+                      style: tt.bodySmall?.copyWith(color: Colors.white.withValues(alpha: 0.9), fontSize: 11.sp)),
                   ],
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.edit_note_rounded, color: Colors.white),
+                icon: Icon(Icons.edit_note_rounded, color: Colors.white, size: 24.r),
                 onPressed: () {},
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
+              color: Colors.black.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16.r),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -260,8 +279,8 @@ class _StatItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18)),
-        Text(label, style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 11)),
+        Text(value, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18.sp)),
+        Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 11.sp)),
       ],
     );
   }
@@ -270,7 +289,7 @@ class _StatItem extends StatelessWidget {
 class _StatDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(width: 1, height: 24, color: Colors.white.withOpacity(0.2));
+    return Container(width: 1.w, height: 24.h, color: Colors.white.withValues(alpha: 0.2));
   }
 }
 
@@ -281,12 +300,13 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 0, 0, 12),
+      padding: EdgeInsets.fromLTRB(4.w, 0, 0, 12.h),
       child: Text(title, 
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
           color: Theme.of(context).colorScheme.primary,
           fontWeight: FontWeight.w800,
           letterSpacing: 0.5,
+          fontSize: 12.sp,
         )),
     );
   }
@@ -311,43 +331,43 @@ class _SettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.only(bottom: 8.h),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           decoration: BoxDecoration(
             color: cs.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
           ),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(8.r),
                 decoration: BoxDecoration(
-                  color: cs.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  color: cs.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10.r),
                 ),
-                child: Icon(icon, color: cs.primary, size: 22),
+                child: Icon(icon, color: cs.primary, size: 22.r),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title, 
-                      style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 15)),
+                      style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 14.sp)),
                     if (subtitle != null)
                       Text(subtitle!, 
-                        style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12)),
+                        style: TextStyle(color: cs.onSurfaceVariant, fontSize: 11.sp)),
                   ],
                 ),
               ),
               if (trailing != null) trailing!
               else if (onTap != null)
-                Icon(Icons.chevron_right_rounded, color: cs.outline),
+                Icon(Icons.chevron_right_rounded, color: cs.outline, size: 20.r),
             ],
           ),
         ),

@@ -3,6 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _kOnboardingComplete = 'has_completed_onboarding';
+const _kUserName = 'user_name';
+const _kUserAge = 'user_age';
+const _kUserGender = 'user_gender';
+const _kConditions = 'user_conditions';
+const _kNotificationsEnabled = 'notifications_enabled';
+const _kHealthGoal = 'health_goal';
+const _kIsPremium = 'is_premium';
 
 class OnboardingState extends Equatable {
   final bool hasCompletedOnboarding;
@@ -36,7 +43,8 @@ class OnboardingState extends Equatable {
     bool? isPremium,
   }) {
     return OnboardingState(
-      hasCompletedOnboarding: hasCompletedOnboarding ?? this.hasCompletedOnboarding,
+      hasCompletedOnboarding:
+          hasCompletedOnboarding ?? this.hasCompletedOnboarding,
       userName: userName ?? this.userName,
       userAge: userAge ?? this.userAge,
       userGender: userGender ?? this.userGender,
@@ -56,46 +64,63 @@ class OnboardingState extends Equatable {
         conditions,
         notificationsEnabled,
         healthGoal,
-        isPremium
+        isPremium,
       ];
 }
 
 class OnboardingCubit extends Cubit<OnboardingState> {
   OnboardingCubit() : super(const OnboardingState()) {
-    _loadOnboardingState();
+    _load();
   }
 
-  Future<void> _loadOnboardingState() async {
+  Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final completed = prefs.getBool(_kOnboardingComplete) ?? false;
-    if (completed) {
-      emit(state.copyWith(hasCompletedOnboarding: true));
-    }
-  }
-
-  void updateUserInfo({String? name, int? age, String? gender, String? goal}) {
-    emit(state.copyWith(
-      userName: name,
-      userAge: age,
-      userGender: gender,
-      healthGoal: goal,
+    emit(OnboardingState(
+      hasCompletedOnboarding: prefs.getBool(_kOnboardingComplete) ?? false,
+      userName: prefs.getString(_kUserName),
+      userAge: prefs.getInt(_kUserAge),
+      userGender: prefs.getString(_kUserGender),
+      conditions: prefs.getStringList(_kConditions) ?? const [],
+      notificationsEnabled: prefs.getBool(_kNotificationsEnabled) ?? false,
+      healthGoal: prefs.getString(_kHealthGoal),
+      isPremium: prefs.getBool(_kIsPremium) ?? false,
     ));
   }
 
-  void saveUserInfo({required String name, required int age, required String gender}) {
+  Future<void> saveUserInfo({
+    required String name,
+    required int age,
+    required String gender,
+  }) async {
     emit(state.copyWith(userName: name, userAge: age, userGender: gender));
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kUserName, name);
+    await prefs.setInt(_kUserAge, age);
+    await prefs.setString(_kUserGender, gender);
   }
 
-  void saveConditions(List<String> conditions) {
+  Future<void> saveConditions(List<String> conditions) async {
     emit(state.copyWith(conditions: conditions));
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_kConditions, conditions);
   }
 
-  void setNotificationsEnabled(bool enabled) {
+  Future<void> setNotificationsEnabled(bool enabled) async {
     emit(state.copyWith(notificationsEnabled: enabled));
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kNotificationsEnabled, enabled);
   }
 
-  void setPremium(bool isPremium) {
+  Future<void> setHealthGoal(String goal) async {
+    emit(state.copyWith(healthGoal: goal));
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kHealthGoal, goal);
+  }
+
+  Future<void> setPremium(bool isPremium) async {
     emit(state.copyWith(isPremium: isPremium));
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kIsPremium, isPremium);
   }
 
   Future<void> completeOnboarding() async {

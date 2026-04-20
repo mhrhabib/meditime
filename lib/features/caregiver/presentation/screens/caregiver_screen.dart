@@ -1,128 +1,88 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class CaregiverScreen extends StatefulWidget {
+class CaregiverScreen extends StatelessWidget {
   const CaregiverScreen({super.key});
 
   @override
-  State<CaregiverScreen> createState() => _CaregiverScreenState();
-}
-
-class _CaregiverScreenState extends State<CaregiverScreen> {
-  // Mock internal state for caregiver permissions
-  bool _canView = true;
-  bool _canEdit = false;
-  bool _missedAlerts = true;
-  bool _dailySummary = false;
-
-  @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Caregiver Access'),
+        title: Text('Caregiver Access', style: TextStyle(fontSize: 20.sp)),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.r),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-             Text(
+            Text(
               'Share your schedule with family or doctors so they can help you stay on track.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
+              style: tt.bodyMedium?.copyWith(
+                color: cs.outline,
+                fontSize: 14.sp,
               ),
             ),
-            const SizedBox(height: 24),
-            
+            SizedBox(height: 24.h),
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
                 onPressed: () {},
-                icon: const Icon(Icons.link),
-                label: const Text('Invite caregiver by link'),
+                icon: Icon(Icons.link, size: 20.r),
+                label: Text('Invite caregiver by link',
+                    style: TextStyle(fontSize: 15.sp)),
                 style: FilledButton.styleFrom(
-                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r)),
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
             Center(
-               child: Text(
-                'Caregivers don\'t need to install the app',
-                style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.outline),
+              child: Text(
+                "Caregivers don't need to install the app",
+                style: TextStyle(fontSize: 12.sp, color: cs.outline),
               ),
             ),
-
-            const SizedBox(height: 32),
-            const Text('Active Caregivers', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            
-            // Mock Caregiver Card
+            SizedBox(height: 32.h),
+            Text('Active Caregivers',
+                style:
+                    TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+            SizedBox(height: 16.h),
             Container(
-              padding: const EdgeInsets.all(16),
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 32.h, horizontal: 16.w),
               decoration: BoxDecoration(
-                color: Theme.of(context).cardTheme.color,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+                color: cs.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: cs.outlineVariant),
               ),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                        child: Text('FH', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Fahmidah (Daughter)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                            Text('Active since Mar 2026', style: TextStyle(color: Theme.of(context).colorScheme.outline, fontSize: 13)),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.more_vert),
-                        onPressed: () {},
-                        color: Theme.of(context).colorScheme.outline,
-                      )
-                    ],
+                  Icon(Icons.people_outline_rounded,
+                      size: 40.r, color: cs.outlineVariant),
+                  SizedBox(height: 8.h),
+                  Text(
+                    'No caregivers yet',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: cs.onSurfaceVariant,
+                    ),
                   ),
-                  const Divider(height: 32),
-                  _buildToggleRow('View medicines', _canView, (v) => setState(() => _canView = v)),
-                  _buildToggleRow('Edit & refill meds', _canEdit, (v) => setState(() => _canEdit = v)),
-                  _buildToggleRow('Missed dose alerts', _missedAlerts, (v) => setState(() => _missedAlerts = v)),
-                  _buildToggleRow('Daily summary emails', _dailySummary, (v) => setState(() => _dailySummary = v)),
-                  
-                  const SizedBox(height: 8),
-                  TextButton.icon(
-                    onPressed: () {}, 
-                    icon: Icon(Icons.cancel, color: Theme.of(context).colorScheme.error, size: 18),
-                    label: Text('Revoke access', style: TextStyle(color: Theme.of(context).colorScheme.error)),
-                  )
+                  SizedBox(height: 4.h),
+                  Text(
+                    'Invite someone to get started.',
+                    style: TextStyle(fontSize: 12.sp, color: cs.outline),
+                  ),
                 ],
               ),
-            )
+            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildToggleRow(String label, bool value, ValueChanged<bool> onChanged) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-          Switch(
-            value: value, 
-            onChanged: onChanged,
-            activeColor: Theme.of(context).colorScheme.primary,
-          ),
-        ],
       ),
     );
   }

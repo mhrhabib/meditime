@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:meditime/features/medicines/presentation/cubit/medicine_cubit.dart';
+import 'package:meditime/features/medicines/domain/entities/medicine.dart';
+import 'package:meditime/features/profile/presentation/cubit/profile_cubit.dart';
 
 class AddMedicineScreen extends StatefulWidget {
   const AddMedicineScreen({super.key});
@@ -9,14 +14,11 @@ class AddMedicineScreen extends StatefulWidget {
 
 class _AddMedicineScreenState extends State<AddMedicineScreen> {
   int _step = 0;
-  final List<TimeOfDay> _times = [
-    const TimeOfDay(hour: 8, minute: 0),
-    const TimeOfDay(hour: 20, minute: 0)
-  ];
+  final List<TimeOfDay> _times = [const TimeOfDay(hour: 8, minute: 0), const TimeOfDay(hour: 20, minute: 0)];
   String _selectedFrequency = 'Daily';
   String _selectedType = 'Tablet';
   String _selectedInstruction = 'After meal';
-  String _selectedProfile = 'Me (Rafiq)';
+  String? _selectedProfileId;
   bool _repeatUntilConfirmed = true;
   bool _snoozeEnabled = true;
   bool _refillReminder = true;
@@ -32,6 +34,13 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     'Reminders & Alerts',
     'Stock & Prescription',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    final profileCubit = context.read<ProfileCubit>();
+    _selectedProfileId = profileCubit.state.activeProfile?.id;
+  }
 
   @override
   void dispose() {
@@ -61,20 +70,18 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_stepTitles[_step]),
+        title: Text(_stepTitles[_step], style: TextStyle(fontSize: 18.sp)),
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: _step > 0
-              ? () => setState(() => _step--)
-              : () => Navigator.pop(context),
+          icon: Icon(Icons.arrow_back_rounded, size: 24.r),
+          onPressed: _step > 0 ? () => setState(() => _step--) : () => Navigator.pop(context),
         ),
       ),
       body: Column(
         children: [
           // ── Step progress bar ──────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+            padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -84,34 +91,36 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                       (i) => Expanded(
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 300),
-                              height: 6,
-                              margin: EdgeInsets.only(right: i < 3 ? 8 : 0),
+                              height: 6.h,
+                              margin: EdgeInsets.only(right: i < 3 ? 8.w : 0),
                               decoration: BoxDecoration(
-                                color: i <= _step ? cs.primary : cs.outlineVariant.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(10),
+                                color: i <= _step ? cs.primary : cs.outlineVariant.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(10.r),
                               ),
                             ),
                           )),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
                 Text(
                   'Step ${_step + 1} of 4',
-                  style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant, fontWeight: FontWeight.w600),
+                  style: tt.labelMedium?.copyWith(
+                      color: cs.onSurfaceVariant, fontWeight: FontWeight.w600, fontSize: 12.sp),
                 ),
               ],
             ),
           ),
-          
+
           // ── Step content ───────────────────────────────────
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20.r),
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 transitionBuilder: (child, anim) => FadeTransition(
                   opacity: anim,
                   child: SlideTransition(
-                    position: anim.drive(Tween(begin: const Offset(0.05, 0), end: Offset.zero).chain(CurveTween(curve: Curves.easeOutCubic))),
+                    position: anim.drive(Tween(begin: const Offset(0.05, 0), end: Offset.zero)
+                        .chain(CurveTween(curve: Curves.easeOutCubic))),
                     child: child,
                   ),
                 ),
@@ -122,24 +131,24 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
               ),
             ),
           ),
-          
+
           // ── Bottom actions ─────────────────────────────────
           SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20.r),
               child: Row(
                 children: [
                   if (_step > 0) ...[
                     OutlinedButton(
                       onPressed: () => setState(() => _step--),
                       style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(80, 56),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        minimumSize: Size(80.w, 56.h),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
                       ),
-                      child: const Text('Back'),
+                      child: Text('Back', style: TextStyle(fontSize: 14.sp)),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12.w),
                   ],
                   Expanded(
                     child: FilledButton(
@@ -147,22 +156,49 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                         if (_step < 3) {
                           setState(() => _step++);
                         } else {
+                          final name = _nameController.text;
+                          if (name.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please enter a medicine name')),
+                            );
+                            return;
+                          }
+
+                          final stock = int.tryParse(_stockController.text) ?? 0;
+                          final alertDays = int.tryParse(_alertDaysController.text) ?? 3;
+                          final scheduleStr = '$_selectedFrequency · ${_times.length}× · $_selectedInstruction';
+                          final daysLeft = stock ~/ (_times.isEmpty ? 1 : _times.length);
+
+                          final medicine = Medicine(
+                            id: DateTime.now().millisecondsSinceEpoch.toString(),
+                            name: name,
+                            type: _selectedType.toLowerCase(),
+                            schedule: scheduleStr,
+                            stockRemaining: stock,
+                            stockTotal: stock,
+                            daysLeft: daysLeft,
+                            isLowStock: daysLeft <= alertDays,
+                            profileId: _selectedProfileId ?? 'me',
+                          );
+
+                          context.read<MedicineCubit>().addMedicine(medicine);
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: const Text('Medicine added successfully! ✓'),
+                              content: Text('$name added successfully! ✓'),
                               behavior: SnackBarBehavior.floating,
                               backgroundColor: cs.primary,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                             ),
                           );
                         }
                       },
                       style: FilledButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 56),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        minimumSize: Size(double.infinity, 56.h),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
                       ),
-                      child: Text(_step < 3 ? 'Continue' : 'Complete Setup'),
+                      child: Text(_step < 3 ? 'Continue' : 'Complete Setup',
+                          style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -189,43 +225,45 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
   Widget _buildStep1() {
     final cs = Theme.of(context).colorScheme;
-    
     final types = ['Tablet', 'Syrup', 'Injection', 'Drops', 'Inhaler', 'Capsule'];
     final instructions = ['After meal', 'Before meal', 'Empty stomach', 'With water'];
     final units = ['mg', 'ml', 'mcg', 'IU', '%'];
-    final profiles = ['Me (Rafiq)', 'Mum (Parent)', 'Sadia (Daughter)'];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextField(
           controller: _nameController,
+          style: TextStyle(fontSize: 15.sp),
           decoration: InputDecoration(
             labelText: 'Medicine Name *',
+            labelStyle: TextStyle(fontSize: 14.sp),
             hintText: 'e.g. Metformin',
-            prefixIcon: const Icon(Icons.medication_rounded),
+            prefixIcon: Icon(Icons.medication_rounded, size: 24.r),
             filled: true,
             fillColor: cs.surfaceContainerLowest,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(16.r),
               borderSide: BorderSide(color: cs.outlineVariant),
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24.h),
         _label('MEDICINE FORM'),
         Wrap(
-          spacing: 10,
-          runSpacing: 8,
-          children: types.map((t) => ChoiceChip(
-            label: Text(t),
-            selected: _selectedType == t,
-            onSelected: (_) => setState(() => _selectedType = t),
-            showCheckmark: false,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          )).toList(),
+          spacing: 10.w,
+          runSpacing: 8.h,
+          children: types
+              .map((t) => ChoiceChip(
+                    label: Text(t, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 13.sp)),
+                    selected: _selectedType == t,
+                    onSelected: (_) => setState(() => _selectedType = t),
+                    showCheckmark: false,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  ))
+              .toList(),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24.h),
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -234,23 +272,27 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
               child: TextField(
                 controller: _strengthController,
                 keyboardType: TextInputType.number,
+                style: TextStyle(fontSize: 15.sp),
                 decoration: InputDecoration(
                   labelText: 'Dose Strength',
+                  labelStyle: TextStyle(fontSize: 14.sp),
                   filled: true,
                   fillColor: cs.surfaceContainerLowest,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r)),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12.w),
             Expanded(
               child: DropdownButtonFormField<String>(
-                value: _unit,
+                initialValue: _unit,
+                style: TextStyle(fontSize: 14.sp, color: cs.onSurface),
                 decoration: InputDecoration(
                   labelText: 'Unit',
+                  labelStyle: TextStyle(fontSize: 14.sp),
                   filled: true,
                   fillColor: cs.surfaceContainerLowest,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r)),
                 ),
                 items: units.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
                 onChanged: (v) => setState(() => _unit = v!),
@@ -258,31 +300,39 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24.h),
         _label('INSTRUCTIONS'),
         Wrap(
-          spacing: 10,
-          runSpacing: 8,
-          children: instructions.map((i) => ChoiceChip(
-            label: Text(i),
-            selected: _selectedInstruction == i,
-            onSelected: (_) => setState(() => _selectedInstruction = i),
-            showCheckmark: false,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          )).toList(),
+          spacing: 10.w,
+          runSpacing: 8.h,
+          children: instructions
+              .map((i) => ChoiceChip(
+                    label: Text(i, style: Theme.of( context).textTheme.bodyMedium?.copyWith(fontSize: 13.sp)),
+                    selected: _selectedInstruction == i,
+                    onSelected: (_) => setState(() => _selectedInstruction = i),
+                    showCheckmark: false,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  ))
+              .toList(),
         ),
-        const SizedBox(height: 24),
-        DropdownButtonFormField<String>(
-          value: _selectedProfile,
-          decoration: InputDecoration(
-            labelText: 'Add medicine for',
-            prefixIcon: const Icon(Icons.person_pin_rounded),
-            filled: true,
-            fillColor: cs.surfaceContainerLowest,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-          ),
-          items: profiles.map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
-          onChanged: (v) => setState(() => _selectedProfile = v!),
+        SizedBox(height: 24.h),
+        BlocBuilder<ProfileCubit, ProfileState>(
+          builder: (context, state) {
+            return DropdownButtonFormField<String>(
+              initialValue: _selectedProfileId ?? state.activeProfile?.id,
+              style: TextStyle(fontSize: 15.sp, color: cs.onSurface),
+              decoration: InputDecoration(
+                labelText: 'Add medicine for',
+                labelStyle: TextStyle(fontSize: 14.sp),
+                prefixIcon: Icon(Icons.person_pin_rounded, size: 24.r),
+                filled: true,
+                fillColor: cs.surfaceContainerLowest,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r)),
+              ),
+              items: state.profiles.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name))).toList(),
+              onChanged: (v) => setState(() => _selectedProfileId = v!),
+            );
+          },
         ),
       ],
     );
@@ -298,59 +348,61 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       children: [
         _label('FREQUENCY'),
         Wrap(
-          spacing: 10,
-          runSpacing: 8,
-          children: freqs.map((f) => ChoiceChip(
-            label: Text(f),
-            selected: _selectedFrequency == f,
-            onSelected: (_) => setState(() => _selectedFrequency = f),
-            showCheckmark: false,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          )).toList(),
+          spacing: 10.w,
+          runSpacing: 8.h,
+          children: freqs
+              .map((f) => ChoiceChip(
+                    label: Text(f, style: Theme.of( context).textTheme.bodyMedium?.copyWith(fontSize: 13.sp)),
+                    selected: _selectedFrequency == f,
+                    onSelected: (_) => setState(() => _selectedFrequency = f),
+                    showCheckmark: false,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  ))
+              .toList(),
         ),
-        const SizedBox(height: 28),
+        SizedBox(height: 28.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _label('REMINDER TIMES'),
             TextButton.icon(
               onPressed: _addTime,
-              icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
-              label: const Text('Add Time'),
+              icon: Icon(Icons.add_circle_outline_rounded, size: 18.r),
+              label: Text('Add Time', style: TextStyle(fontSize: 13.sp)),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         ..._times.asMap().entries.map((e) => Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
-          ),
-          child: ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(10),
+              margin: EdgeInsets.only(bottom: 12.h),
               decoration: BoxDecoration(
-                color: cs.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
+                color: cs.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
               ),
-              child: Icon(Icons.access_time_filled_rounded, color: cs.primary, size: 20),
-            ),
-            title: Text(e.value.format(context), 
-              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-            subtitle: Text(_timeLabel(e.key), style: tt.bodySmall),
-            trailing: IconButton(
-              icon: Icon(Icons.delete_outline_rounded, color: cs.error, size: 22),
-              onPressed: () => _removeTime(e.key),
-            ),
-            onTap: () async {
-              final result = await showTimePicker(context: context, initialTime: e.value);
-              if (result != null) setState(() => _times[e.key] = result);
-            },
-          ),
-        )),
-        const SizedBox(height: 16),
+              child: ListTile(
+                leading: Container(
+                  padding: EdgeInsets.all(10.r),
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: Icon(Icons.access_time_filled_rounded, color: cs.primary, size: 20.r),
+                ),
+                title: Text(e.value.format(context),
+                    style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w800, fontSize: 16.sp)),
+                subtitle: Text(_timeLabel(e.key), style: tt.bodySmall?.copyWith(fontSize: 12.sp)),
+                trailing: IconButton(
+                  icon: Icon(Icons.delete_outline_rounded, color: cs.error, size: 22.r),
+                  onPressed: () => _removeTime(e.key),
+                ),
+                onTap: () async {
+                  final result = await showTimePicker(context: context, initialTime: e.value);
+                  if (result != null) setState(() => _times[e.key] = result);
+                },
+              ),
+            )),
+        SizedBox(height: 16.h),
         _ModernSwitchTile(
           value: _repeatUntilConfirmed,
           onChanged: (v) => setState(() => _repeatUntilConfirmed = v),
@@ -358,7 +410,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           subtitle: 'Re-rings every 5 min if not answered',
           icon: Icons.repeat_rounded,
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         _ModernSwitchTile(
           value: _snoozeEnabled,
           onChanged: (v) => setState(() => _snoozeEnabled = v),
@@ -388,54 +440,58 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           subtitle: 'Standard reminder on your phone',
           isOn: true,
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         _InfoTile(
           icon: Icons.priority_high_rounded,
           title: 'Critical Alert',
           subtitle: 'Overrides silent/DND mode',
           isOn: false,
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24.h),
         TextField(
+          style: TextStyle(fontSize: 15.sp),
           decoration: InputDecoration(
             labelText: 'Reminder Message',
+            labelStyle: TextStyle(fontSize: 14.sp),
             hintText: 'e.g. Time to take Metformin',
-            prefixIcon: const Icon(Icons.chat_bubble_outline_rounded),
+            prefixIcon: Icon(Icons.chat_bubble_outline_rounded, size: 22.r),
             filled: true,
             fillColor: cs.surfaceContainerLowest,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r)),
           ),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24.h),
         _label('NOTIFICATION SOUND'),
         DropdownButtonFormField<String>(
           value: 'Standard chime',
+          style: TextStyle(fontSize: 15.sp, color: cs.onSurface),
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.music_note_rounded),
+            prefixIcon: Icon(Icons.music_note_rounded, size: 22.r),
             filled: true,
             fillColor: cs.surfaceContainerLowest,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r)),
           ),
           items: ['Standard chime', 'Soft bell', 'Alarm tone', 'Vibrate only']
-              .map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+              .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+              .toList(),
           onChanged: (_) {},
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24.h),
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16.r),
           decoration: BoxDecoration(
-            color: cs.secondaryContainer.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(16),
+            color: cs.secondaryContainer.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: cs.secondaryContainer),
           ),
           child: Row(
             children: [
-              Icon(Icons.info_outline_rounded, color: cs.secondary, size: 20),
-              const SizedBox(width: 12),
+              Icon(Icons.info_outline_rounded, color: cs.secondary, size: 20.r),
+              SizedBox(width: 12.w),
               Expanded(
                 child: Text(
                   'Quiet hours and repeat behavior can be configured in Global Settings.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSecondaryContainer),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSecondaryContainer, fontSize: 11.sp),
                 ),
               ),
             ],
@@ -448,7 +504,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   Widget _buildStep4() {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -456,36 +512,39 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         TextField(
           controller: _stockController,
           keyboardType: TextInputType.number,
+          style: TextStyle(fontSize: 15.sp),
           decoration: InputDecoration(
             labelText: 'Current Stock Quantity',
-            prefixIcon: const Icon(Icons.inventory_2_rounded),
+            labelStyle: TextStyle(fontSize: 14.sp),
+            prefixIcon: Icon(Icons.inventory_2_rounded, size: 22.r),
             suffixText: _selectedType == 'Syrup' ? 'ml' : 'units',
             filled: true,
             fillColor: cs.surfaceContainerLowest,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r)),
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16.r),
           decoration: BoxDecoration(
-            color: cs.primaryContainer.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: cs.primaryContainer.withOpacity(0.5)),
+            color: cs.primaryContainer.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: cs.primaryContainer.withValues(alpha: 0.5)),
           ),
           child: Row(
             children: [
-              Icon(Icons.auto_awesome_rounded, color: cs.primary, size: 22),
-              const SizedBox(width: 12),
+              Icon(Icons.auto_awesome_rounded, color: cs.primary, size: 22.r),
+              SizedBox(width: 12.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Auto-Calculated Supply', style: tt.titleSmall?.copyWith(color: cs.primary, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 2),
+                    Text('Auto-Calculated Supply',
+                        style: tt.titleSmall?.copyWith(color: cs.primary, fontWeight: FontWeight.bold, fontSize: 13.sp)),
+                    SizedBox(height: 2.h),
                     Text(
                       'Based on dose frequency: ~${int.tryParse(_stockController.text) != null ? (int.parse(_stockController.text) ~/ _times.length) : "?"} day supply remaining.',
-                      style: tt.bodySmall?.copyWith(color: cs.primary.withOpacity(0.8)),
+                      style: tt.bodySmall?.copyWith(color: cs.primary.withValues(alpha: 0.8), fontSize: 11.sp),
                     ),
                   ],
                 ),
@@ -493,7 +552,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24.h),
         _ModernSwitchTile(
           value: _refillReminder,
           onChanged: (v) => setState(() => _refillReminder = v),
@@ -502,21 +561,23 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           icon: Icons.notifications_active_rounded,
         ),
         if (_refillReminder) ...[
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           TextField(
             controller: _alertDaysController,
             keyboardType: TextInputType.number,
+            style: TextStyle(fontSize: 15.sp),
             decoration: InputDecoration(
               labelText: 'Alert me when',
-              suffixText: 'days supply left',
-              prefixIcon: const Icon(Icons.upcoming_rounded),
+              labelStyle: TextStyle(fontSize: 14.sp),
+              suffixText: 'days left',
+              prefixIcon: Icon(Icons.upcoming_rounded, size: 22.r),
               filled: true,
               fillColor: cs.surfaceContainerLowest,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.r)),
             ),
           ),
         ],
-        const SizedBox(height: 32),
+        SizedBox(height: 32.h),
         _label('ATTACH PRESCRIPTION (OPTIONAL)'),
         _UploadOption(
           icon: Icons.camera_enhance_rounded,
@@ -524,21 +585,22 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           subtitle: 'Capture the label or paper',
           onTap: () {},
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         _UploadOption(
           icon: Icons.photo_library_rounded,
           title: 'Upload from Gallery',
           subtitle: 'Pick a photo or PDF file',
           onTap: () {},
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24.h),
         Center(
           child: TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Skip for now', style: tt.bodyMedium?.copyWith(color: cs.outline, fontWeight: FontWeight.normal)),
+            child:
+                Text('Skip for now', style: tt.bodyMedium?.copyWith(color: cs.outline, fontWeight: FontWeight.normal, fontSize: 14.sp)),
           ),
         ),
-        const SizedBox(height: 32),
+        SizedBox(height: 32.h),
       ],
     );
   }
@@ -546,12 +608,14 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   Widget _label(String text) {
     final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12, left: 4),
-      child: Text(text, style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: cs.primary,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 1.0,
-      )),
+      padding: EdgeInsets.only(bottom: 12.h, left: 4.w),
+      child: Text(text,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: cs.primary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.0,
+                fontSize: 10.sp,
+              )),
     );
   }
 }
@@ -563,29 +627,32 @@ class _ModernSwitchTile extends StatelessWidget {
   final IconData icon;
 
   const _ModernSwitchTile({
-    required this.value, required this.onChanged, 
-    required this.title, required this.subtitle, required this.icon,
+    required this.value,
+    required this.onChanged,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    
+
     return Container(
       decoration: BoxDecoration(
         color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: SwitchListTile(
         value: value,
         onChanged: onChanged,
         activeColor: cs.primary,
-        secondary: Icon(icon, color: cs.secondary, size: 22),
-        title: Text(title, style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700)),
-        subtitle: Text(subtitle, style: tt.bodySmall),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+        secondary: Icon(icon, color: cs.secondary, size: 22.r),
+        title: Text(title, style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
+        subtitle: Text(subtitle, style: tt.bodySmall?.copyWith(fontSize: 12.sp)),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w),
       ),
     );
   }
@@ -604,23 +671,26 @@ class _InfoTile extends StatefulWidget {
 class _InfoTileState extends State<_InfoTile> {
   late bool _on;
   @override
-  void initState() { super.initState(); _on = widget.isOn; }
+  void initState() {
+    super.initState();
+    _on = widget.isOn;
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: _on ? cs.primaryContainer.withOpacity(0.1) : cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _on ? cs.primary.withOpacity(0.3) : cs.outlineVariant.withOpacity(0.5)),
+        color: _on ? cs.primaryContainer.withValues(alpha: 0.1) : cs.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: _on ? cs.primary.withValues(alpha: 0.3) : cs.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: ListTile(
-        leading: Icon(widget.icon, color: _on ? cs.primary : cs.outline),
-        title: Text(widget.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-        subtitle: Text(widget.subtitle, style: const TextStyle(fontSize: 12)),
+        leading: Icon(widget.icon, color: _on ? cs.primary : cs.outline, size: 24.r),
+        title: Text(widget.title, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.sp)),
+        subtitle: Text(widget.subtitle, style: TextStyle(fontSize: 11.sp)),
         trailing: Switch(value: _on, onChanged: (v) => setState(() => _on = v), activeColor: cs.primary),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
       ),
     );
   }
@@ -637,32 +707,32 @@ class _UploadOption extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(16.r),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.r),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
           color: cs.surfaceContainerLow,
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: cs.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Icon(icon, color: cs.primary, size: 22),
+              padding: EdgeInsets.all(10.r),
+              decoration: BoxDecoration(color: cs.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12.r)),
+              child: Icon(icon, color: cs.primary, size: 22.r),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-                  Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                  Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
+                  Text(subtitle, style: TextStyle(color: cs.onSurfaceVariant, fontSize: 11.sp)),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: cs.outline, size: 20),
+            Icon(Icons.chevron_right_rounded, color: cs.outline, size: 20.r),
           ],
         ),
       ),

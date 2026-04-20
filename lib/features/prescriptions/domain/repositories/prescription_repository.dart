@@ -1,3 +1,11 @@
+import '../entities/prescription.dart';
+
 abstract class PrescriptionRepository {
-  // Future<Either<Failure, Prescription>> getPrescriptions();
+  Stream<List<Prescription>> watchAll();
+  Future<List<Prescription>> getAll();
+  Future<void> upsert(Prescription prescription);
+  Future<void> delete(String id);
+
+  Future<void> syncFromRemote();
+  Future<void> syncToRemote();
 }

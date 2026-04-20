@@ -1,17 +1,9 @@
-import 'package:hive/hive.dart';
 import 'package:equatable/equatable.dart';
 
-part 'dose_event.g.dart';
-
-@HiveType(typeId: 10) // Unique ID for this enum
 enum DoseStatus {
-  @HiveField(0)
   taken,
-  @HiveField(1)
   missed,
-  @HiveField(2)
   skipped,
-  @HiveField(3)
   snoozed
 }
 
