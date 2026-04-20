@@ -62,6 +62,20 @@ class WelcomePage extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  const TrustChip(
+                    icon: Icons.star_rounded,
+                    label: '4.9',
+                    sub: 'Play Store',
+                    iconColor: Color(0xFFFFB300),
+                  ),
+                  SizedBox(width: 8.w),
+                  TrustChip(
+                    icon: Icons.people_rounded,
+                    label: '500K+',
+                    sub: 'users',
+                    iconColor: cs.primary,
+                  ),
+                  SizedBox(width: 8.w),
                   TrustChip(
                     icon: Icons.verified_user_rounded,
                     label: 'Private',
@@ -71,6 +85,58 @@ class WelcomePage extends StatelessWidget {
                 ],
               ),
               const Spacer(),
+              Container(
+                padding: EdgeInsets.all(16.r),
+                decoration: BoxDecoration(
+                  color: cs.surface.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(18.r),
+                  border: Border.all(color: cs.primary.withValues(alpha: 0.15)),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 22.r,
+                      backgroundColor: cs.primary.withValues(alpha: 0.15),
+                      child: Text('R',
+                          style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w900,
+                              color: cs.primary)),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: List.generate(
+                              5,
+                              (_) => Icon(Icons.star_rounded,
+                                  size: 12.r, color: const Color(0xFFFFB300)),
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            '"Helped my father take his BP pills on time. Life-changing."',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurface,
+                              fontWeight: FontWeight.w600,
+                              height: 1.35,
+                              fontSize: 11.sp,
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text('— Rafiq · Dhaka',
+                              style:
+                                  tt.labelSmall?.copyWith(color: cs.outline, fontSize: 10.sp)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20.h),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
