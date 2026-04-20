@@ -13,7 +13,7 @@ class ProfileTable extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get initials => text()();
-  
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -29,6 +29,11 @@ class MedicineTable extends Table {
   IntColumn get stockTotal => integer()();
   IntColumn get daysLeft => integer()();
   BoolColumn get isLowStock => boolean()();
+  TextColumn get imagePath => text().nullable()();
+  RealColumn get amount => real().withDefault(const Constant(1.0))();
+  TextColumn get strength => text().nullable()();
+  TextColumn get unit => text().nullable()();
+  TextColumn get reminderTimes => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -39,9 +44,11 @@ class DoseLogTable extends Table {
   TextColumn get id => text()();
   TextColumn get medicineId => text().references(MedicineTable, #id)();
   TextColumn get medicineName => text()();
-  DateTimeColumn get logDateTime => dateTime()(); // Renamed to avoid clash with Table.dateTime()
-  IntColumn get status => integer()(); 
+  DateTimeColumn get logDateTime =>
+      dateTime()(); // Renamed to avoid clash with Table.dateTime()
+  IntColumn get status => integer()();
   TextColumn get note => text().nullable()();
+  DateTimeColumn get scheduledDateTime => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -68,7 +75,7 @@ class PrescriptionTable extends Table {
   DateTimeColumn get date => dateTime()();
   TextColumn get reason => text()();
   TextColumn get imageUrl => text().nullable()();
-  TextColumn get medicines => text()(); 
+  TextColumn get medicines => text()();
   BoolColumn get isScanned => boolean().withDefault(const Constant(false))();
 
   @override
@@ -78,10 +85,14 @@ class PrescriptionTable extends Table {
 @DataClassName('ReminderSettingsTableData')
 class ReminderSettingsTable extends Table {
   TextColumn get id => text().withDefault(const Constant('primary'))();
-  BoolColumn get enableNotifications => boolean().withDefault(const Constant(true))();
-  IntColumn get snoozeDurationMinutes => integer().withDefault(const Constant(10))();
-  TextColumn get notificationSound => text().withDefault(const Constant('default'))();
-  BoolColumn get criticalAlerts => boolean().withDefault(const Constant(false))();
+  BoolColumn get enableNotifications =>
+      boolean().withDefault(const Constant(true))();
+  IntColumn get snoozeDurationMinutes =>
+      integer().withDefault(const Constant(10))();
+  TextColumn get notificationSound =>
+      text().withDefault(const Constant('default'))();
+  BoolColumn get criticalAlerts =>
+      boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -90,10 +101,10 @@ class ReminderSettingsTable extends Table {
 // ── Database ───────────────────────────────────────────────────────
 
 @DriftDatabase(tables: [
-  ProfileTable, 
-  MedicineTable, 
-  DoseLogTable, 
-  EmergencyCardTable, 
+  ProfileTable,
+  MedicineTable,
+  DoseLogTable,
+  EmergencyCardTable,
   PrescriptionTable,
   ReminderSettingsTable
 ])
@@ -103,36 +114,66 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase._internal() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 3;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.addColumn(medicineTable, medicineTable.imagePath);
+            await m.addColumn(medicineTable, medicineTable.amount);
+            await m.addColumn(medicineTable, medicineTable.strength);
+            await m.addColumn(medicineTable, medicineTable.unit);
+          }
+          if (from < 3) {
+            await m.addColumn(medicineTable, medicineTable.reminderTimes);
+            await m.addColumn(doseLogTable, doseLogTable.scheduledDateTime);
+          }
+        },
+      );
 
   // ── Helper Methods ───────────────────────────────────────────────
-  
+
   // Medicines
-  Future<List<MedicineTableData>> getAllMedicines() => select(medicineTable).get();
-  Stream<List<MedicineTableData>> watchAllMedicines() => select(medicineTable).watch();
-  Future insertMedicine(MedicineTableData med) => into(medicineTable).insert(med, mode: InsertMode.insertOrReplace);
-  Future deleteMedicine(String id) => (delete(medicineTable)..where((t) => t.id.equals(id))).go();
-  
+  Future<List<MedicineTableData>> getAllMedicines() =>
+      select(medicineTable).get();
+  Stream<List<MedicineTableData>> watchAllMedicines() =>
+      select(medicineTable).watch();
+  Future insertMedicine(MedicineTableData med) =>
+      into(medicineTable).insert(med, mode: InsertMode.insertOrReplace);
+  Future deleteMedicine(String id) =>
+      (delete(medicineTable)..where((t) => t.id.equals(id))).go();
+
   // Profiles
   Future<List<ProfileTableData>> getAllProfiles() => select(profileTable).get();
-  Future insertProfile(ProfileTableData pro) => into(profileTable).insert(pro, mode: InsertMode.insertOrReplace);
-  
+  Future insertProfile(ProfileTableData pro) =>
+      into(profileTable).insert(pro, mode: InsertMode.insertOrReplace);
+
   // DoseLogs
   Future<List<DoseLogTableData>> getAllDoseLogs() => select(doseLogTable).get();
-  Stream<List<DoseLogTableData>> watchAllDoseLogs() => select(doseLogTable).watch();
-  Future insertDoseLog(DoseLogTableData log) => into(doseLogTable).insert(log, mode: InsertMode.insertOrReplace);
-  
+  Stream<List<DoseLogTableData>> watchAllDoseLogs() =>
+      select(doseLogTable).watch();
+  Future insertDoseLog(DoseLogTableData log) =>
+      into(doseLogTable).insert(log, mode: InsertMode.insertOrReplace);
+
   // Emergency Card
-  Future<EmergencyCardTableData?> getEmergencyCard() => select(emergencyCardTable).getSingleOrNull();
-  Future saveEmergencyCard(EmergencyCardTableData data) => into(emergencyCardTable).insert(data, mode: InsertMode.insertOrReplace);
-  
+  Future<EmergencyCardTableData?> getEmergencyCard() =>
+      select(emergencyCardTable).getSingleOrNull();
+  Future saveEmergencyCard(EmergencyCardTableData data) =>
+      into(emergencyCardTable).insert(data, mode: InsertMode.insertOrReplace);
+
   // Prescriptions
-  Future<List<PrescriptionTableData>> getAllPrescriptions() => select(prescriptionTable).get();
-  Future insertPrescription(PrescriptionTableData rx) => into(prescriptionTable).insert(rx, mode: InsertMode.insertOrReplace);
+  Future<List<PrescriptionTableData>> getAllPrescriptions() =>
+      select(prescriptionTable).get();
+  Future insertPrescription(PrescriptionTableData rx) =>
+      into(prescriptionTable).insert(rx, mode: InsertMode.insertOrReplace);
 
   // Reminder Settings
-  Future<ReminderSettingsTableData?> getReminderSettings() => select(reminderSettingsTable).getSingleOrNull();
-  Future saveReminderSettings(ReminderSettingsTableData settings) => into(reminderSettingsTable).insert(settings, mode: InsertMode.insertOrReplace);
+  Future<ReminderSettingsTableData?> getReminderSettings() =>
+      select(reminderSettingsTable).getSingleOrNull();
+  Future saveReminderSettings(ReminderSettingsTableData settings) =>
+      into(reminderSettingsTable)
+          .insert(settings, mode: InsertMode.insertOrReplace);
 }
 
 LazyDatabase _openConnection() {

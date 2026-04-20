@@ -5,7 +5,6 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import '../storage/app_database.dart';
 import '../storage/data_mappers.dart';
-import '../../features/medicines/domain/entities/medicine.dart';
 import '../../features/history/domain/entities/dose_log.dart';
 import '../../features/medicines/domain/refill_predictor.dart';
 import 'notification_channels.dart';
@@ -27,60 +26,66 @@ void _handleNotificationAction(String? actionId, String? payload) async {
   if (payload == null) return;
 
   final db = AppDatabase.instance;
-  
+
   // Payload format: "medicineId|doseIdx|scheduledTimeIso"
   final parts = payload.split('|');
   final medId = parts[0];
-  final scheduledStr = parts.length > 2 ? parts[2] : (parts.length > 1 ? parts[1] : null);
+  final scheduledStr =
+      parts.length > 2 ? parts[2] : (parts.length > 1 ? parts[1] : null);
 
   debugPrint('[NotificationService] Action: $actionId for Medicine: $medId');
 
   if (actionId == 'take') {
     final allMeds = await db.getAllMedicines();
-    final medData = allMeds.firstWhere((m) => m.id == medId, orElse: () => throw Exception('Medicine not found'));
+    final medData = allMeds.firstWhere((m) => m.id == medId,
+        orElse: () => throw Exception('Medicine not found'));
     final med = DataMappers.medicineFromTable(medData);
 
-    if (med != null) {
-      // 1. Decrement stock
-      final newStock = (med.stockRemaining - 1).clamp(0, med.stockTotal);
+    // 1. Decrement stock
+    final newStock = (med.stockRemaining - 1).clamp(0, med.stockTotal);
 
-      // 2. Predict refill
-      final dosesPerDay = RefillPredictor.parseDosesPerDay(med.schedule);
-      final prediction = RefillPredictor.predict(currentStock: newStock, dosesPerDay: dosesPerDay);
+    // 2. Predict refill
+    final dosesPerDay = RefillPredictor.parseDosesPerDay(med.schedule);
+    final prediction = RefillPredictor.predict(
+        currentStock: newStock, dosesPerDay: dosesPerDay);
 
-      final updatedMed = med.copyWith(
-        stockRemaining: newStock,
-        daysLeft: prediction.daysRemaining,
-        isLowStock: prediction.isWarning,
+    final updatedMed = med.copyWith(
+      stockRemaining: newStock,
+      daysLeft: prediction.daysRemaining,
+      isLowStock: prediction.isWarning,
+    );
+    await db.insertMedicine(DataMappers.medicineToTable(updatedMed));
+
+    // 3. Log event
+    final log = DoseLog(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      medicineId: medId,
+      medicineName: med.name,
+      dateTime: DateTime.now(),
+      status: DoseStatus.taken,
+      scheduledDateTime:
+          scheduledStr != null ? DateTime.tryParse(scheduledStr) : null,
+    );
+    await db.insertDoseLog(DataMappers.doseLogToTable(log));
+    debugPrint('[NotificationService] Recorded dose for $medId');
+
+    // 4. Fire Refill Alert if hit threshold
+    if (prediction.daysRemaining == 3 ||
+        prediction.daysRemaining == 1 ||
+        newStock == 0) {
+      await NotificationService.instance.showNow(
+        id: medId.hashCode + 999,
+        title: '⚠️ Refill Reminder: ${med.name}',
+        body: prediction.message,
+        channelId: NotificationChannels.refillAlerts,
       );
-      await db.insertMedicine(DataMappers.medicineToTable(updatedMed));
-
-      // 3. Log event
-      final log = DoseLog(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        medicineId: medId,
-        medicineName: med.name,
-        dateTime: DateTime.now(),
-        status: DoseStatus.taken,
-      );
-      await db.insertDoseLog(DataMappers.doseLogToTable(log));
-      debugPrint('[NotificationService] Recorded dose for $medId');
-
-      // 4. Fire Refill Alert if hit threshold
-      if (prediction.daysRemaining == 3 || prediction.daysRemaining == 1 || newStock == 0) {
-        await NotificationService.instance.showNow(
-          id: medId.hashCode + 999,
-          title: '⚠️ Refill Reminder: ${med.name}',
-          body: prediction.message,
-          channelId: NotificationChannels.refillAlerts,
-        );
-      }
     }
   } else if (actionId == 'skip') {
     final log = DoseLog(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       medicineId: medId,
-      medicineName: 'Unknown', // Ideally we'd fetch it, but skipping is often quick
+      medicineName:
+          'Unknown', // Ideally we'd fetch it, but skipping is often quick
       dateTime: DateTime.now(),
       status: DoseStatus.skipped,
     );
@@ -93,7 +98,8 @@ class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
 
-  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
   FlutterLocalNotificationsPlugin get plugin => _plugin;
@@ -106,7 +112,8 @@ class NotificationService {
     tz_data.initializeTimeZones();
 
     // Android init
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
     // iOS / macOS init
     const darwinSettings = DarwinInitializationSettings(
@@ -124,12 +131,14 @@ class NotificationService {
     await _plugin.initialize(
       initSettings,
       onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
-      onDidReceiveBackgroundNotificationResponse: onDidReceiveBackgroundNotificationResponse,
+      onDidReceiveBackgroundNotificationResponse:
+          onDidReceiveBackgroundNotificationResponse,
     );
 
     // Create Android notification channels
     if (Platform.isAndroid) {
-      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
       if (androidPlugin != null) {
         for (final channel in NotificationChannels.all) {
           await androidPlugin.createNotificationChannel(channel);
@@ -144,11 +153,13 @@ class NotificationService {
   /// Request notification permission (call from UI context).
   Future<bool> requestPermission() async {
     if (Platform.isAndroid) {
-      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
       final granted = await androidPlugin?.requestNotificationsPermission();
       return granted ?? false;
     } else if (Platform.isIOS) {
-      final iosPlugin = _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+      final iosPlugin = _plugin.resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>();
       final granted = await iosPlugin?.requestPermissions(
         alert: true,
         badge: true,
@@ -164,7 +175,8 @@ class NotificationService {
   /// scheduled reminders). No-op on iOS.
   Future<bool> requestExactAlarmsPermission() async {
     if (!Platform.isAndroid) return true;
-    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
     final granted = await androidPlugin?.requestExactAlarmsPermission();
     return granted ?? false;
   }
@@ -180,19 +192,25 @@ class NotificationService {
     bool critical = false,
     List<AndroidNotificationAction>? actions,
   }) async {
-    final effectiveChannel = critical ? NotificationChannels.medsCritical : channelId;
+    final effectiveChannel =
+        critical ? NotificationChannels.medsCritical : channelId;
 
     final androidDetails = AndroidNotificationDetails(
       effectiveChannel,
-      effectiveChannel == NotificationChannels.medsCritical ? 'Critical Medication Alerts' : 'Medication Reminders',
+      effectiveChannel == NotificationChannels.medsCritical
+          ? 'Critical Medication Alerts'
+          : 'Medication Reminders',
       importance: critical ? Importance.max : Importance.high,
       priority: critical ? Priority.max : Priority.high,
       category: AndroidNotificationCategory.reminder,
       actions: actions ??
           const [
-            AndroidNotificationAction('take', '✅ Take', showsUserInterface: true),
-            AndroidNotificationAction('snooze', '⏰ Snooze', showsUserInterface: false),
-            AndroidNotificationAction('skip', '❌ Skip', showsUserInterface: false),
+            AndroidNotificationAction('take', '✅ Take',
+                showsUserInterface: true),
+            AndroidNotificationAction('snooze', '⏰ Snooze',
+                showsUserInterface: false),
+            AndroidNotificationAction('skip', '❌ Skip',
+                showsUserInterface: false),
           ],
     );
 
@@ -215,7 +233,8 @@ class NotificationService {
       details,
       payload: payload,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 
@@ -235,7 +254,8 @@ class NotificationService {
       category: AndroidNotificationCategory.reminder,
       actions: const [
         AndroidNotificationAction('take', '✅ Take', showsUserInterface: true),
-        AndroidNotificationAction('snooze', '⏰ Snooze', showsUserInterface: false),
+        AndroidNotificationAction('snooze', '⏰ Snooze',
+            showsUserInterface: false),
         AndroidNotificationAction('skip', '❌ Skip', showsUserInterface: false),
       ],
     );

@@ -24,7 +24,7 @@ class SettingsScreen extends StatelessWidget {
           SizedBox(height: 24.h),
 
           // ── Preferences Section ──────────────────────────────────
-          _SectionTitle('Preferences'),
+          const _SectionTitle('Preferences'),
           _SettingsTile(
             icon: Icons.notifications_active_outlined,
             title: 'Notifications & Reminders',
@@ -32,11 +32,12 @@ class SettingsScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const RemindersScreen()),
+                MaterialPageRoute(
+                    builder: (context) => const RemindersScreen()),
               );
             },
           ),
-          
+
           // Dark Mode Toggle
           BlocBuilder<ThemeCubit, ThemeState>(
             builder: (context, state) {
@@ -53,35 +54,38 @@ class SettingsScreen extends StatelessWidget {
                     }
                   },
                   items: const [
-                    DropdownMenuItem(value: ThemeModeOption.system, child: Text('System')),
-                    DropdownMenuItem(value: ThemeModeOption.light, child: Text('Light')),
-                    DropdownMenuItem(value: ThemeModeOption.dark, child: Text('Dark')),
+                    DropdownMenuItem(
+                        value: ThemeModeOption.system, child: Text('System')),
+                    DropdownMenuItem(
+                        value: ThemeModeOption.light, child: Text('Light')),
+                    DropdownMenuItem(
+                        value: ThemeModeOption.dark, child: Text('Dark')),
                   ],
                 ),
               );
             },
           ),
-          
+
           _SettingsTile(
             icon: Icons.security_outlined,
             title: 'Security & Biometrics',
             subtitle: 'Face ID, App lock',
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Security settings coming soon!')));
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Security settings coming soon!')));
             },
           ),
           SizedBox(height: 24.h),
 
           // ── Data Section ─────────────────────────────────────────
-          _SectionTitle('Data & Backup'),
+          const _SectionTitle('Data & Backup'),
           _SettingsTile(
             icon: Icons.cloud_upload_outlined,
             title: 'Automatic Backup',
             subtitle: 'Last synced: 2 hours ago',
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Backup triggered successfully! ✓')));
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Backup triggered successfully! ✓')));
             },
           ),
           _SettingsTile(
@@ -89,14 +93,14 @@ class SettingsScreen extends StatelessWidget {
             title: 'Export Health Data',
             subtitle: 'PDF, CSV or FHIR format',
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Generating health report PDF...')));
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Generating health report PDF...')));
             },
           ),
           SizedBox(height: 24.h),
 
           // ── Support Section ──────────────────────────────────────
-          _SectionTitle('Support'),
+          const _SectionTitle('Support'),
           _SettingsTile(
             icon: Icons.help_outline_rounded,
             title: 'Help Center',
@@ -116,8 +120,8 @@ class SettingsScreen extends StatelessWidget {
           SizedBox(height: 24.h),
 
           // ── About Section ────────────────────────────────────────
-          _SectionTitle('About'),
-          _SettingsTile(
+          const _SectionTitle('About'),
+          const _SettingsTile(
             icon: Icons.info_outline_rounded,
             title: 'Software Version',
             subtitle: '1.2.0 (Stable)',
@@ -126,13 +130,13 @@ class SettingsScreen extends StatelessWidget {
             icon: Icons.gavel_outlined,
             title: 'Terms & Privacy Policy',
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Opening terms and conditions...')));
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Opening terms and conditions...')));
             },
           ),
-          
+
           SizedBox(height: 32.h),
-          
+
           // Sign Out
           Center(
             child: TextButton(
@@ -146,8 +150,11 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   Icon(Icons.logout_rounded, size: 18.r),
                   SizedBox(width: 8.w),
-                  Text('Sign out from this device', 
-                    style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 14.sp)),
+                  Text('Sign out from this device',
+                      style: TextStyle(
+                          fontFamily: 'Nunito',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14.sp)),
                 ],
               ),
             ),
@@ -160,9 +167,12 @@ class SettingsScreen extends StatelessWidget {
 
   String _getThemeModeLabel(ThemeModeOption option) {
     switch (option) {
-      case ThemeModeOption.system: return 'System Default';
-      case ThemeModeOption.light: return 'Light Mode';
-      case ThemeModeOption.dark: return 'Dark Mode';
+      case ThemeModeOption.system:
+        return 'System Default';
+      case ThemeModeOption.light:
+        return 'Light Mode';
+      case ThemeModeOption.dark:
+        return 'Dark Mode';
     }
   }
 
@@ -172,7 +182,8 @@ class SettingsScreen extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Sign out?'),
-        content: const Text('Are you sure you want to sign out? Your local data will be safely encrypted.'),
+        content: const Text(
+            'Are you sure you want to sign out? Your local data will be safely encrypted.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -180,7 +191,8 @@ class SettingsScreen extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context),
-            style: FilledButton.styleFrom(backgroundColor: cs.error, foregroundColor: cs.onError),
+            style: FilledButton.styleFrom(
+                backgroundColor: cs.error, foregroundColor: cs.onError),
             child: const Text('Sign out'),
           ),
         ],
@@ -222,26 +234,36 @@ class _ProfileCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 3.w),
+                  border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.5), width: 3.w),
                 ),
                 alignment: Alignment.center,
-                child: Text('MH', 
-                  style: tt.headlineSmall?.copyWith(color: cs.primary, fontWeight: FontWeight.w800, fontSize: 18.sp)),
+                child: Text('MH',
+                    style: tt.headlineSmall?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18.sp)),
               ),
               SizedBox(width: 16.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Mhr Habib', 
-                      style: tt.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18.sp)),
-                    Text('Joined March 2024', 
-                      style: tt.bodySmall?.copyWith(color: Colors.white.withValues(alpha: 0.9), fontSize: 11.sp)),
+                    Text('Mhr Habib',
+                        style: tt.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 18.sp)),
+                    Text('Joined March 2024',
+                        style: tt.bodySmall?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: 11.sp)),
                   ],
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.edit_note_rounded, color: Colors.white, size: 24.r),
+                icon: Icon(Icons.edit_note_rounded,
+                    color: Colors.white, size: 24.r),
                 onPressed: () {},
               ),
             ],
@@ -256,11 +278,11 @@ class _ProfileCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _StatItem(label: 'Medicines', value: '12'),
+                const _StatItem(label: 'Medicines', value: '12'),
                 _StatDivider(),
-                _StatItem(label: 'Streak', value: '5d'),
+                const _StatItem(label: 'Streak', value: '5d'),
                 _StatDivider(),
-                _StatItem(label: 'Points', value: '450'),
+                const _StatItem(label: 'Points', value: '450'),
               ],
             ),
           ),
@@ -279,8 +301,14 @@ class _StatItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(value, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18.sp)),
-        Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 11.sp)),
+        Text(value,
+            style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                fontSize: 18.sp)),
+        Text(label,
+            style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.8), fontSize: 11.sp)),
       ],
     );
   }
@@ -289,7 +317,8 @@ class _StatItem extends StatelessWidget {
 class _StatDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(width: 1.w, height: 24.h, color: Colors.white.withValues(alpha: 0.2));
+    return Container(
+        width: 1.w, height: 24.h, color: Colors.white.withValues(alpha: 0.2));
   }
 }
 
@@ -301,13 +330,13 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.fromLTRB(4.w, 0, 0, 12.h),
-      child: Text(title, 
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.5,
-          fontSize: 12.sp,
-        )),
+      child: Text(title,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+                fontSize: 12.sp,
+              )),
     );
   }
 }
@@ -357,17 +386,23 @@ class _SettingsTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, 
-                      style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, fontSize: 14.sp)),
+                    Text(title,
+                        style: TextStyle(
+                            fontFamily: 'Nunito',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.sp)),
                     if (subtitle != null)
-                      Text(subtitle!, 
-                        style: TextStyle(color: cs.onSurfaceVariant, fontSize: 11.sp)),
+                      Text(subtitle!,
+                          style: TextStyle(
+                              color: cs.onSurfaceVariant, fontSize: 11.sp)),
                   ],
                 ),
               ),
-              if (trailing != null) trailing!
+              if (trailing != null)
+                trailing!
               else if (onTap != null)
-                Icon(Icons.chevron_right_rounded, color: cs.outline, size: 20.r),
+                Icon(Icons.chevron_right_rounded,
+                    color: cs.outline, size: 20.r),
             ],
           ),
         ),

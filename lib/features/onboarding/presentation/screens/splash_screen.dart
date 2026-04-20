@@ -21,11 +21,20 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _navigateToNext() async {
     // Artificial delay for splash effect
     await Future.delayed(const Duration(milliseconds: 2500));
-    
+
     if (!mounted) return;
 
-    final state = context.read<OnboardingCubit>().state;
-    
+    final onboardingCubit = context.read<OnboardingCubit>();
+
+    // Wait for the cubit to finish loading if it hasn't already
+    if (!onboardingCubit.state.isLoaded) {
+      await onboardingCubit.stream.firstWhere((state) => state.isLoaded);
+    }
+
+    if (!mounted) return;
+
+    final state = onboardingCubit.state;
+
     if (state.hasCompletedOnboarding) {
       context.go('/');
     } else {
@@ -47,7 +56,7 @@ class _SplashScreenState extends State<SplashScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -56,24 +65,26 @@ class _SplashScreenState extends State<SplashScreen> {
                 color: Colors.white,
               ),
             )
-            .animate(onPlay: (controller) => controller.repeat())
-            .shimmer(duration: 1500.ms, color: Colors.white.withOpacity(0.3))
-            .scale(
-              begin: const Offset(1, 1),
-              end: const Offset(1.1, 1.1),
-              duration: 1000.ms,
-              curve: Curves.easeInOut,
-            )
-            .then()
-            .scale(
-              begin: const Offset(1.1, 1.1),
-              end: const Offset(1, 1),
-              duration: 1000.ms,
-              curve: Curves.easeInOut,
-            ),
-            
+                .animate(onPlay: (controller) => controller.repeat())
+                .shimmer(
+                    duration: 1500.ms,
+                    color: Colors.white.withValues(alpha: 0.3))
+                .scale(
+                  begin: const Offset(1, 1),
+                  end: const Offset(1.1, 1.1),
+                  duration: 1000.ms,
+                  curve: Curves.easeInOut,
+                )
+                .then()
+                .scale(
+                  begin: const Offset(1.1, 1.1),
+                  end: const Offset(1, 1),
+                  duration: 1000.ms,
+                  curve: Curves.easeInOut,
+                ),
+
             const SizedBox(height: 32),
-            
+
             // App Name with Slide and Fade
             const Text(
               'MediTime',
@@ -84,13 +95,14 @@ class _SplashScreenState extends State<SplashScreen> {
                 color: Colors.white,
                 letterSpacing: -1.5,
               ),
-            )
-            .animate()
-            .fadeIn(duration: 800.ms)
-            .slideY(begin: 0.3, end: 0, curve: Curves.easeOutBack, duration: 800.ms),
-            
+            ).animate().fadeIn(duration: 800.ms).slideY(
+                begin: 0.3,
+                end: 0,
+                curve: Curves.easeOutBack,
+                duration: 800.ms),
+
             const SizedBox(height: 8),
-            
+
             // Tagline
             Text(
               'Smart Health Companion',
@@ -98,12 +110,10 @@ class _SplashScreenState extends State<SplashScreen> {
                 fontFamily: 'Nunito',
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 letterSpacing: 1.5,
               ),
-            )
-            .animate()
-            .fadeIn(delay: 400.ms, duration: 800.ms),
+            ).animate().fadeIn(delay: 400.ms, duration: 800.ms),
           ],
         ),
       ),

@@ -12,6 +12,7 @@ const _kHealthGoal = 'health_goal';
 const _kIsPremium = 'is_premium';
 
 class OnboardingState extends Equatable {
+  final bool isLoaded;
   final bool hasCompletedOnboarding;
   final String? userName;
   final int? userAge;
@@ -22,6 +23,7 @@ class OnboardingState extends Equatable {
   final bool isPremium;
 
   const OnboardingState({
+    this.isLoaded = false,
     this.hasCompletedOnboarding = false,
     this.userName,
     this.userAge,
@@ -33,6 +35,7 @@ class OnboardingState extends Equatable {
   });
 
   OnboardingState copyWith({
+    bool? isLoaded,
     bool? hasCompletedOnboarding,
     String? userName,
     int? userAge,
@@ -43,6 +46,7 @@ class OnboardingState extends Equatable {
     bool? isPremium,
   }) {
     return OnboardingState(
+      isLoaded: isLoaded ?? this.isLoaded,
       hasCompletedOnboarding:
           hasCompletedOnboarding ?? this.hasCompletedOnboarding,
       userName: userName ?? this.userName,
@@ -57,6 +61,7 @@ class OnboardingState extends Equatable {
 
   @override
   List<Object?> get props => [
+        isLoaded,
         hasCompletedOnboarding,
         userName,
         userAge,
@@ -76,6 +81,7 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     emit(OnboardingState(
+      isLoaded: true,
       hasCompletedOnboarding: prefs.getBool(_kOnboardingComplete) ?? false,
       userName: prefs.getString(_kUserName),
       userAge: prefs.getInt(_kUserAge),

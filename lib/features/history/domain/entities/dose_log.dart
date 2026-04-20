@@ -9,6 +9,7 @@ class DoseLog extends Equatable {
   final DateTime dateTime;
   final DoseStatus status;
   final String? note;
+  final DateTime? scheduledDateTime;
 
   const DoseLog({
     required this.id,
@@ -17,6 +18,7 @@ class DoseLog extends Equatable {
     required this.dateTime,
     required this.status,
     this.note,
+    this.scheduledDateTime,
   });
 
   @override

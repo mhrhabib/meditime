@@ -28,7 +28,9 @@ class MediTimeApp extends StatelessWidget {
             BlocProvider<ThemeCubit>(create: (_) => ThemeCubit()),
             BlocProvider<OnboardingCubit>(create: (_) => OnboardingCubit()),
             BlocProvider<ProfileCubit>(create: (_) => ProfileCubit()),
-            BlocProvider<MedicineCubit>(create: (_) => MedicineCubit()),
+            BlocProvider<MedicineCubit>(
+                create: (context) => MedicineCubit(
+                    profileCubit: context.read<ProfileCubit>())),
             BlocProvider<HistoryCubit>(create: (_) => HistoryCubit()),
             BlocProvider<PrescriptionCubit>(create: (_) => PrescriptionCubit()),
             BlocProvider<SettingsCubit>(create: (_) => SettingsCubit()),

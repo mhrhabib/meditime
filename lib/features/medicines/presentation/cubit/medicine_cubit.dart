@@ -11,6 +11,7 @@ import 'package:meditime/features/medicines/data/repositories/medicine_repositor
 import 'package:meditime/features/medicines/domain/entities/medicine.dart';
 import 'package:meditime/features/medicines/domain/refill_predictor.dart';
 import 'package:meditime/features/medicines/domain/repositories/medicine_repository.dart';
+import 'package:meditime/features/profile/presentation/cubit/profile_cubit.dart';
 
 class MedicineState {
   final List<Medicine> medicines;
@@ -20,16 +21,24 @@ class MedicineState {
 class MedicineCubit extends Cubit<MedicineState> {
   final MedicineRepository _repo;
   final HistoryRepository _historyRepo;
+  final ProfileCubit _profileCubit;
   StreamSubscription? _sub;
+  StreamSubscription? _profileSub;
   String _currentProfileId = 'me';
 
   MedicineCubit({
     MedicineRepository? repo,
     HistoryRepository? historyRepo,
+    required ProfileCubit profileCubit,
   })  : _repo = repo ?? MedicineRepositoryImpl.instance,
         _historyRepo = historyRepo ?? HistoryRepositoryImpl.instance,
+        _profileCubit = profileCubit,
         super(const MedicineState()) {
+    _currentProfileId = _profileCubit.state.activeProfile?.id ?? 'me';
     _sub = _repo.watchAll().listen(_onMedicines);
+    _profileSub = _profileCubit.stream.listen((ps) {
+      setProfile(ps.activeProfile?.id ?? 'me');
+    });
   }
 
   void setProfile(String profileId) async {
@@ -39,9 +48,8 @@ class MedicineCubit extends Cubit<MedicineState> {
   }
 
   void _onMedicines(List<Medicine> all) {
-    final filtered = all
-        .where((m) => (m.profileId ?? 'me') == _currentProfileId)
-        .toList();
+    final filtered =
+        all.where((m) => (m.profileId ?? 'me') == _currentProfileId).toList();
     emit(MedicineState(medicines: filtered));
   }
 
@@ -87,6 +95,7 @@ class MedicineCubit extends Cubit<MedicineState> {
       medicineName: med.name,
       dateTime: DateTime.now(),
       status: DoseStatus.taken,
+      scheduledDateTime: scheduledTime,
     ));
 
     if (prediction.daysRemaining == 3 ||
@@ -104,6 +113,7 @@ class MedicineCubit extends Cubit<MedicineState> {
   @override
   Future<void> close() {
     _sub?.cancel();
+    _profileSub?.cancel();
     return super.close();
   }
 }

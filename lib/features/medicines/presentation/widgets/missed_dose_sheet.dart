@@ -144,14 +144,16 @@ class _MissedDoseSheetState extends State<MissedDoseSheet> {
               controller: _noteController,
               decoration: InputDecoration(
                 hintText: 'Add a note (optional)',
-                hintStyle: TextStyle(color: cs.onSurfaceVariant.withOpacity(0.6)),
+                hintStyle: TextStyle(
+                    color: cs.onSurfaceVariant.withValues(alpha: 0.6)),
                 filled: true,
                 fillColor: cs.surfaceContainerHighest,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
               maxLines: 2,
             ),
@@ -178,7 +180,8 @@ class _MissedDoseSheetState extends State<MissedDoseSheet> {
                   ),
                 ),
                 child: const Text('Save reason',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                    style:
+                        TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
               ),
             ),
           ],

@@ -295,6 +295,36 @@ class $MedicineTableTable extends MedicineTable
       requiredDuringInsert: true,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("is_low_stock" IN (0, 1))'));
+  static const VerificationMeta _imagePathMeta =
+      const VerificationMeta('imagePath');
+  @override
+  late final GeneratedColumn<String> imagePath = GeneratedColumn<String>(
+      'image_path', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+      'amount', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1.0));
+  static const VerificationMeta _strengthMeta =
+      const VerificationMeta('strength');
+  @override
+  late final GeneratedColumn<String> strength = GeneratedColumn<String>(
+      'strength', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+      'unit', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _reminderTimesMeta =
+      const VerificationMeta('reminderTimes');
+  @override
+  late final GeneratedColumn<String> reminderTimes = GeneratedColumn<String>(
+      'reminder_times', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -305,7 +335,12 @@ class $MedicineTableTable extends MedicineTable
         stockRemaining,
         stockTotal,
         daysLeft,
-        isLowStock
+        isLowStock,
+        imagePath,
+        amount,
+        strength,
+        unit,
+        reminderTimes
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -374,6 +409,28 @@ class $MedicineTableTable extends MedicineTable
     } else if (isInserting) {
       context.missing(_isLowStockMeta);
     }
+    if (data.containsKey('image_path')) {
+      context.handle(_imagePathMeta,
+          imagePath.isAcceptableOrUnknown(data['image_path']!, _imagePathMeta));
+    }
+    if (data.containsKey('amount')) {
+      context.handle(_amountMeta,
+          amount.isAcceptableOrUnknown(data['amount']!, _amountMeta));
+    }
+    if (data.containsKey('strength')) {
+      context.handle(_strengthMeta,
+          strength.isAcceptableOrUnknown(data['strength']!, _strengthMeta));
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+          _unitMeta, unit.isAcceptableOrUnknown(data['unit']!, _unitMeta));
+    }
+    if (data.containsKey('reminder_times')) {
+      context.handle(
+          _reminderTimesMeta,
+          reminderTimes.isAcceptableOrUnknown(
+              data['reminder_times']!, _reminderTimesMeta));
+    }
     return context;
   }
 
@@ -401,6 +458,16 @@ class $MedicineTableTable extends MedicineTable
           .read(DriftSqlType.int, data['${effectivePrefix}days_left'])!,
       isLowStock: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_low_stock'])!,
+      imagePath: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}image_path']),
+      amount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}amount'])!,
+      strength: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}strength']),
+      unit: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}unit']),
+      reminderTimes: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}reminder_times']),
     );
   }
 
@@ -421,6 +488,11 @@ class MedicineTableData extends DataClass
   final int stockTotal;
   final int daysLeft;
   final bool isLowStock;
+  final String? imagePath;
+  final double amount;
+  final String? strength;
+  final String? unit;
+  final String? reminderTimes;
   const MedicineTableData(
       {required this.id,
       this.profileId,
@@ -430,7 +502,12 @@ class MedicineTableData extends DataClass
       required this.stockRemaining,
       required this.stockTotal,
       required this.daysLeft,
-      required this.isLowStock});
+      required this.isLowStock,
+      this.imagePath,
+      required this.amount,
+      this.strength,
+      this.unit,
+      this.reminderTimes});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -445,6 +522,19 @@ class MedicineTableData extends DataClass
     map['stock_total'] = Variable<int>(stockTotal);
     map['days_left'] = Variable<int>(daysLeft);
     map['is_low_stock'] = Variable<bool>(isLowStock);
+    if (!nullToAbsent || imagePath != null) {
+      map['image_path'] = Variable<String>(imagePath);
+    }
+    map['amount'] = Variable<double>(amount);
+    if (!nullToAbsent || strength != null) {
+      map['strength'] = Variable<String>(strength);
+    }
+    if (!nullToAbsent || unit != null) {
+      map['unit'] = Variable<String>(unit);
+    }
+    if (!nullToAbsent || reminderTimes != null) {
+      map['reminder_times'] = Variable<String>(reminderTimes);
+    }
     return map;
   }
 
@@ -461,6 +551,17 @@ class MedicineTableData extends DataClass
       stockTotal: Value(stockTotal),
       daysLeft: Value(daysLeft),
       isLowStock: Value(isLowStock),
+      imagePath: imagePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imagePath),
+      amount: Value(amount),
+      strength: strength == null && nullToAbsent
+          ? const Value.absent()
+          : Value(strength),
+      unit: unit == null && nullToAbsent ? const Value.absent() : Value(unit),
+      reminderTimes: reminderTimes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reminderTimes),
     );
   }
 
@@ -477,6 +578,11 @@ class MedicineTableData extends DataClass
       stockTotal: serializer.fromJson<int>(json['stockTotal']),
       daysLeft: serializer.fromJson<int>(json['daysLeft']),
       isLowStock: serializer.fromJson<bool>(json['isLowStock']),
+      imagePath: serializer.fromJson<String?>(json['imagePath']),
+      amount: serializer.fromJson<double>(json['amount']),
+      strength: serializer.fromJson<String?>(json['strength']),
+      unit: serializer.fromJson<String?>(json['unit']),
+      reminderTimes: serializer.fromJson<String?>(json['reminderTimes']),
     );
   }
   @override
@@ -492,6 +598,11 @@ class MedicineTableData extends DataClass
       'stockTotal': serializer.toJson<int>(stockTotal),
       'daysLeft': serializer.toJson<int>(daysLeft),
       'isLowStock': serializer.toJson<bool>(isLowStock),
+      'imagePath': serializer.toJson<String?>(imagePath),
+      'amount': serializer.toJson<double>(amount),
+      'strength': serializer.toJson<String?>(strength),
+      'unit': serializer.toJson<String?>(unit),
+      'reminderTimes': serializer.toJson<String?>(reminderTimes),
     };
   }
 
@@ -504,7 +615,12 @@ class MedicineTableData extends DataClass
           int? stockRemaining,
           int? stockTotal,
           int? daysLeft,
-          bool? isLowStock}) =>
+          bool? isLowStock,
+          Value<String?> imagePath = const Value.absent(),
+          double? amount,
+          Value<String?> strength = const Value.absent(),
+          Value<String?> unit = const Value.absent(),
+          Value<String?> reminderTimes = const Value.absent()}) =>
       MedicineTableData(
         id: id ?? this.id,
         profileId: profileId.present ? profileId.value : this.profileId,
@@ -515,6 +631,12 @@ class MedicineTableData extends DataClass
         stockTotal: stockTotal ?? this.stockTotal,
         daysLeft: daysLeft ?? this.daysLeft,
         isLowStock: isLowStock ?? this.isLowStock,
+        imagePath: imagePath.present ? imagePath.value : this.imagePath,
+        amount: amount ?? this.amount,
+        strength: strength.present ? strength.value : this.strength,
+        unit: unit.present ? unit.value : this.unit,
+        reminderTimes:
+            reminderTimes.present ? reminderTimes.value : this.reminderTimes,
       );
   MedicineTableData copyWithCompanion(MedicineTableCompanion data) {
     return MedicineTableData(
@@ -531,6 +653,13 @@ class MedicineTableData extends DataClass
       daysLeft: data.daysLeft.present ? data.daysLeft.value : this.daysLeft,
       isLowStock:
           data.isLowStock.present ? data.isLowStock.value : this.isLowStock,
+      imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      strength: data.strength.present ? data.strength.value : this.strength,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      reminderTimes: data.reminderTimes.present
+          ? data.reminderTimes.value
+          : this.reminderTimes,
     );
   }
 
@@ -545,14 +674,32 @@ class MedicineTableData extends DataClass
           ..write('stockRemaining: $stockRemaining, ')
           ..write('stockTotal: $stockTotal, ')
           ..write('daysLeft: $daysLeft, ')
-          ..write('isLowStock: $isLowStock')
+          ..write('isLowStock: $isLowStock, ')
+          ..write('imagePath: $imagePath, ')
+          ..write('amount: $amount, ')
+          ..write('strength: $strength, ')
+          ..write('unit: $unit, ')
+          ..write('reminderTimes: $reminderTimes')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, profileId, name, type, schedule,
-      stockRemaining, stockTotal, daysLeft, isLowStock);
+  int get hashCode => Object.hash(
+      id,
+      profileId,
+      name,
+      type,
+      schedule,
+      stockRemaining,
+      stockTotal,
+      daysLeft,
+      isLowStock,
+      imagePath,
+      amount,
+      strength,
+      unit,
+      reminderTimes);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -565,7 +712,12 @@ class MedicineTableData extends DataClass
           other.stockRemaining == this.stockRemaining &&
           other.stockTotal == this.stockTotal &&
           other.daysLeft == this.daysLeft &&
-          other.isLowStock == this.isLowStock);
+          other.isLowStock == this.isLowStock &&
+          other.imagePath == this.imagePath &&
+          other.amount == this.amount &&
+          other.strength == this.strength &&
+          other.unit == this.unit &&
+          other.reminderTimes == this.reminderTimes);
 }
 
 class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
@@ -578,6 +730,11 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
   final Value<int> stockTotal;
   final Value<int> daysLeft;
   final Value<bool> isLowStock;
+  final Value<String?> imagePath;
+  final Value<double> amount;
+  final Value<String?> strength;
+  final Value<String?> unit;
+  final Value<String?> reminderTimes;
   final Value<int> rowid;
   const MedicineTableCompanion({
     this.id = const Value.absent(),
@@ -589,6 +746,11 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
     this.stockTotal = const Value.absent(),
     this.daysLeft = const Value.absent(),
     this.isLowStock = const Value.absent(),
+    this.imagePath = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.strength = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.reminderTimes = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MedicineTableCompanion.insert({
@@ -601,6 +763,11 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
     required int stockTotal,
     required int daysLeft,
     required bool isLowStock,
+    this.imagePath = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.strength = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.reminderTimes = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         name = Value(name),
@@ -620,6 +787,11 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
     Expression<int>? stockTotal,
     Expression<int>? daysLeft,
     Expression<bool>? isLowStock,
+    Expression<String>? imagePath,
+    Expression<double>? amount,
+    Expression<String>? strength,
+    Expression<String>? unit,
+    Expression<String>? reminderTimes,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -632,6 +804,11 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
       if (stockTotal != null) 'stock_total': stockTotal,
       if (daysLeft != null) 'days_left': daysLeft,
       if (isLowStock != null) 'is_low_stock': isLowStock,
+      if (imagePath != null) 'image_path': imagePath,
+      if (amount != null) 'amount': amount,
+      if (strength != null) 'strength': strength,
+      if (unit != null) 'unit': unit,
+      if (reminderTimes != null) 'reminder_times': reminderTimes,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -646,6 +823,11 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
       Value<int>? stockTotal,
       Value<int>? daysLeft,
       Value<bool>? isLowStock,
+      Value<String?>? imagePath,
+      Value<double>? amount,
+      Value<String?>? strength,
+      Value<String?>? unit,
+      Value<String?>? reminderTimes,
       Value<int>? rowid}) {
     return MedicineTableCompanion(
       id: id ?? this.id,
@@ -657,6 +839,11 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
       stockTotal: stockTotal ?? this.stockTotal,
       daysLeft: daysLeft ?? this.daysLeft,
       isLowStock: isLowStock ?? this.isLowStock,
+      imagePath: imagePath ?? this.imagePath,
+      amount: amount ?? this.amount,
+      strength: strength ?? this.strength,
+      unit: unit ?? this.unit,
+      reminderTimes: reminderTimes ?? this.reminderTimes,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -691,6 +878,21 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
     if (isLowStock.present) {
       map['is_low_stock'] = Variable<bool>(isLowStock.value);
     }
+    if (imagePath.present) {
+      map['image_path'] = Variable<String>(imagePath.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (strength.present) {
+      map['strength'] = Variable<String>(strength.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (reminderTimes.present) {
+      map['reminder_times'] = Variable<String>(reminderTimes.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -709,6 +911,11 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
           ..write('stockTotal: $stockTotal, ')
           ..write('daysLeft: $daysLeft, ')
           ..write('isLowStock: $isLowStock, ')
+          ..write('imagePath: $imagePath, ')
+          ..write('amount: $amount, ')
+          ..write('strength: $strength, ')
+          ..write('unit: $unit, ')
+          ..write('reminderTimes: $reminderTimes, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -757,9 +964,22 @@ class $DoseLogTableTable extends DoseLogTable
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
       'note', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _scheduledDateTimeMeta =
+      const VerificationMeta('scheduledDateTime');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, medicineId, medicineName, logDateTime, status, note];
+  late final GeneratedColumn<DateTime> scheduledDateTime =
+      GeneratedColumn<DateTime>('scheduled_date_time', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        medicineId,
+        medicineName,
+        logDateTime,
+        status,
+        note,
+        scheduledDateTime
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -809,6 +1029,12 @@ class $DoseLogTableTable extends DoseLogTable
       context.handle(
           _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
     }
+    if (data.containsKey('scheduled_date_time')) {
+      context.handle(
+          _scheduledDateTimeMeta,
+          scheduledDateTime.isAcceptableOrUnknown(
+              data['scheduled_date_time']!, _scheduledDateTimeMeta));
+    }
     return context;
   }
 
@@ -830,6 +1056,8 @@ class $DoseLogTableTable extends DoseLogTable
           .read(DriftSqlType.int, data['${effectivePrefix}status'])!,
       note: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}note']),
+      scheduledDateTime: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}scheduled_date_time']),
     );
   }
 
@@ -847,13 +1075,15 @@ class DoseLogTableData extends DataClass
   final DateTime logDateTime;
   final int status;
   final String? note;
+  final DateTime? scheduledDateTime;
   const DoseLogTableData(
       {required this.id,
       required this.medicineId,
       required this.medicineName,
       required this.logDateTime,
       required this.status,
-      this.note});
+      this.note,
+      this.scheduledDateTime});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -864,6 +1094,9 @@ class DoseLogTableData extends DataClass
     map['status'] = Variable<int>(status);
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
+    }
+    if (!nullToAbsent || scheduledDateTime != null) {
+      map['scheduled_date_time'] = Variable<DateTime>(scheduledDateTime);
     }
     return map;
   }
@@ -876,6 +1109,9 @@ class DoseLogTableData extends DataClass
       logDateTime: Value(logDateTime),
       status: Value(status),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      scheduledDateTime: scheduledDateTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(scheduledDateTime),
     );
   }
 
@@ -889,6 +1125,8 @@ class DoseLogTableData extends DataClass
       logDateTime: serializer.fromJson<DateTime>(json['logDateTime']),
       status: serializer.fromJson<int>(json['status']),
       note: serializer.fromJson<String?>(json['note']),
+      scheduledDateTime:
+          serializer.fromJson<DateTime?>(json['scheduledDateTime']),
     );
   }
   @override
@@ -901,6 +1139,7 @@ class DoseLogTableData extends DataClass
       'logDateTime': serializer.toJson<DateTime>(logDateTime),
       'status': serializer.toJson<int>(status),
       'note': serializer.toJson<String?>(note),
+      'scheduledDateTime': serializer.toJson<DateTime?>(scheduledDateTime),
     };
   }
 
@@ -910,7 +1149,8 @@ class DoseLogTableData extends DataClass
           String? medicineName,
           DateTime? logDateTime,
           int? status,
-          Value<String?> note = const Value.absent()}) =>
+          Value<String?> note = const Value.absent(),
+          Value<DateTime?> scheduledDateTime = const Value.absent()}) =>
       DoseLogTableData(
         id: id ?? this.id,
         medicineId: medicineId ?? this.medicineId,
@@ -918,6 +1158,9 @@ class DoseLogTableData extends DataClass
         logDateTime: logDateTime ?? this.logDateTime,
         status: status ?? this.status,
         note: note.present ? note.value : this.note,
+        scheduledDateTime: scheduledDateTime.present
+            ? scheduledDateTime.value
+            : this.scheduledDateTime,
       );
   DoseLogTableData copyWithCompanion(DoseLogTableCompanion data) {
     return DoseLogTableData(
@@ -931,6 +1174,9 @@ class DoseLogTableData extends DataClass
           data.logDateTime.present ? data.logDateTime.value : this.logDateTime,
       status: data.status.present ? data.status.value : this.status,
       note: data.note.present ? data.note.value : this.note,
+      scheduledDateTime: data.scheduledDateTime.present
+          ? data.scheduledDateTime.value
+          : this.scheduledDateTime,
     );
   }
 
@@ -942,14 +1188,15 @@ class DoseLogTableData extends DataClass
           ..write('medicineName: $medicineName, ')
           ..write('logDateTime: $logDateTime, ')
           ..write('status: $status, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('scheduledDateTime: $scheduledDateTime')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, medicineId, medicineName, logDateTime, status, note);
+  int get hashCode => Object.hash(id, medicineId, medicineName, logDateTime,
+      status, note, scheduledDateTime);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -959,7 +1206,8 @@ class DoseLogTableData extends DataClass
           other.medicineName == this.medicineName &&
           other.logDateTime == this.logDateTime &&
           other.status == this.status &&
-          other.note == this.note);
+          other.note == this.note &&
+          other.scheduledDateTime == this.scheduledDateTime);
 }
 
 class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
@@ -969,6 +1217,7 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
   final Value<DateTime> logDateTime;
   final Value<int> status;
   final Value<String?> note;
+  final Value<DateTime?> scheduledDateTime;
   final Value<int> rowid;
   const DoseLogTableCompanion({
     this.id = const Value.absent(),
@@ -977,6 +1226,7 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
     this.logDateTime = const Value.absent(),
     this.status = const Value.absent(),
     this.note = const Value.absent(),
+    this.scheduledDateTime = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   DoseLogTableCompanion.insert({
@@ -986,6 +1236,7 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
     required DateTime logDateTime,
     required int status,
     this.note = const Value.absent(),
+    this.scheduledDateTime = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         medicineId = Value(medicineId),
@@ -999,6 +1250,7 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
     Expression<DateTime>? logDateTime,
     Expression<int>? status,
     Expression<String>? note,
+    Expression<DateTime>? scheduledDateTime,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1008,6 +1260,7 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
       if (logDateTime != null) 'log_date_time': logDateTime,
       if (status != null) 'status': status,
       if (note != null) 'note': note,
+      if (scheduledDateTime != null) 'scheduled_date_time': scheduledDateTime,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1019,6 +1272,7 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
       Value<DateTime>? logDateTime,
       Value<int>? status,
       Value<String?>? note,
+      Value<DateTime?>? scheduledDateTime,
       Value<int>? rowid}) {
     return DoseLogTableCompanion(
       id: id ?? this.id,
@@ -1027,6 +1281,7 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
       logDateTime: logDateTime ?? this.logDateTime,
       status: status ?? this.status,
       note: note ?? this.note,
+      scheduledDateTime: scheduledDateTime ?? this.scheduledDateTime,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1052,6 +1307,9 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (scheduledDateTime.present) {
+      map['scheduled_date_time'] = Variable<DateTime>(scheduledDateTime.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1067,6 +1325,7 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
           ..write('logDateTime: $logDateTime, ')
           ..write('status: $status, ')
           ..write('note: $note, ')
+          ..write('scheduledDateTime: $scheduledDateTime, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2484,6 +2743,11 @@ typedef $$MedicineTableTableCreateCompanionBuilder = MedicineTableCompanion
   required int stockTotal,
   required int daysLeft,
   required bool isLowStock,
+  Value<String?> imagePath,
+  Value<double> amount,
+  Value<String?> strength,
+  Value<String?> unit,
+  Value<String?> reminderTimes,
   Value<int> rowid,
 });
 typedef $$MedicineTableTableUpdateCompanionBuilder = MedicineTableCompanion
@@ -2497,6 +2761,11 @@ typedef $$MedicineTableTableUpdateCompanionBuilder = MedicineTableCompanion
   Value<int> stockTotal,
   Value<int> daysLeft,
   Value<bool> isLowStock,
+  Value<String?> imagePath,
+  Value<double> amount,
+  Value<String?> strength,
+  Value<String?> unit,
+  Value<String?> reminderTimes,
   Value<int> rowid,
 });
 
@@ -2569,6 +2838,21 @@ class $$MedicineTableTableFilterComposer
 
   ColumnFilters<bool> get isLowStock => $composableBuilder(
       column: $table.isLowStock, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get imagePath => $composableBuilder(
+      column: $table.imagePath, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get strength => $composableBuilder(
+      column: $table.strength, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get reminderTimes => $composableBuilder(
+      column: $table.reminderTimes, builder: (column) => ColumnFilters(column));
 
   $$ProfileTableTableFilterComposer get profileId {
     final $$ProfileTableTableFilterComposer composer = $composerBuilder(
@@ -2646,6 +2930,22 @@ class $$MedicineTableTableOrderingComposer
   ColumnOrderings<bool> get isLowStock => $composableBuilder(
       column: $table.isLowStock, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get imagePath => $composableBuilder(
+      column: $table.imagePath, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get strength => $composableBuilder(
+      column: $table.strength, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get reminderTimes => $composableBuilder(
+      column: $table.reminderTimes,
+      builder: (column) => ColumnOrderings(column));
+
   $$ProfileTableTableOrderingComposer get profileId {
     final $$ProfileTableTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -2699,6 +2999,21 @@ class $$MedicineTableTableAnnotationComposer
 
   GeneratedColumn<bool> get isLowStock => $composableBuilder(
       column: $table.isLowStock, builder: (column) => column);
+
+  GeneratedColumn<String> get imagePath =>
+      $composableBuilder(column: $table.imagePath, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get strength =>
+      $composableBuilder(column: $table.strength, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<String> get reminderTimes => $composableBuilder(
+      column: $table.reminderTimes, builder: (column) => column);
 
   $$ProfileTableTableAnnotationComposer get profileId {
     final $$ProfileTableTableAnnotationComposer composer = $composerBuilder(
@@ -2774,6 +3089,11 @@ class $$MedicineTableTableTableManager extends RootTableManager<
             Value<int> stockTotal = const Value.absent(),
             Value<int> daysLeft = const Value.absent(),
             Value<bool> isLowStock = const Value.absent(),
+            Value<String?> imagePath = const Value.absent(),
+            Value<double> amount = const Value.absent(),
+            Value<String?> strength = const Value.absent(),
+            Value<String?> unit = const Value.absent(),
+            Value<String?> reminderTimes = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               MedicineTableCompanion(
@@ -2786,6 +3106,11 @@ class $$MedicineTableTableTableManager extends RootTableManager<
             stockTotal: stockTotal,
             daysLeft: daysLeft,
             isLowStock: isLowStock,
+            imagePath: imagePath,
+            amount: amount,
+            strength: strength,
+            unit: unit,
+            reminderTimes: reminderTimes,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -2798,6 +3123,11 @@ class $$MedicineTableTableTableManager extends RootTableManager<
             required int stockTotal,
             required int daysLeft,
             required bool isLowStock,
+            Value<String?> imagePath = const Value.absent(),
+            Value<double> amount = const Value.absent(),
+            Value<String?> strength = const Value.absent(),
+            Value<String?> unit = const Value.absent(),
+            Value<String?> reminderTimes = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               MedicineTableCompanion.insert(
@@ -2810,6 +3140,11 @@ class $$MedicineTableTableTableManager extends RootTableManager<
             stockTotal: stockTotal,
             daysLeft: daysLeft,
             isLowStock: isLowStock,
+            imagePath: imagePath,
+            amount: amount,
+            strength: strength,
+            unit: unit,
+            reminderTimes: reminderTimes,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -2891,6 +3226,7 @@ typedef $$DoseLogTableTableCreateCompanionBuilder = DoseLogTableCompanion
   required DateTime logDateTime,
   required int status,
   Value<String?> note,
+  Value<DateTime?> scheduledDateTime,
   Value<int> rowid,
 });
 typedef $$DoseLogTableTableUpdateCompanionBuilder = DoseLogTableCompanion
@@ -2901,6 +3237,7 @@ typedef $$DoseLogTableTableUpdateCompanionBuilder = DoseLogTableCompanion
   Value<DateTime> logDateTime,
   Value<int> status,
   Value<String?> note,
+  Value<DateTime?> scheduledDateTime,
   Value<int> rowid,
 });
 
@@ -2948,6 +3285,10 @@ class $$DoseLogTableTableFilterComposer
   ColumnFilters<String> get note => $composableBuilder(
       column: $table.note, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<DateTime> get scheduledDateTime => $composableBuilder(
+      column: $table.scheduledDateTime,
+      builder: (column) => ColumnFilters(column));
+
   $$MedicineTableTableFilterComposer get medicineId {
     final $$MedicineTableTableFilterComposer composer = $composerBuilder(
         composer: this,
@@ -2994,6 +3335,10 @@ class $$DoseLogTableTableOrderingComposer
   ColumnOrderings<String> get note => $composableBuilder(
       column: $table.note, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get scheduledDateTime => $composableBuilder(
+      column: $table.scheduledDateTime,
+      builder: (column) => ColumnOrderings(column));
+
   $$MedicineTableTableOrderingComposer get medicineId {
     final $$MedicineTableTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -3038,6 +3383,9 @@ class $$DoseLogTableTableAnnotationComposer
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get scheduledDateTime => $composableBuilder(
+      column: $table.scheduledDateTime, builder: (column) => column);
 
   $$MedicineTableTableAnnotationComposer get medicineId {
     final $$MedicineTableTableAnnotationComposer composer = $composerBuilder(
@@ -3089,6 +3437,7 @@ class $$DoseLogTableTableTableManager extends RootTableManager<
             Value<DateTime> logDateTime = const Value.absent(),
             Value<int> status = const Value.absent(),
             Value<String?> note = const Value.absent(),
+            Value<DateTime?> scheduledDateTime = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               DoseLogTableCompanion(
@@ -3098,6 +3447,7 @@ class $$DoseLogTableTableTableManager extends RootTableManager<
             logDateTime: logDateTime,
             status: status,
             note: note,
+            scheduledDateTime: scheduledDateTime,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -3107,6 +3457,7 @@ class $$DoseLogTableTableTableManager extends RootTableManager<
             required DateTime logDateTime,
             required int status,
             Value<String?> note = const Value.absent(),
+            Value<DateTime?> scheduledDateTime = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               DoseLogTableCompanion.insert(
@@ -3116,6 +3467,7 @@ class $$DoseLogTableTableTableManager extends RootTableManager<
             logDateTime: logDateTime,
             status: status,
             note: note,
+            scheduledDateTime: scheduledDateTime,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

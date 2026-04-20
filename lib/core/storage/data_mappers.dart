@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:meditime/core/storage/app_database.dart';
 import 'package:meditime/features/medicines/domain/entities/medicine.dart';
 import 'package:meditime/features/history/domain/entities/dose_log.dart' as entity;
@@ -18,6 +20,11 @@ class DataMappers {
       stockTotal: data.stockTotal,
       daysLeft: data.daysLeft,
       isLowStock: data.isLowStock,
+      imagePath: data.imagePath,
+      amount: data.amount,
+      strength: data.strength,
+      unit: data.unit,
+      times: _timeListFromJson(data.reminderTimes),
     );
   }
 
@@ -32,6 +39,11 @@ class DataMappers {
       stockTotal: entity.stockTotal,
       daysLeft: entity.daysLeft,
       isLowStock: entity.isLowStock,
+      imagePath: entity.imagePath,
+      amount: entity.amount,
+      strength: entity.strength,
+      unit: entity.unit,
+      reminderTimes: _timeListToJson(entity.times),
     );
   }
 
@@ -44,6 +56,7 @@ class DataMappers {
       dateTime: data.logDateTime,
       status: entity.DoseStatus.values[data.status],
       note: data.note,
+      scheduledDateTime: data.scheduledDateTime,
     );
   }
 
@@ -55,7 +68,27 @@ class DataMappers {
       logDateTime: data.dateTime,
       status: data.status.index,
       note: data.note,
+      scheduledDateTime: data.scheduledDateTime,
     );
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────
+  static String _timeListToJson(List<TimeOfDay> times) {
+    return jsonEncode(times.map((t) => '${t.hour}:${t.minute}').toList());
+  }
+
+  static List<TimeOfDay> _timeListFromJson(String? json) {
+    if (json == null || json.isEmpty) return [];
+    try {
+      final List<dynamic> list = jsonDecode(json);
+      return list.map((s) {
+        final parts = s.split(':');
+        return TimeOfDay(
+            hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+      }).toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   // ── Profile ──────────────────────────────────────────────────────

@@ -34,15 +34,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           children: [
             Text(
               'Personal Details',
-              style: tt.headlineSmall?.copyWith(fontSize: 20.sp, fontWeight: FontWeight.bold),
+              style: tt.headlineSmall
+                  ?.copyWith(fontSize: 20.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8.h),
             Text(
               'Let\'s build your medical profile for accurate reminders.',
               style: tt.bodyMedium?.copyWith(
-                    color: cs.outline,
-                    fontSize: 14.sp,
-                  ),
+                color: cs.outline,
+                fontSize: 14.sp,
+              ),
             ),
             SizedBox(height: 32.h),
             TextField(
@@ -52,7 +53,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 labelText: 'Full Name',
                 labelStyle: TextStyle(fontSize: 14.sp),
                 prefixIcon: Icon(Icons.person, size: 24.r),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r)),
               ),
             ),
             SizedBox(height: 20.h),
@@ -60,26 +62,30 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedGender,
+                    initialValue: _selectedGender,
                     style: TextStyle(fontSize: 14.sp, color: cs.onSurface),
                     decoration: InputDecoration(
                       labelText: 'Gender',
                       labelStyle: TextStyle(fontSize: 14.sp),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r)),
                     ),
-                    items: ['Male', 'Female', 'Other'].map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
+                    items: ['Male', 'Female', 'Other']
+                        .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                        .toList(),
                     onChanged: (v) => setState(() => _selectedGender = v!),
                   ),
                 ),
                 SizedBox(width: 16.w),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _selectedBlood,
+                    initialValue: _selectedBlood,
                     style: TextStyle(fontSize: 14.sp, color: cs.onSurface),
                     decoration: InputDecoration(
                       labelText: 'Blood Group',
                       labelStyle: TextStyle(fontSize: 14.sp),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r)),
                     ),
                     items: ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-']
                         .map((g) => DropdownMenuItem(value: g, child: Text(g)))
@@ -96,7 +102,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 labelText: 'Health Conditions (e.g. Diabetes, BP)',
                 labelStyle: TextStyle(fontSize: 14.sp),
                 prefixIcon: Icon(Icons.medical_information, size: 24.r),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r)),
               ),
               maxLines: 2,
             ),
@@ -107,7 +114,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 labelText: 'Allergies',
                 labelStyle: TextStyle(fontSize: 14.sp),
                 prefixIcon: Icon(Icons.warning_amber, size: 24.r),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r)),
               ),
             ),
           ],
@@ -132,12 +140,18 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   },
             style: FilledButton.styleFrom(
               minimumSize: Size(double.infinity, 56.h),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.r)),
             ),
             child: _isSaving
                 ? SizedBox(
-                    height: 20.r, width: 20.r, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : Text('Save Profile', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                    height: 20.r,
+                    width: 20.r,
+                    child: const CircularProgressIndicator(
+                        color: Colors.white, strokeWidth: 2))
+                : Text('Save Profile',
+                    style: TextStyle(
+                        fontSize: 16.sp, fontWeight: FontWeight.bold)),
           ),
         ),
       ),

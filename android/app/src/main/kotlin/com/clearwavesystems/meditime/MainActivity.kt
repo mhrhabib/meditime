@@ -1,4 +1,4 @@
-package com.example.meditime
+package com.clearwavesystems.meditime
 
 import io.flutter.embedding.android.FlutterActivity
 

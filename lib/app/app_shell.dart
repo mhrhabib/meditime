@@ -73,11 +73,16 @@ class _AppShellState extends State<AppShell> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildNavItem(0, SolarIconsOutline.home, SolarIconsOutline.home2, 'Home'),
-                  _buildNavItem(1, SolarIconsOutline.pill, SolarIconsOutline.pill, 'Meds'),
-                  _buildNavItem(2, SolarIconsOutline.history, SolarIconsOutline.history, 'History'),
-                  _buildNavItem(3, SolarIconsOutline.document, SolarIconsOutline.document, 'Docs'),
-                  _buildNavItem(4, SolarIconsOutline.settings, SolarIconsOutline.settings, 'Settings'),
+                  _buildNavItem(0, SolarIconsOutline.home,
+                      SolarIconsOutline.home2, 'Home'),
+                  _buildNavItem(1, SolarIconsOutline.pill,
+                      SolarIconsOutline.pill, 'Meds'),
+                  _buildNavItem(2, SolarIconsOutline.history,
+                      SolarIconsOutline.history, 'History'),
+                  _buildNavItem(3, SolarIconsOutline.document,
+                      SolarIconsOutline.document, 'Docs'),
+                  _buildNavItem(4, SolarIconsOutline.settings,
+                      SolarIconsOutline.settings, 'Settings'),
                 ],
               ),
             ),
@@ -88,7 +93,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   Widget? _getFAB() {
-    if (_index == 0 || _index == 1) {
+    if (_index == 1) {
       return Padding(
         padding: EdgeInsets.only(bottom: 30.h),
         child: FloatingActionButton.extended(
@@ -116,7 +121,8 @@ class _AppShellState extends State<AppShell> {
     return null;
   }
 
-  Widget _buildNavItem(int index, IconData icon, IconData selectedIcon, String label) {
+  Widget _buildNavItem(
+      int index, IconData icon, IconData selectedIcon, String label) {
     final isSelected = _index == index;
     final theme = Theme.of(context);
     final activeColor = theme.colorScheme.primary;

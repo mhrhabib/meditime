@@ -54,7 +54,11 @@ class MedicineScheduler {
   /// Schedule notifications for a single medicine for the next 14 days.
   static Future<void> scheduleForMedicine(Medicine medicine) async {
     final service = NotificationService.instance;
-    final doseTimes = _parseDoseTimes(medicine.schedule);
+    final doseTimes = medicine.times.isNotEmpty
+        ? medicine.times
+            .map((t) => Duration(hours: t.hour, minutes: t.minute))
+            .toList()
+        : _parseDoseTimes(medicine.schedule);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 

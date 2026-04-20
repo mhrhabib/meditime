@@ -39,46 +39,59 @@ class _RemindersScreenState extends State<RemindersScreen> {
             SwitchListTile(
               value: _soundVibration,
               onChanged: (v) => setState(() => _soundVibration = v),
-              activeColor: cs.primary,
+              activeThumbColor: cs.primary,
               secondary: _iconBox(context, Icons.volume_up_rounded, cs.primary),
               title: Text('Sound & Vibration',
-                  style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
-              subtitle: Text('Play a sound when a reminder fires', style: tt.bodySmall?.copyWith(fontSize: 12.sp)),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                  style: tt.bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
+              subtitle: Text('Play a sound when a reminder fires',
+                  style: tt.bodySmall?.copyWith(fontSize: 12.sp)),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
             ),
             const _Divider(),
             SwitchListTile(
               value: _autoRepeat,
               onChanged: (v) => setState(() => _autoRepeat = v),
-              activeColor: cs.primary,
+              activeThumbColor: cs.primary,
               secondary: _iconBox(context, Icons.repeat_rounded, cs.secondary),
               title: Text('Auto-repeat Alarm',
-                  style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
-              subtitle: Text('Re-rings every 5 min until you respond', style: tt.bodySmall?.copyWith(fontSize: 12.sp)),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                  style: tt.bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
+              subtitle: Text('Re-rings every 5 min until you respond',
+                  style: tt.bodySmall?.copyWith(fontSize: 12.sp)),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
             ),
             const _Divider(),
             SwitchListTile(
               value: _lockScreen,
               onChanged: (v) => setState(() => _lockScreen = v),
-              activeColor: cs.primary,
-              secondary: _iconBox(context, Icons.lock_outline_rounded, cs.tertiary),
+              activeThumbColor: cs.primary,
+              secondary:
+                  _iconBox(context, Icons.lock_outline_rounded, cs.tertiary),
               title: Text('Lock Screen Notification',
-                  style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
-              subtitle: Text('Show dose details without unlocking', style: tt.bodySmall?.copyWith(fontSize: 12.sp)),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                  style: tt.bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
+              subtitle: Text('Show dose details without unlocking',
+                  style: tt.bodySmall?.copyWith(fontSize: 12.sp)),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
             ),
             const _Divider(),
             SwitchListTile(
               value: _criticalOverride,
               onChanged: (v) => setState(() => _criticalOverride = v),
-              activeColor: cs.error,
-              secondary: _iconBox(context, Icons.priority_high_rounded, cs.error),
+              activeThumbColor: cs.error,
+              secondary:
+                  _iconBox(context, Icons.priority_high_rounded, cs.error),
               title: Text('Critical Alert Override',
-                  style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
+                  style: tt.bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
               subtitle: Text('Break through silent/DND for life-critical meds',
                   style: tt.bodySmall?.copyWith(fontSize: 12.sp)),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
             ),
           ]),
           SizedBox(height: 24.h),
@@ -89,19 +102,23 @@ class _RemindersScreenState extends State<RemindersScreen> {
             SwitchListTile(
               value: _allowSnooze,
               onChanged: (v) => setState(() => _allowSnooze = v),
-              activeColor: cs.primary,
+              activeThumbColor: cs.primary,
               secondary: _iconBox(context, Icons.snooze_rounded, cs.secondary),
               title: Text('Allow Snooze',
-                  style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
-              subtitle: Text('Snooze and respond later', style: tt.bodySmall?.copyWith(fontSize: 12.sp)),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                  style: tt.bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
+              subtitle: Text('Snooze and respond later',
+                  style: tt.bodySmall?.copyWith(fontSize: 12.sp)),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
             ),
             if (_allowSnooze) ...[
               const _Divider(),
               ListTile(
                 leading: _iconBox(context, Icons.timer_outlined, cs.outline),
                 title: Text('Snooze Duration',
-                    style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
+                    style: tt.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w700, fontSize: 15.sp)),
                 trailing: _StepperWidget(
                   value: _snoozeDuration,
                   unit: 'min',
@@ -116,8 +133,10 @@ class _RemindersScreenState extends State<RemindersScreen> {
               ListTile(
                 leading: _iconBox(context, Icons.block_rounded, cs.outline),
                 title: Text('Max Snooze Count',
-                    style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
-                subtitle: Text('After this, marked as missed', style: tt.bodySmall?.copyWith(fontSize: 12.sp)),
+                    style: tt.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w700, fontSize: 15.sp)),
+                subtitle: Text('After this, marked as missed',
+                    style: tt.bodySmall?.copyWith(fontSize: 12.sp)),
                 trailing: _StepperWidget(
                   value: _maxSnooze,
                   unit: 'times',
@@ -138,33 +157,49 @@ class _RemindersScreenState extends State<RemindersScreen> {
             SwitchListTile(
               value: _quietHours,
               onChanged: (v) => setState(() => _quietHours = v),
-              activeColor: cs.primary,
+              activeThumbColor: cs.primary,
               secondary: _iconBox(context, Icons.bedtime_outlined, cs.tertiary),
               title: Text('Enable Quiet Hours',
-                  style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
-              subtitle: Text('Mute non-critical reminders', style: tt.bodySmall?.copyWith(fontSize: 12.sp)),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+                  style: tt.bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
+              subtitle: Text('Mute non-critical reminders',
+                  style: tt.bodySmall?.copyWith(fontSize: 12.sp)),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
             ),
             if (_quietHours) ...[
               const _Divider(),
               ListTile(
-                leading: _iconBox(context, Icons.nights_stay_outlined, cs.outline),
-                title: Text('From', style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
+                leading:
+                    _iconBox(context, Icons.nights_stay_outlined, cs.outline),
+                title: Text('From',
+                    style: tt.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w700, fontSize: 15.sp)),
                 trailing: TextButton(
-                  onPressed: () => _pickTime(context, _quietStart, (t) => setState(() => _quietStart = t)),
+                  onPressed: () => _pickTime(context, _quietStart,
+                      (t) => setState(() => _quietStart = t)),
                   child: Text(_quietStart.format(context),
-                      style: TextStyle(fontWeight: FontWeight.w800, color: cs.primary, fontSize: 14.sp)),
+                      style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: cs.primary,
+                          fontSize: 14.sp)),
                 ),
                 contentPadding: EdgeInsets.symmetric(horizontal: 16.w),
               ),
               const _Divider(),
               ListTile(
                 leading: _iconBox(context, Icons.wb_sunny_outlined, cs.outline),
-                title: Text('Until', style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w700, fontSize: 15.sp)),
+                title: Text('Until',
+                    style: tt.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w700, fontSize: 15.sp)),
                 trailing: TextButton(
-                  onPressed: () => _pickTime(context, _quietEnd, (t) => setState(() => _quietEnd = t)),
+                  onPressed: () => _pickTime(
+                      context, _quietEnd, (t) => setState(() => _quietEnd = t)),
                   child: Text(_quietEnd.format(context),
-                      style: TextStyle(fontWeight: FontWeight.w800, color: cs.primary, fontSize: 14.sp)),
+                      style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: cs.primary,
+                          fontSize: 14.sp)),
                 ),
                 contentPadding: EdgeInsets.symmetric(horizontal: 16.w),
               ),
@@ -177,19 +212,23 @@ class _RemindersScreenState extends State<RemindersScreen> {
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Notification settings saved ✓', style: TextStyle(fontSize: 14.sp)),
+                  content: Text('Notification settings saved ✓',
+                      style: TextStyle(fontSize: 14.sp)),
                   behavior: SnackBarBehavior.floating,
                   backgroundColor: cs.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r)),
                 ),
               );
               Navigator.pop(context);
             },
             style: FilledButton.styleFrom(
               minimumSize: Size(double.infinity, 56.h),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.r)),
             ),
-            child: Text('Save Changes', style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold)),
+            child: Text('Save Changes',
+                style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold)),
           ),
           SizedBox(height: 48.h),
         ],
@@ -197,7 +236,8 @@ class _RemindersScreenState extends State<RemindersScreen> {
     );
   }
 
-  Future<void> _pickTime(BuildContext context, TimeOfDay initial, void Function(TimeOfDay) onPick) async {
+  Future<void> _pickTime(BuildContext context, TimeOfDay initial,
+      void Function(TimeOfDay) onPick) async {
     final result = await showTimePicker(context: context, initialTime: initial);
     if (result != null) onPick(result);
   }
@@ -261,7 +301,10 @@ class _Divider extends StatelessWidget {
         height: 1.h,
         indent: 56.w,
         endIndent: 16.w,
-        color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3));
+        color: Theme.of(context)
+            .colorScheme
+            .outlineVariant
+            .withValues(alpha: 0.3));
   }
 }
 
@@ -290,7 +333,8 @@ class _StepperWidget extends StatelessWidget {
           style: IconButton.styleFrom(minimumSize: Size(32.r, 32.r)),
         ),
         SizedBox(width: 12.w),
-        Text('$value $unit', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.sp)),
+        Text('$value $unit',
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.sp)),
         SizedBox(width: 4.w),
         IconButton.filledTonal(
           icon: Icon(Icons.add_rounded, size: 18.r),

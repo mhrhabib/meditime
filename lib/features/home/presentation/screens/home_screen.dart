@@ -3,363 +3,285 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:meditime/features/history/domain/entities/dose_log.dart';
 import 'package:meditime/features/history/presentation/cubit/history_cubit.dart';
+import 'package:meditime/features/home/presentation/widgets/adherence_summary.dart';
+import 'package:meditime/features/home/presentation/widgets/calendar_strip.dart';
+import 'package:meditime/features/home/presentation/widgets/elder_medicine_tile.dart';
+import 'package:meditime/features/home/presentation/widgets/header_icon_button.dart';
+import 'package:meditime/features/home/presentation/widgets/home_empty_state.dart';
+import 'package:meditime/features/home/presentation/widgets/profile_switcher.dart';
+import 'package:meditime/features/home/presentation/widgets/section_title.dart';
+import 'package:meditime/features/home/presentation/widgets/today_summary.dart';
+import 'package:meditime/features/medicines/domain/entities/medicine.dart';
 import 'package:meditime/features/medicines/presentation/screens/add_medicine_screen.dart';
 import 'package:meditime/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:meditime/features/medicines/presentation/cubit/medicine_cubit.dart';
 import 'package:meditime/features/profile/presentation/screens/profile_setup_screen.dart';
-import 'package:meditime/core/theme/app_theme.dart';
-import 'package:meditime/core/widgets/components.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+  List<DoseEvent> _getDoseEvents(
+      List<Medicine> medicines, List<DoseLog> logs, DateTime date) {
+    final List<DoseEvent> events = [];
+
+    for (final med in medicines) {
+      // Fallback for legacy medicines without times
+      final times =
+          med.times.isEmpty ? [const TimeOfDay(hour: 8, minute: 0)] : med.times;
+
+      for (final time in times) {
+        final scheduledDateTime = DateTime(
+          date.year,
+          date.month,
+          date.day,
+          time.hour,
+          time.minute,
+        );
+
+        final isTaken = logs.any((log) =>
+            log.medicineId == med.id &&
+            log.status == DoseStatus.taken &&
+            log.scheduledDateTime != null &&
+            log.scheduledDateTime!.year == scheduledDateTime.year &&
+            log.scheduledDateTime!.month == scheduledDateTime.month &&
+            log.scheduledDateTime!.day == scheduledDateTime.day &&
+            log.scheduledDateTime!.hour == scheduledDateTime.hour &&
+            log.scheduledDateTime!.minute == scheduledDateTime.minute);
+
+        events.add(DoseEvent(
+          medicine: med,
+          scheduledTime: time,
+          isTaken: isTaken,
+          scheduledDateTime: scheduledDateTime,
+        ));
+      }
+    }
+
+    // Sort by time
+    events.sort((a, b) {
+      final aVal = a.scheduledTime.hour * 60 + a.scheduledTime.minute;
+      final bVal = b.scheduledTime.hour * 60 + b.scheduledTime.minute;
+      return aVal.compareTo(bVal);
+    });
+
+    return events;
+  }
+
+  String _greeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: cs.surface,
       body: CustomScrollView(
         slivers: [
-          // ── Hero Header ──────────────────────────────────────────
           SliverAppBar(
-            expandedHeight: 180.h,
             pinned: true,
-            centerTitle: true,
-            stretch: true,
-            backgroundColor: cs.primary,
+            toolbarHeight: 64.h,
+            backgroundColor: cs.surface,
+            surfaceTintColor: cs.surface,
             elevation: 0,
-            scrolledUnderElevation: 1,
-            flexibleSpace: FlexibleSpaceBar(
-              stretchModes: const [StretchMode.zoomBackground],
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      cs.primary,
-                      isDark ? const Color(0xFF004040) : const Color(0xFF0B8E8E),
+            scrolledUnderElevation: 3,
+            shadowColor: cs.shadow.withValues(alpha: 0.08),
+            automaticallyImplyLeading: false,
+            titleSpacing: 16.w,
+            title: BlocBuilder<ProfileCubit, ProfileState>(
+              builder: (context, state) {
+                return ProfileSwitcher(
+                  name: state.activeProfileName,
+                  initials: state.initials,
+                  profiles: state.profiles,
+                  onSwitch: (id) {
+                    if (id == 'add') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ProfileSetupScreen(
+                            onComplete: () => Navigator.pop(context),
+                          ),
+                        ),
+                      );
+                    } else {
+                      context.read<ProfileCubit>().switchProfile(id);
+                      context.read<MedicineCubit>().setProfile(id);
+                    }
+                  },
+                );
+              },
+            ),
+            actions: [
+              HeaderIconButton(
+                icon: Icons.emergency_rounded,
+                background: Colors.red.withValues(alpha: 0.12),
+                iconColor: Colors.red.shade700,
+                tooltip: 'Medical ID',
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text(
+                            '🚑 Emergency Medical ID Notification Active')),
+                  );
+                },
+              ),
+              SizedBox(width: 8.w),
+              HeaderIconButton(
+                icon: Icons.notifications_none_rounded,
+                background: cs.surfaceContainerHighest,
+                iconColor: cs.onSurface,
+                onPressed: () {},
+              ),
+              SizedBox(width: 12.w),
+            ],
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 20.h),
+              child: BlocBuilder<ProfileCubit, ProfileState>(
+                builder: (context, state) {
+                  final firstName = state.activeProfileName.split(' ').first;
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${_greeting()},',
+                        style: TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                      SizedBox(width: 2.w),
+                      Text(
+                        firstName,
+                        style: TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 30.sp,
+                          fontWeight: FontWeight.w800,
+                          color: cs.onSurface,
+                          height: 1.1,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
-                  ),
-                ),
-                child: SafeArea(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(20.w, 48.h, 20.w, 0),
-                    child: BlocBuilder<ProfileCubit, ProfileState>(
-                      builder: (context, state) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  ProfileSwitcher(
-                                    name: state.activeProfileName,
-                                    initials: state.initials,
-                                    profiles: state.profiles,
-                                    onSwitch: (id) {
-                                      if (id == 'add') {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => ProfileSetupScreen(
-                                              onComplete: () => Navigator.pop(context),
-                                            ),
-                                          ),
-                                        );
-                                      } else {
-                                        context.read<ProfileCubit>().switchProfile(id);
-                                        context.read<MedicineCubit>().setProfile(id);
-                                      }
-                                    },
-                                  ),
-                                  SizedBox(width: 8.w),
-                                  Row(
-                                    children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.red.withValues(alpha: 0.2),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: IconButton(
-                                          icon: Icon(Icons.emergency_rounded, color: Colors.white, size: 24.r),
-                                          tooltip: 'Medical ID',
-                                          onPressed: () {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(
-                                                  content: Text('🚑 Emergency Medical ID Notification Active')),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                      SizedBox(width: 10.w),
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.15),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: IconButton(
-                                          icon: Icon(Icons.notifications_none_rounded, color: Colors.white, size: 24.r),
-                                          onPressed: () {},
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: 24.h),
-                            Text(
-                              'Good morning, ${state.activeProfileName.split(' ').first}',
-                              style: tt.headlineMedium?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 24.sp,
-                              ),
-                            ),
-                            Text(
-                              '${DateTime.now().day} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][DateTime.now().month - 1]} · ${context.read<MedicineCubit>().state.medicines.length} medicines today',
-                              style: tt.bodyMedium?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.85),
-                                fontSize: 13.sp,
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
           ),
-
-          // ── Main Content ─────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.all(16.r),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Stats Row
-                  BlocBuilder<MedicineCubit, MedicineState>(
-                    builder: (context, medState) {
-                      final lowStockCount =
-                          medState.medicines.where((m) => m.isLowStock).length;
-                      final totalScheduled = medState.medicines.length;
-
-                      return BlocBuilder<HistoryCubit, HistoryState>(
-                        builder: (context, historyState) {
-                          final takenToday = historyState.events.where((e) {
-                            final now = DateTime.now();
-                            return e.status == DoseStatus.taken &&
-                                e.dateTime.year == now.year &&
-                                e.dateTime.month == now.month &&
-                                e.dateTime.day == now.day;
-                          }).length;
-
-                          return Row(
-                            children: [
-                              Expanded(
-                                child: StatCard(
-                                  value: totalScheduled.toString(),
-                                  label: 'Scheduled',
-                                  containerColor:
-                                      cs.primaryContainer.withValues(alpha: 0.4),
-                                  contentColor: cs.primary,
-                                  icon: Icons.calendar_today_rounded,
-                                ),
-                              ),
-                              SizedBox(width: 10.w),
-                              Expanded(
-                                child: StatCard(
-                                  value: takenToday.toString(),
-                                  label: 'Taken',
-                                  containerColor:
-                                      StatusColors.getTakenContainer(context),
-                                  contentColor: StatusColors.getTaken(context),
-                                  icon: Icons.check_circle_rounded,
-                                ),
-                              ),
-                              SizedBox(width: 10.w),
-                              Expanded(
-                                child: StatCard(
-                                  value: lowStockCount.toString(),
-                                  label: 'Low stock',
-                                  containerColor:
-                                      StatusColors.getLowStockContainer(context),
-                                  contentColor:
-                                      StatusColors.getLowStock(context),
-                                  icon: Icons.inventory_2_rounded,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
-                  SizedBox(height: 24.h),
-
-                  // Calendar Strip
-                  CalendarStrip(
-                    onDateSelected: (date) {
-                      // Filter logic for selected date
-                    },
-                  ),
-                  SizedBox(height: 24.h),
-
-                  // Adherence card (real data)
-                  BlocBuilder<HistoryCubit, HistoryState>(
+              padding: EdgeInsets.fromLTRB(16.r, 0, 16.r, 0),
+              child: BlocBuilder<MedicineCubit, MedicineState>(
+                builder: (context, medState) {
+                  return BlocBuilder<HistoryCubit, HistoryState>(
                     builder: (context, historyState) {
-                      final actionable =
-                          historyState.takenCount + historyState.missedCount;
-                      final pct = (historyState.adherenceRate * 100).round();
-                      final headline = actionable == 0
-                          ? 'Log your first dose to start tracking adherence.'
-                          : 'You\'ve kept $pct% adherence this month.';
-                      final sub = actionable == 0
-                          ? 'Every dose you log helps build your history.'
-                          : '${historyState.takenCount} taken · ${historyState.missedCount} missed';
-                      return Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(20.r),
-                        decoration: BoxDecoration(
-                          color: cs.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(24.r),
-                          border: Border.all(
-                              color: cs.outlineVariant.withValues(alpha: 0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('This month',
-                                      style: tt.labelSmall?.copyWith(
-                                          color: cs.primary,
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: 1,
-                                          fontSize: 10.sp)),
-                                  SizedBox(height: 8.h),
-                                  Text(headline,
-                                      style: tt.titleSmall?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 13.sp)),
-                                  SizedBox(height: 4.h),
-                                  Text(sub,
-                                      style: tt.bodySmall?.copyWith(
-                                          color: cs.onSurfaceVariant,
-                                          fontSize: 11.sp)),
-                                ],
-                              ),
-                            ),
-                            SizedBox(width: 16.w),
-                            Container(
-                              padding: EdgeInsets.all(12.r),
-                              decoration: BoxDecoration(
-                                color: cs.primary.withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(Icons.trending_up_rounded,
-                                  color: cs.primary, size: 28.r),
-                            ),
-                          ],
-                        ),
+                      final now = DateTime.now();
+                      final today = DateTime(now.year, now.month, now.day);
+
+                      final allEvents = _getDoseEvents(
+                        medState.medicines,
+                        historyState.events,
+                        today,
                       );
-                    },
-                  ),
 
-                  SizedBox(height: 32.h),
+                      final pending =
+                          allEvents.where((e) => !e.isTaken).toList();
+                      final taken = allEvents.where((e) => e.isTaken).toList();
 
-                  // Timeline
-                  SectionHeader(
-                      title: "Today's schedule",
-                      action: 'See all',
-                      onAction: () {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(const SnackBar(content: Text('See all medications')));
-                      }),
-
-                  BlocBuilder<MedicineCubit, MedicineState>(
-                    builder: (context, state) {
-                      if (state.medicines.isEmpty) {
-                        return Padding(
-                          padding: EdgeInsets.symmetric(vertical: 40.h),
-                          child: Center(
-                            child: Column(
-                              children: [
-                                Icon(Icons.medication_outlined, size: 48.r, color: cs.outlineVariant),
-                                SizedBox(height: 12.h),
-                                Text('No medicines scheduled today',
-                                    style: tt.bodyMedium?.copyWith(color: cs.outline, fontSize: 14.sp)),
-                                SizedBox(height: 24.h),
-                                FilledButton.icon(
-                                  onPressed: () {
-                                    Navigator.push(
-                                        context, MaterialPageRoute(builder: (_) => const AddMedicineScreen()));
-                                  },
-                                  icon: Icon(Icons.add_rounded, size: 20.r),
-                                  label: Text('Add your first medicine', style: TextStyle(fontSize: 14.sp)),
-                                ),
-                              ],
-                            ),
+                      if (medState.medicines.isEmpty) {
+                        return HomeEmptyState(
+                          onAdd: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const AddMedicineScreen()),
                           ),
                         );
                       }
 
-                      return BlocBuilder<HistoryCubit, HistoryState>(
-                        builder: (context, historyState) {
-                          final now = DateTime.now();
-                          final takenIdsToday = historyState.events
-                              .where((e) =>
-                                  e.status == DoseStatus.taken &&
-                                  e.dateTime.year == now.year &&
-                                  e.dateTime.month == now.month &&
-                                  e.dateTime.day == now.day)
-                              .map((e) => e.medicineId)
-                              .toSet();
-
-                          return ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            padding: EdgeInsets.zero,
-                            itemCount: state.medicines.length,
-                            itemBuilder: (context, index) {
-                              final med = state.medicines[index];
-                              final status = takenIdsToday.contains(med.id)
-                                  ? MedicineStatus.taken
-                                  : MedicineStatus.pending;
-
-                              return MedicineTile(
-                                time: med.schedule,
-                                name: med.name,
-                                dose: '1 ${med.type.toLowerCase()}',
-                                instruction: '',
-                                status: status,
-                                onTake: () {
-                                  context.read<MedicineCubit>().takeDose(med.id);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TodaySummary(
+                            pendingCount: pending.length,
+                            takenCount: taken.length,
+                          ),
+                          SizedBox(height: 20.h),
+                          CalendarStrip(
+                            onDateSelected: (_) {},
+                          ),
+                          SizedBox(height: 20.h),
+                          if (pending.isNotEmpty) ...[
+                            const SectionTitle(
+                              title: 'Up next',
+                              subtitle:
+                                  'Tap the big green button when you take it',
+                            ),
+                            SizedBox(height: 12.h),
+                            ...pending.map((event) => ElderMedicineTile(
+                                  time: event.scheduledTime.format(context),
+                                  name: event.medicine.name,
+                                  dose:
+                                      '${event.medicine.amount % 1 == 0 ? event.medicine.amount.toInt() : event.medicine.amount} ${event.medicine.type.toLowerCase()}${event.medicine.strength != null && event.medicine.strength!.isNotEmpty ? ' · ${event.medicine.strength}${event.medicine.unit ?? ''}' : ''}',
+                                  imagePath: event.medicine.imagePath,
+                                  status: MedicineStatus.pending,
+                                  onTake: () {
+                                    context.read<MedicineCubit>().takeDose(
+                                          event.medicine.id,
+                                          scheduledTime:
+                                              event.scheduledDateTime,
+                                        );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
                                         content: Text(
-                                            'Logged dose: ${med.name}')),
-                                  );
-                                },
-                              );
-                            },
-                          );
-                        },
+                                          'Logged: ${event.medicine.name}',
+                                          style: TextStyle(fontSize: 16.sp),
+                                        ),
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
+                                  },
+                                  onSkip: () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Skipped: ${event.medicine.name}',
+                                          style: TextStyle(fontSize: 16.sp),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                )),
+                          ],
+                          if (taken.isNotEmpty) ...[
+                            SizedBox(height: 12.h),
+                            const SectionTitle(title: 'Already taken'),
+                            SizedBox(height: 12.h),
+                            ...taken.map((event) => ElderMedicineTile(
+                                  time: event.scheduledTime.format(context),
+                                  name: event.medicine.name,
+                                  dose:
+                                      '${event.medicine.amount % 1 == 0 ? event.medicine.amount.toInt() : event.medicine.amount} ${event.medicine.type.toLowerCase()}${event.medicine.strength != null && event.medicine.strength!.isNotEmpty ? ' · ${event.medicine.strength}${event.medicine.unit ?? ''}' : ''}',
+                                  imagePath: event.medicine.imagePath,
+                                  status: MedicineStatus.taken,
+                                )),
+                          ],
+                          SizedBox(height: 24.h),
+                          AdherenceSummary(historyState: historyState),
+                          SizedBox(height: 120.h),
+                        ],
                       );
                     },
-                  ),
-                  SizedBox(height: 100.h), // Bottom nav space
-                ],
+                  );
+                },
               ),
             ),
           ),
@@ -367,4 +289,18 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class DoseEvent {
+  final Medicine medicine;
+  final TimeOfDay scheduledTime;
+  final bool isTaken;
+  final DateTime scheduledDateTime;
+
+  DoseEvent({
+    required this.medicine,
+    required this.scheduledTime,
+    required this.isTaken,
+    required this.scheduledDateTime,
+  });
 }

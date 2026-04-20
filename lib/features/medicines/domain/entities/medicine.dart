@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 
 class Medicine extends Equatable {
   final String id;
@@ -10,10 +11,15 @@ class Medicine extends Equatable {
   final int stockTotal;
   final int daysLeft;
   final bool isLowStock;
+  final String? imagePath;
+  final double amount;
+  final String? strength;
+  final String? unit;
+  final List<TimeOfDay> times;
 
   const Medicine({
     required this.id,
-    this.profileId = 'me', // Default for legacy/main user
+    this.profileId = 'me',
     required this.name,
     required this.type,
     required this.schedule,
@@ -21,6 +27,11 @@ class Medicine extends Equatable {
     required this.stockTotal,
     required this.daysLeft,
     required this.isLowStock,
+    this.imagePath,
+    this.amount = 1.0,
+    this.strength,
+    this.unit,
+    this.times = const [],
   });
 
   Medicine copyWith({
@@ -33,6 +44,11 @@ class Medicine extends Equatable {
     int? stockTotal,
     int? daysLeft,
     bool? isLowStock,
+    String? imagePath,
+    double? amount,
+    String? strength,
+    String? unit,
+    List<TimeOfDay>? times,
   }) {
     return Medicine(
       id: id ?? this.id,
@@ -44,6 +60,11 @@ class Medicine extends Equatable {
       stockTotal: stockTotal ?? this.stockTotal,
       daysLeft: daysLeft ?? this.daysLeft,
       isLowStock: isLowStock ?? this.isLowStock,
+      imagePath: imagePath ?? this.imagePath,
+      amount: amount ?? this.amount,
+      strength: strength ?? this.strength,
+      unit: unit ?? this.unit,
+      times: times ?? this.times,
     );
   }
 
@@ -58,5 +79,10 @@ class Medicine extends Equatable {
         stockTotal,
         daysLeft,
         isLowStock,
+        imagePath,
+        amount,
+        strength,
+        unit,
+        times,
       ];
 }
