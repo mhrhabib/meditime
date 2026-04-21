@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:meditime/core/widgets/components.dart';
+import 'package:meditime/features/medicines/domain/refill_predictor.dart';
 import 'package:meditime/features/medicines/presentation/cubit/medicine_cubit.dart';
+import 'package:meditime/features/medicines/presentation/widgets/edit_medicine_sheet.dart';
+import 'package:meditime/features/medicines/presentation/widgets/restock_dialog.dart';
 
 // ─── MEDICINE LIST SCREEN ────────────────────────────────────
 class MedicineListScreen extends StatefulWidget {
@@ -108,6 +112,16 @@ class _MedicineListTab extends StatelessWidget {
   final String searchQuery;
   const _MedicineListTab({this.filter = 'all', this.searchQuery = ''});
 
+  void _toast(String message) {
+    Fluttertoast.cancel();
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      fontSize: 15,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MedicineCubit, MedicineState>(
@@ -149,23 +163,71 @@ class _MedicineListTab extends StatelessWidget {
                 stockTotal: med.stockTotal,
                 daysLeft: med.daysLeft,
                 isLowStock: med.isLowStock,
-                onEdit: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Edit flow for ${med.name} coming soon!')));
+                onEdit: () async {
+                  final updated = await EditMedicineSheet.show(context, med);
+                  if (updated == null) return;
+                  if (!context.mounted) return;
+                  await context.read<MedicineCubit>().updateMedicine(updated);
+                  _toast('Updated ${updated.name}');
+                },
+                onRestock: () async {
+                  final amount = await RestockDialog.show(context, med);
+                  if (amount == null) return;
+                  if (!context.mounted) return;
+                  final newRemaining = (med.stockRemaining + amount)
+                      .clamp(0, med.stockTotal + amount);
+                  final newTotal = newRemaining > med.stockTotal
+                      ? newRemaining
+                      : med.stockTotal;
+                  final dosesPerDay =
+                      RefillPredictor.parseDosesPerDay(med.schedule);
+                  final prediction = RefillPredictor.predict(
+                    currentStock: newRemaining,
+                    dosesPerDay: dosesPerDay,
+                  );
+                  await context.read<MedicineCubit>().updateMedicine(
+                        med.copyWith(
+                          stockRemaining: newRemaining,
+                          stockTotal: newTotal,
+                          daysLeft: prediction.daysRemaining,
+                          isLowStock: prediction.isWarning,
+                        ),
+                      );
+                  _toast('Restocked ${med.name} (+$amount)');
                 },
                 onRefill: med.isLowStock
-                    ? () {
-                        context.read<MedicineCubit>().updateMedicine(med.copyWith(
-                            stockRemaining: med.stockRemaining + 30,
-                            isLowStock: false));
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text('✅ Refilled ${med.name} (+30 units)')));
+                    ? () async {
+                        final amount =
+                            await RestockDialog.show(context, med);
+                        if (amount == null) return;
+                        if (!context.mounted) return;
+                        final newRemaining = (med.stockRemaining + amount)
+                            .clamp(0, med.stockTotal + amount);
+                        final newTotal = newRemaining > med.stockTotal
+                            ? newRemaining
+                            : med.stockTotal;
+                        final dosesPerDay = RefillPredictor.parseDosesPerDay(
+                            med.schedule);
+                        final prediction = RefillPredictor.predict(
+                          currentStock: newRemaining,
+                          dosesPerDay: dosesPerDay,
+                        );
+                        await context
+                            .read<MedicineCubit>()
+                            .updateMedicine(
+                              med.copyWith(
+                                stockRemaining: newRemaining,
+                                stockTotal: newTotal,
+                                daysLeft: prediction.daysRemaining,
+                                isLowStock: prediction.isWarning,
+                              ),
+                            );
+                        _toast('Refilled ${med.name} (+$amount)');
                       }
                     : null,
                 onDelete: () {
                   context.read<MedicineCubit>().deleteMedicine(med.id);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('🗑️ Removed ${med.name} from schedule')));
+                  _toast('Removed ${med.name}');
                 },
               ),
             );

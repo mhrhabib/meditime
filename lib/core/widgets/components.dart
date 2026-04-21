@@ -199,6 +199,7 @@ class MedicineCard extends StatelessWidget {
   final bool isLowStock;
   final VoidCallback? onEdit;
   final VoidCallback? onRefill;
+  final VoidCallback? onRestock;
   final VoidCallback? onDelete;
 
   const MedicineCard({
@@ -212,6 +213,7 @@ class MedicineCard extends StatelessWidget {
     this.isLowStock = false,
     this.onEdit,
     this.onRefill,
+    this.onRestock,
     this.onDelete,
   });
 
@@ -294,6 +296,18 @@ class MedicineCard extends StatelessWidget {
                       textStyle: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w600, fontSize: 13)),
                 ),
                 const SizedBox(width: 4),
+                if (onRestock != null)
+                  TextButton.icon(
+                    onPressed: onRestock,
+                    icon: const Icon(Icons.add_box_outlined, size: 16),
+                    label: const Text('Restock'),
+                    style: TextButton.styleFrom(
+                        foregroundColor: cs.primary,
+                        textStyle: const TextStyle(
+                            fontFamily: 'Nunito',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13)),
+                  ),
                 const Spacer(),
                 IconButton(
                   onPressed: onDelete,

@@ -225,12 +225,12 @@ class _AddPrescriptionSheetState extends State<AddPrescriptionSheet> {
               ),
               if (_medicines.isNotEmpty) ...[
                 SizedBox(height: 12.h),
-                Wrap(
+                Wrap( 
                   spacing: 8.w,
                   runSpacing: 8.h,
                   children: _medicines
                       .map((m) => Chip(
-                            label: Text(m, style: TextStyle(fontSize: 12.sp)),
+                            label: Text(m, style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 13.sp)),
                             onDeleted: () => _removeMedicine(m),
                             deleteIcon: Icon(Icons.close_rounded, size: 16.r),
                           ))

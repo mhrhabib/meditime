@@ -36,6 +36,8 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
+  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,19 +107,7 @@ class _AppShellState extends State<AppShell> {
           label: Text('Add Medicine', style: TextStyle(fontSize: 14.sp)),
         ),
       );
-    } else if (_index == 3) {
-      return Padding(
-        padding: EdgeInsets.only(bottom: 30.h),
-        child: FloatingActionButton.extended(
-          onPressed: () {
-            HapticFeedback.lightImpact();
-            // Handle new prescription action
-          },
-          icon: Icon(Icons.add_rounded, size: 24.r),
-          label: Text('New RX', style: TextStyle(fontSize: 14.sp)),
-        ),
-      );
-    }
+    } 
     return null;
   }
 

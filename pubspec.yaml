@@ -49,6 +49,7 @@ dependencies:
   equatable: ^2.0.8
   solar_icons: ^0.0.5
   flutter_screenutil: ^5.9.3
+  fluttertoast: ^8.2.4
   drift: ^2.32.1
   sqlite3_flutter_libs: ^0.5.21
   path_provider: ^2.1.2

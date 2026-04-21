@@ -11,8 +11,16 @@ class ElderMedicineTile extends StatelessWidget {
   final String dose;
   final String? imagePath;
   final MedicineStatus status;
+  final bool isOverdue;
+  final String? overdueLabel;
+  final bool isLowStock;
+  final int? daysLeft;
+  final bool isLockedEarly;
+  final String? lockedHint;
   final VoidCallback? onTake;
   final VoidCallback? onSkip;
+  final VoidCallback? onSnooze;
+  final VoidCallback? onTakeEarly;
 
   const ElderMedicineTile({
     super.key,
@@ -21,8 +29,16 @@ class ElderMedicineTile extends StatelessWidget {
     required this.dose,
     this.imagePath,
     required this.status,
+    this.isOverdue = false,
+    this.overdueLabel,
+    this.isLowStock = false,
+    this.daysLeft,
+    this.isLockedEarly = false,
+    this.lockedHint,
     this.onTake,
     this.onSkip,
+    this.onSnooze,
+    this.onTakeEarly,
   });
 
   @override
@@ -33,14 +49,15 @@ class ElderMedicineTile extends StatelessWidget {
     final isTaken = status == MedicineStatus.taken;
     final isMissed = status == MedicineStatus.missed;
 
+    final showOverdue = isPending && isOverdue;
     final accent = isTaken
         ? StatusColors.getTaken(context)
-        : isMissed
+        : (isMissed || showOverdue)
             ? StatusColors.getMissed(context)
             : cs.primary;
     final accentContainer = isTaken
         ? StatusColors.getTakenContainer(context)
-        : isMissed
+        : (isMissed || showOverdue)
             ? StatusColors.getMissedContainer(context)
             : cs.primaryContainer.withValues(alpha: 0.4);
 
@@ -80,37 +97,62 @@ class ElderMedicineTile extends StatelessWidget {
                 ),
                 SizedBox(width: 12.w),
               ],
-              Flexible(
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
-                  decoration: BoxDecoration(
-                    color: accentContainer,
-                    borderRadius: BorderRadius.circular(14.r),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.access_time_rounded, size: 22.r, color: accent),
-                      SizedBox(width: 8.w),
-                      Flexible(
-                        child: Text(
-                          time,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 20.sp,
-                            fontWeight: FontWeight.w800,
-                            color: accent,
-                          ),
-                        ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                decoration: BoxDecoration(
+                  color: accentContainer,
+                  borderRadius: BorderRadius.circular(14.r),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.access_time_rounded, size: 22.r, color: accent),
+                    SizedBox(width: 8.w),
+                    Text(
+                      time,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.w800,
+                        color: accent,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-              if (isTaken || isMissed) SizedBox(width: 10.w),
-              if (isTaken)
+              const Spacer(),
+              if (isPending && !showOverdue && !isLockedEarly && onSnooze != null)
+                IconButton(
+                  onPressed: onSnooze,
+                  tooltip: 'Snooze',
+                  iconSize: 26.r,
+                  padding: EdgeInsets.all(6.r),
+                  constraints: BoxConstraints.tightFor(width: 44.r, height: 44.r),
+                  icon: Icon(Icons.snooze_rounded, color: cs.onSurfaceVariant),
+                ),
+              if (isTaken || isMissed || showOverdue) SizedBox(width: 10.w),
+              if (showOverdue)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.warning_amber_rounded,
+                        size: 24.r, color: accent),
+                    SizedBox(width: 4.w),
+                    Text(
+                      overdueLabel ?? 'OVERDUE',
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                        color: accent,
+                      ),
+                    ),
+                  ],
+                )
+              else if (isTaken)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -158,16 +200,106 @@ class ElderMedicineTile extends StatelessWidget {
             ),
           ),
           SizedBox(height: 6.h),
-          Text(
-            dose,
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 17.sp,
-              fontWeight: FontWeight.w600,
-              color: cs.onSurfaceVariant,
-            ),
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  dose,
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 17.sp,
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              if (isLowStock) ...[
+                SizedBox(width: 8.w),
+                Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10.r),
+                    border: Border.all(
+                      color: Colors.orange.withValues(alpha: 0.5),
+                      width: 1.w,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.inventory_2_rounded,
+                          size: 14.r, color: Colors.orange.shade800),
+                      SizedBox(width: 4.w),
+                      Text(
+                        daysLeft != null
+                            ? '${daysLeft!}d left'
+                            : 'Low stock',
+                        style: TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.orange.shade800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
           ),
-          if (isPending) ...[
+          if (isPending && isLockedEarly) ...[
+            SizedBox(height: 16.h),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerHighest.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(14.r),
+                border: Border.all(
+                  color: cs.outlineVariant.withValues(alpha: 0.6),
+                  width: 1.w,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.lock_clock_rounded,
+                      size: 22.r, color: cs.onSurfaceVariant),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: Text(
+                      lockedHint ?? 'Available at $time',
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w700,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  if (onTakeEarly != null)
+                    TextButton(
+                      onPressed: onTakeEarly,
+                      style: TextButton.styleFrom(
+                        foregroundColor: cs.primary,
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 10.w, vertical: 4.h),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        'Take early',
+                        style: TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ] else if (isPending) ...[
             SizedBox(height: 18.h),
             Row(
               children: [

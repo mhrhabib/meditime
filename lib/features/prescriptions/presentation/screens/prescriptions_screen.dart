@@ -187,10 +187,13 @@ class PrescriptionsScreen extends StatelessWidget {
             ),
           ),
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => _showAddPrescription(context),
-          icon: Icon(Icons.add_rounded, size: 20.r),
-          label: Text('Add', style: TextStyle(fontSize: 14.sp)),
+        floatingActionButton: Padding(
+          padding: EdgeInsets.only(bottom: 90.h),
+          child: FloatingActionButton.extended(
+            onPressed: () => _showAddPrescription(context),
+            icon: Icon(Icons.add_rounded, size: 20.r),
+            label: Text('Add', style: TextStyle(fontSize: 14.sp)),
+          ),
         ),
         body: BlocBuilder<PrescriptionCubit, PrescriptionState>(
           builder: (context, state) {

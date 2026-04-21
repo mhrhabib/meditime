@@ -110,6 +110,102 @@ class MedicineCubit extends Cubit<MedicineState> {
     }
   }
 
+  Future<void> undoTakeDose(String medicineId,
+      {DateTime? scheduledTime}) async {
+    final med = await _repo.getById(medicineId);
+    if (med == null) return;
+
+    final logs = await _historyRepo.getAll();
+    DoseLog? match;
+    for (final log in logs) {
+      if (log.medicineId != medicineId) continue;
+      if (log.status != DoseStatus.taken) continue;
+      if (scheduledTime != null) {
+        if (log.scheduledDateTime == null) continue;
+        if (!log.scheduledDateTime!.isAtSameMomentAs(scheduledTime)) continue;
+      }
+      if (match == null || log.dateTime.isAfter(match.dateTime)) {
+        match = log;
+      }
+    }
+    if (match == null) return;
+
+    await _historyRepo.delete(match.id);
+
+    final newStock = (med.stockRemaining + 1).clamp(0, med.stockTotal);
+    final dosesPerDay = RefillPredictor.parseDosesPerDay(med.schedule);
+    final prediction = RefillPredictor.predict(
+      currentStock: newStock,
+      dosesPerDay: dosesPerDay,
+    );
+    await _repo.upsert(med.copyWith(
+      stockRemaining: newStock,
+      daysLeft: prediction.daysRemaining,
+      isLowStock: prediction.isWarning,
+    ));
+  }
+
+  Future<void> skipDose(String medicineId, {DateTime? scheduledTime}) async {
+    final med = await _repo.getById(medicineId);
+    if (med == null) return;
+
+    await _historyRepo.add(DoseLog(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      medicineId: medicineId,
+      medicineName: med.name,
+      dateTime: DateTime.now(),
+      status: DoseStatus.skipped,
+      scheduledDateTime: scheduledTime,
+    ));
+  }
+
+  Future<void> snoozeDose(
+    String medicineId, {
+    required DateTime scheduledTime,
+    required Duration delay,
+  }) async {
+    final med = await _repo.getById(medicineId);
+    if (med == null) return;
+
+    await _historyRepo.add(DoseLog(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      medicineId: medicineId,
+      medicineName: med.name,
+      dateTime: DateTime.now(),
+      status: DoseStatus.snoozed,
+      scheduledDateTime: scheduledTime,
+    ));
+
+    final fireAt = DateTime.now().add(delay);
+    await NotificationService.instance.scheduleNotification(
+      id: medicineId.hashCode + fireAt.millisecondsSinceEpoch ~/ 1000,
+      title: '⏰ Snoozed reminder: ${med.name}',
+      body: 'Time to take your ${med.name}',
+      scheduledTime: fireAt,
+      payload: '$medicineId|0|${scheduledTime.toIso8601String()}',
+      channelId: NotificationChannels.medsDefault,
+    );
+  }
+
+  Future<void> undoSkipDose(String medicineId,
+      {DateTime? scheduledTime}) async {
+    final logs = await _historyRepo.getAll();
+    DoseLog? match;
+    for (final log in logs) {
+      if (log.medicineId != medicineId) continue;
+      if (log.status != DoseStatus.skipped) continue;
+      if (scheduledTime != null) {
+        if (log.scheduledDateTime == null) continue;
+        if (!log.scheduledDateTime!.isAtSameMomentAs(scheduledTime)) continue;
+      }
+      if (match == null || log.dateTime.isAfter(match.dateTime)) {
+        match = log;
+      }
+    }
+    if (match == null) return;
+    await _historyRepo.delete(match.id);
+  }
+
   @override
   Future<void> close() {
     _sub?.cancel();
