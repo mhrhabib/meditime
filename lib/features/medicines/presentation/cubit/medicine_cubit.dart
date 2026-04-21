@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:meditime/core/alarm/medicine_alarm_service.dart';
 import 'package:meditime/core/notifications/notification_channels.dart';
 import 'package:meditime/core/notifications/notification_service.dart';
 import 'package:meditime/features/history/data/repositories/history_repository_impl.dart';
@@ -71,9 +72,18 @@ class MedicineCubit extends Cubit<MedicineState> {
     await _repo.delete(id);
   }
 
-  Future<void> takeDose(String medicineId, {DateTime? scheduledTime}) async {
+  Future<void> takeDose(String medicineId,
+      {DateTime? scheduledTime, int doseIdx = 0}) async {
     final med = await _repo.getById(medicineId);
     if (med == null) return;
+
+    if (scheduledTime != null) {
+      await MedicineScheduler.cancelDose(
+        medicineId: medicineId,
+        doseIdx: doseIdx,
+        scheduledTime: scheduledTime,
+      );
+    }
 
     final newStock = (med.stockRemaining - 1).clamp(0, med.stockTotal);
     final dosesPerDay = RefillPredictor.parseDosesPerDay(med.schedule);
@@ -145,9 +155,18 @@ class MedicineCubit extends Cubit<MedicineState> {
     ));
   }
 
-  Future<void> skipDose(String medicineId, {DateTime? scheduledTime}) async {
+  Future<void> skipDose(String medicineId,
+      {DateTime? scheduledTime, int doseIdx = 0}) async {
     final med = await _repo.getById(medicineId);
     if (med == null) return;
+
+    if (scheduledTime != null) {
+      await MedicineScheduler.cancelDose(
+        medicineId: medicineId,
+        doseIdx: doseIdx,
+        scheduledTime: scheduledTime,
+      );
+    }
 
     await _historyRepo.add(DoseLog(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -163,9 +182,16 @@ class MedicineCubit extends Cubit<MedicineState> {
     String medicineId, {
     required DateTime scheduledTime,
     required Duration delay,
+    int doseIdx = 0,
   }) async {
     final med = await _repo.getById(medicineId);
     if (med == null) return;
+
+    await MedicineScheduler.cancelDose(
+      medicineId: medicineId,
+      doseIdx: doseIdx,
+      scheduledTime: scheduledTime,
+    );
 
     await _historyRepo.add(DoseLog(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -177,13 +203,28 @@ class MedicineCubit extends Cubit<MedicineState> {
     ));
 
     final fireAt = DateTime.now().add(delay);
+    // flutter_local_notifications validates id as a signed int32. Unix
+    // seconds are already ~1.76B in 2026, so adding any positive hashCode
+    // overflows the 2^31-1 ceiling. XOR + mask to 31 bits keeps the id
+    // stable-per-dose and within range.
+    final notifId = (medicineId.hashCode ^
+            (fireAt.millisecondsSinceEpoch ~/ 1000)) &
+        0x7FFFFFFF;
     await NotificationService.instance.scheduleNotification(
-      id: medicineId.hashCode + fireAt.millisecondsSinceEpoch ~/ 1000,
+      id: notifId,
       title: '⏰ Snoozed reminder: ${med.name}',
       body: 'Time to take your ${med.name}',
       scheduledTime: fireAt,
       payload: '$medicineId|0|${scheduledTime.toIso8601String()}',
       channelId: NotificationChannels.medsDefault,
+    );
+    // Fire the loud alarm on the snooze too — silent snoozes defeat the
+    // whole point of the alarm for elderly users.
+    await MedicineAlarmService.instance.scheduleForDose(
+      id: notifId,
+      fireAt: fireAt,
+      medicineName: med.name,
+      body: 'Snoozed reminder — time to take your ${med.name}',
     );
   }
 

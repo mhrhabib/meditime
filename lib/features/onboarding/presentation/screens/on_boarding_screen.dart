@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meditime/features/onboarding/presentation/cubit/onboarding_cubit.dart';
+import 'package:meditime/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:meditime/features/onboarding/presentation/widgets/age_page.dart';
 import 'package:meditime/features/onboarding/presentation/widgets/benefits_page.dart';
 import 'package:meditime/features/onboarding/presentation/widgets/conditions_page.dart';
@@ -60,8 +61,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  void _finish() {
-    context.read<OnboardingCubit>().completeOnboarding();
+  Future<void> _finish() async {
+    final profileCubit = context.read<ProfileCubit>();
+    final onboardingCubit = context.read<OnboardingCubit>();
+
+    // Promote the onboarding data into a real Profile so the app stops
+    // showing "Guest". Only create one if the user actually entered a name
+    // and doesn't already have a profile (handles replay / skip-through).
+    final trimmedName = _name.trim();
+    if (trimmedName.isNotEmpty && profileCubit.state.profiles.isEmpty) {
+      await profileCubit.addProfile(
+        trimmedName,
+        age: _age,
+        gender: _gender,
+      );
+    }
+
+    await onboardingCubit.completeOnboarding();
+    if (!mounted) return;
     context.go('/');
   }
 

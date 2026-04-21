@@ -13,6 +13,8 @@ class ProfileTable extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get initials => text()();
+  IntColumn get age => integer().nullable()();
+  TextColumn get gender => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -114,7 +116,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase._internal() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -128,6 +130,10 @@ class AppDatabase extends _$AppDatabase {
           if (from < 3) {
             await m.addColumn(medicineTable, medicineTable.reminderTimes);
             await m.addColumn(doseLogTable, doseLogTable.scheduledDateTime);
+          }
+          if (from < 4) {
+            await m.addColumn(profileTable, profileTable.age);
+            await m.addColumn(profileTable, profileTable.gender);
           }
         },
       );

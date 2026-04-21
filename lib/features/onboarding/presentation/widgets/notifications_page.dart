@@ -171,25 +171,50 @@ class NotificationsPage extends StatelessWidget {
               final cubit = context.read<OnboardingCubit>();
               final messenger = ScaffoldMessenger.maybeOf(context);
 
+              // 1. Standard notification permission (in-app system dialog).
               final notifOk =
                   await NotificationService.instance.requestPermission();
-              final alarmOk = await NotificationService.instance
-                  .requestExactAlarmsPermission();
               await cubit.setNotificationsEnabled(notifOk);
 
-              if (!notifOk && messenger != null) {
-                messenger.showSnackBar(
+              if (!notifOk) {
+                messenger?.showSnackBar(
                   const SnackBar(
                     content: Text(
                         'Notifications denied. You can enable them later in Settings.'),
                     duration: Duration(seconds: 3),
                   ),
                 );
-              } else if (notifOk && !alarmOk && messenger != null) {
-                messenger.showSnackBar(
+                onNext();
+                return;
+              }
+
+              // 2. Exact alarms — required for reliable on-the-minute firing
+              //    on Android 12+. Opens a settings page; user must toggle.
+              final alarmOk = await NotificationService.instance
+                  .requestExactAlarmsPermission();
+
+              // 3. Battery optimization exemption — OEM skins kill scheduled
+              //    work for non-whitelisted apps even with permissions.
+              final batteryOk = await NotificationService.instance
+                  .requestIgnoreBatteryOptimizations();
+
+              // 4. Full-screen intent — lets the alarm pop over the lockscreen.
+              await NotificationService.instance
+                  .requestFullScreenIntentPermission();
+
+              if (!alarmOk) {
+                messenger?.showSnackBar(
                   const SnackBar(
                     content: Text(
-                        'Heads up: exact alarms are disabled — reminders may be delayed.'),
+                        'Exact alarms disabled — reminders may be delayed by minutes.'),
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+              } else if (!batteryOk) {
+                messenger?.showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                        'Battery optimization is on — the system may silence alarms in deep sleep.'),
                     duration: Duration(seconds: 3),
                   ),
                 );

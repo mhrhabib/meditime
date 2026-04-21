@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:meditime/core/alarm/medicine_alarm_service.dart';
 import 'package:meditime/core/notifications/notification_service.dart';
 import 'package:meditime/features/medicines/domain/entities/medicine.dart';
 
@@ -81,31 +82,63 @@ class MedicineScheduler {
           payload: '${medicine.id}|$doseIdx|${scheduledTime.toIso8601String()}',
           critical: medicine.isLowStock, // Critical if running low
         );
+
+        // Fire a loud, looping alarm at the same moment. Elderly users often
+        // miss silent notifications — the alarm keeps ringing until they
+        // tap Stop or the cubit cancels it after a dose action.
+        await MedicineAlarmService.instance.scheduleForDose(
+          id: notifId,
+          fireAt: scheduledTime,
+          medicineName: medicine.name,
+          body:
+              'Dose ${doseIdx + 1} of ${doseTimes.length} · ${medicine.schedule}',
+        );
       }
     }
 
-    debugPrint('[MedicineScheduler] Scheduled ${doseTimes.length * _scheduleDays} notifications for ${medicine.name}');
+    debugPrint('[MedicineScheduler] Scheduled ${doseTimes.length * _scheduleDays} notifications + alarms for ${medicine.name}');
   }
 
   /// Cancel all notifications for a medicine.
   static Future<void> cancelForMedicine(Medicine medicine) async {
     final service = NotificationService.instance;
+    final alarm = MedicineAlarmService.instance;
     final doseTimes = _parseDoseTimes(medicine.schedule);
 
     for (int day = 0; day < _scheduleDays; day++) {
       for (int doseIdx = 0; doseIdx < doseTimes.length; doseIdx++) {
         final notifId = _notificationId(medicine.id, day, doseIdx);
         await service.cancel(notifId);
+        await alarm.cancel(notifId);
       }
     }
 
-    debugPrint('[MedicineScheduler] Cancelled notifications for ${medicine.name}');
+    debugPrint('[MedicineScheduler] Cancelled notifications + alarms for ${medicine.name}');
   }
 
   /// Reschedule notifications for a medicine (cancel + re-schedule).
   static Future<void> rescheduleForMedicine(Medicine medicine) async {
     await cancelForMedicine(medicine);
     await scheduleForMedicine(medicine);
+  }
+
+  /// Stop the ringing alarm (and dismiss the paired notification) for a
+  /// single dose once the user has taken / skipped / snoozed it. Called
+  /// from the cubit and from notification action handlers.
+  static Future<void> cancelDose({
+    required String medicineId,
+    required int doseIdx,
+    required DateTime scheduledTime,
+  }) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final scheduledDate =
+        DateTime(scheduledTime.year, scheduledTime.month, scheduledTime.day);
+    final dayOffset = scheduledDate.difference(today).inDays;
+
+    final notifId = _notificationId(medicineId, dayOffset, doseIdx);
+    await NotificationService.instance.cancel(notifId);
+    await MedicineAlarmService.instance.cancel(notifId);
   }
 
   /// Schedule notifications for all medicines.
@@ -118,5 +151,6 @@ class MedicineScheduler {
   /// Cancel all medicine notifications.
   static Future<void> cancelAll() async {
     await NotificationService.instance.cancelAll();
+    await MedicineAlarmService.instance.cancelAll();
   }
 }

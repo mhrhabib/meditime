@@ -40,10 +40,20 @@ class ProfileCubit extends Cubit<ProfileState> {
     emit(ProfileState(activeProfile: active, profiles: profiles));
   }
 
-  Future<void> addProfile(String name) async {
+  Future<void> addProfile(
+    String name, {
+    int? age,
+    String? gender,
+  }) async {
     final id = DateTime.now().millisecondsSinceEpoch.toString();
     final initials = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'P';
-    await _repo.upsert(Profile(id: id, name: name, initials: initials));
+    await _repo.upsert(Profile(
+      id: id,
+      name: name,
+      initials: initials,
+      age: age,
+      gender: gender,
+    ));
   }
 
   Future<void> switchProfile(String id) async {

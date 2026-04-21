@@ -9,3 +9,9 @@
 -keepattributes *Annotation*
 -keepattributes InnerClasses
 -keepattributes EnclosingMethod
+
+# alarm package: plugin resolves its receiver/service classes reflectively
+# and the BroadcastReceiver must survive R8. Keep the whole package plus
+# the media session infra it relies on.
+-keep class com.gdelataillade.alarm.** { *; }
+-keep class androidx.media.** { *; }

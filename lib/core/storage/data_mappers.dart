@@ -97,6 +97,8 @@ class DataMappers {
       id: data.id,
       name: data.name,
       initials: data.initials,
+      age: data.age,
+      gender: data.gender,
     );
   }
 
@@ -105,6 +107,8 @@ class DataMappers {
       id: data.id,
       name: data.name,
       initials: data.initials,
+      age: data.age,
+      gender: data.gender,
     );
   }
 

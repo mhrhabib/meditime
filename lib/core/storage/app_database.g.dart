@@ -25,8 +25,18 @@ class $ProfileTableTable extends ProfileTable
   late final GeneratedColumn<String> initials = GeneratedColumn<String>(
       'initials', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _ageMeta = const VerificationMeta('age');
   @override
-  List<GeneratedColumn> get $columns => [id, name, initials];
+  late final GeneratedColumn<int> age = GeneratedColumn<int>(
+      'age', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _genderMeta = const VerificationMeta('gender');
+  @override
+  late final GeneratedColumn<String> gender = GeneratedColumn<String>(
+      'gender', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [id, name, initials, age, gender];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -54,6 +64,14 @@ class $ProfileTableTable extends ProfileTable
     } else if (isInserting) {
       context.missing(_initialsMeta);
     }
+    if (data.containsKey('age')) {
+      context.handle(
+          _ageMeta, age.isAcceptableOrUnknown(data['age']!, _ageMeta));
+    }
+    if (data.containsKey('gender')) {
+      context.handle(_genderMeta,
+          gender.isAcceptableOrUnknown(data['gender']!, _genderMeta));
+    }
     return context;
   }
 
@@ -69,6 +87,10 @@ class $ProfileTableTable extends ProfileTable
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       initials: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}initials'])!,
+      age: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}age']),
+      gender: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}gender']),
     );
   }
 
@@ -83,14 +105,26 @@ class ProfileTableData extends DataClass
   final String id;
   final String name;
   final String initials;
+  final int? age;
+  final String? gender;
   const ProfileTableData(
-      {required this.id, required this.name, required this.initials});
+      {required this.id,
+      required this.name,
+      required this.initials,
+      this.age,
+      this.gender});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['initials'] = Variable<String>(initials);
+    if (!nullToAbsent || age != null) {
+      map['age'] = Variable<int>(age);
+    }
+    if (!nullToAbsent || gender != null) {
+      map['gender'] = Variable<String>(gender);
+    }
     return map;
   }
 
@@ -99,6 +133,9 @@ class ProfileTableData extends DataClass
       id: Value(id),
       name: Value(name),
       initials: Value(initials),
+      age: age == null && nullToAbsent ? const Value.absent() : Value(age),
+      gender:
+          gender == null && nullToAbsent ? const Value.absent() : Value(gender),
     );
   }
 
@@ -109,6 +146,8 @@ class ProfileTableData extends DataClass
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       initials: serializer.fromJson<String>(json['initials']),
+      age: serializer.fromJson<int?>(json['age']),
+      gender: serializer.fromJson<String?>(json['gender']),
     );
   }
   @override
@@ -118,20 +157,31 @@ class ProfileTableData extends DataClass
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'initials': serializer.toJson<String>(initials),
+      'age': serializer.toJson<int?>(age),
+      'gender': serializer.toJson<String?>(gender),
     };
   }
 
-  ProfileTableData copyWith({String? id, String? name, String? initials}) =>
+  ProfileTableData copyWith(
+          {String? id,
+          String? name,
+          String? initials,
+          Value<int?> age = const Value.absent(),
+          Value<String?> gender = const Value.absent()}) =>
       ProfileTableData(
         id: id ?? this.id,
         name: name ?? this.name,
         initials: initials ?? this.initials,
+        age: age.present ? age.value : this.age,
+        gender: gender.present ? gender.value : this.gender,
       );
   ProfileTableData copyWithCompanion(ProfileTableCompanion data) {
     return ProfileTableData(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       initials: data.initials.present ? data.initials.value : this.initials,
+      age: data.age.present ? data.age.value : this.age,
+      gender: data.gender.present ? data.gender.value : this.gender,
     );
   }
 
@@ -140,37 +190,47 @@ class ProfileTableData extends DataClass
     return (StringBuffer('ProfileTableData(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('initials: $initials')
+          ..write('initials: $initials, ')
+          ..write('age: $age, ')
+          ..write('gender: $gender')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, initials);
+  int get hashCode => Object.hash(id, name, initials, age, gender);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ProfileTableData &&
           other.id == this.id &&
           other.name == this.name &&
-          other.initials == this.initials);
+          other.initials == this.initials &&
+          other.age == this.age &&
+          other.gender == this.gender);
 }
 
 class ProfileTableCompanion extends UpdateCompanion<ProfileTableData> {
   final Value<String> id;
   final Value<String> name;
   final Value<String> initials;
+  final Value<int?> age;
+  final Value<String?> gender;
   final Value<int> rowid;
   const ProfileTableCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.initials = const Value.absent(),
+    this.age = const Value.absent(),
+    this.gender = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ProfileTableCompanion.insert({
     required String id,
     required String name,
     required String initials,
+    this.age = const Value.absent(),
+    this.gender = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         name = Value(name),
@@ -179,12 +239,16 @@ class ProfileTableCompanion extends UpdateCompanion<ProfileTableData> {
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? initials,
+    Expression<int>? age,
+    Expression<String>? gender,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (initials != null) 'initials': initials,
+      if (age != null) 'age': age,
+      if (gender != null) 'gender': gender,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -193,11 +257,15 @@ class ProfileTableCompanion extends UpdateCompanion<ProfileTableData> {
       {Value<String>? id,
       Value<String>? name,
       Value<String>? initials,
+      Value<int?>? age,
+      Value<String?>? gender,
       Value<int>? rowid}) {
     return ProfileTableCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       initials: initials ?? this.initials,
+      age: age ?? this.age,
+      gender: gender ?? this.gender,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -214,6 +282,12 @@ class ProfileTableCompanion extends UpdateCompanion<ProfileTableData> {
     if (initials.present) {
       map['initials'] = Variable<String>(initials.value);
     }
+    if (age.present) {
+      map['age'] = Variable<int>(age.value);
+    }
+    if (gender.present) {
+      map['gender'] = Variable<String>(gender.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -226,6 +300,8 @@ class ProfileTableCompanion extends UpdateCompanion<ProfileTableData> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('initials: $initials, ')
+          ..write('age: $age, ')
+          ..write('gender: $gender, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2510,6 +2586,8 @@ typedef $$ProfileTableTableCreateCompanionBuilder = ProfileTableCompanion
   required String id,
   required String name,
   required String initials,
+  Value<int?> age,
+  Value<String?> gender,
   Value<int> rowid,
 });
 typedef $$ProfileTableTableUpdateCompanionBuilder = ProfileTableCompanion
@@ -2517,6 +2595,8 @@ typedef $$ProfileTableTableUpdateCompanionBuilder = ProfileTableCompanion
   Value<String> id,
   Value<String> name,
   Value<String> initials,
+  Value<int?> age,
+  Value<String?> gender,
   Value<int> rowid,
 });
 
@@ -2558,6 +2638,12 @@ class $$ProfileTableTableFilterComposer
   ColumnFilters<String> get initials => $composableBuilder(
       column: $table.initials, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<int> get age => $composableBuilder(
+      column: $table.age, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get gender => $composableBuilder(
+      column: $table.gender, builder: (column) => ColumnFilters(column));
+
   Expression<bool> medicineTableRefs(
       Expression<bool> Function($$MedicineTableTableFilterComposer f) f) {
     final $$MedicineTableTableFilterComposer composer = $composerBuilder(
@@ -2597,6 +2683,12 @@ class $$ProfileTableTableOrderingComposer
 
   ColumnOrderings<String> get initials => $composableBuilder(
       column: $table.initials, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get age => $composableBuilder(
+      column: $table.age, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get gender => $composableBuilder(
+      column: $table.gender, builder: (column) => ColumnOrderings(column));
 }
 
 class $$ProfileTableTableAnnotationComposer
@@ -2616,6 +2708,12 @@ class $$ProfileTableTableAnnotationComposer
 
   GeneratedColumn<String> get initials =>
       $composableBuilder(column: $table.initials, builder: (column) => column);
+
+  GeneratedColumn<int> get age =>
+      $composableBuilder(column: $table.age, builder: (column) => column);
+
+  GeneratedColumn<String> get gender =>
+      $composableBuilder(column: $table.gender, builder: (column) => column);
 
   Expression<T> medicineTableRefs<T extends Object>(
       Expression<T> Function($$MedicineTableTableAnnotationComposer a) f) {
@@ -2665,24 +2763,32 @@ class $$ProfileTableTableTableManager extends RootTableManager<
             Value<String> id = const Value.absent(),
             Value<String> name = const Value.absent(),
             Value<String> initials = const Value.absent(),
+            Value<int?> age = const Value.absent(),
+            Value<String?> gender = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ProfileTableCompanion(
             id: id,
             name: name,
             initials: initials,
+            age: age,
+            gender: gender,
             rowid: rowid,
           ),
           createCompanionCallback: ({
             required String id,
             required String name,
             required String initials,
+            Value<int?> age = const Value.absent(),
+            Value<String?> gender = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ProfileTableCompanion.insert(
             id: id,
             name: name,
             initials: initials,
+            age: age,
+            gender: gender,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

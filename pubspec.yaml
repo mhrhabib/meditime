@@ -24,6 +24,13 @@ dependencies:
   # Notifications
   flutter_local_notifications: ^17.0.0
   timezone: ^0.9.3
+  flutter_timezone: ^3.0.1
+
+  # Loud medication alarms (elderly-friendly — rings until stopped)
+  alarm: ^5.2.1
+
+  # Runtime permissions (battery optimization, full-screen intent, etc.)
+  permission_handler: ^11.3.1
 
   # Image & PDF
   image_picker: ^1.0.7
@@ -83,3 +90,4 @@ flutter:
     - assets/images/
     - assets/images/onboarding/
     - assets/fonts/
+    - assets/sounds/
