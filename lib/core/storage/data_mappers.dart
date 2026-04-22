@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:meditime/core/device/device_identity.dart';
 import 'package:meditime/core/storage/app_database.dart';
 import 'package:meditime/features/medicines/domain/entities/medicine.dart';
 import 'package:meditime/features/history/domain/entities/dose_log.dart' as entity;
@@ -28,7 +29,12 @@ class DataMappers {
     );
   }
 
-  static MedicineTableData medicineToTable(Medicine entity) {
+  /// Builds a [MedicineTableData] stamped with sync metadata.
+  static MedicineTableData medicineToTable(
+    Medicine entity, {
+    String? accountId,
+  }) {
+    final now = DateTime.now().millisecondsSinceEpoch;
     return MedicineTableData(
       id: entity.id,
       profileId: entity.profileId,
@@ -44,6 +50,12 @@ class DataMappers {
       strength: entity.strength,
       unit: entity.unit,
       reminderTimes: _timeListToJson(entity.times),
+      // sync
+      accountId: accountId,
+      updatedAt: now,
+      deletedAt: null,
+      dirty: true,
+      lastWriterDeviceId: DeviceIdentity.cachedId,
     );
   }
 
@@ -60,7 +72,12 @@ class DataMappers {
     );
   }
 
-  static DoseLogTableData doseLogToTable(entity.DoseLog data) {
+  static DoseLogTableData doseLogToTable(
+    entity.DoseLog data, {
+    String? accountId,
+    String? profileId,
+  }) {
+    final now = DateTime.now().millisecondsSinceEpoch;
     return DoseLogTableData(
       id: data.id,
       medicineId: data.medicineId,
@@ -69,6 +86,13 @@ class DataMappers {
       status: data.status.index,
       note: data.note,
       scheduledDateTime: data.scheduledDateTime,
+      // sync
+      accountId: accountId,
+      profileId: profileId,
+      updatedAt: now,
+      deletedAt: null,
+      dirty: true,
+      lastWriterDeviceId: DeviceIdentity.cachedId,
     );
   }
 
@@ -102,13 +126,23 @@ class DataMappers {
     );
   }
 
-  static ProfileTableData profileToTable(profile_entity.Profile data) {
+  static ProfileTableData profileToTable(
+    profile_entity.Profile data, {
+    String? accountId,
+  }) {
+    final now = DateTime.now().millisecondsSinceEpoch;
     return ProfileTableData(
       id: data.id,
       name: data.name,
       initials: data.initials,
       age: data.age,
       gender: data.gender,
+      // sync
+      accountId: accountId,
+      updatedAt: now,
+      deletedAt: null,
+      dirty: true,
+      lastWriterDeviceId: DeviceIdentity.cachedId,
     );
   }
 
@@ -149,7 +183,12 @@ class DataMappers {
     );
   }
 
-  static PrescriptionTableData prescriptionToTable(Prescription data) {
+  static PrescriptionTableData prescriptionToTable(
+    Prescription data, {
+    String? accountId,
+    String? profileId,
+  }) {
+    final now = DateTime.now().millisecondsSinceEpoch;
     return PrescriptionTableData(
       id: data.id,
       doctorName: data.doctorName,
@@ -158,6 +197,13 @@ class DataMappers {
       imageUrl: data.imageUrl,
       medicines: data.medicines.join(','),
       isScanned: data.isScanned,
+      // sync
+      accountId: accountId,
+      profileId: profileId,
+      updatedAt: now,
+      deletedAt: null,
+      dirty: true,
+      lastWriterDeviceId: DeviceIdentity.cachedId,
     );
   }
 }

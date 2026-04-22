@@ -1,21 +1,21 @@
 import 'package:meditime/core/storage/data_mappers.dart';
+import 'package:meditime/core/sync/sync_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/medicine.dart';
 import '../../domain/repositories/medicine_repository.dart';
 import '../datasources/medicine_local_datasource.dart';
-import '../datasources/medicine_remote_datasource.dart';
 
 class MedicineRepositoryImpl implements MedicineRepository {
   final MedicineLocalDataSource _local;
-  final MedicineRemoteDataSource _remote;
 
   MedicineRepositoryImpl({
     MedicineLocalDataSource? local,
-    MedicineRemoteDataSource? remote,
-  })  : _local = local ?? MedicineLocalDataSourceImpl(),
-        _remote = remote ?? MedicineRemoteDataSourceImpl();
+  }) : _local = local ?? MedicineLocalDataSourceImpl();
 
   static final MedicineRepositoryImpl instance = MedicineRepositoryImpl();
+
+  String? get _currentUserId => Supabase.instance.client.auth.currentUser?.id;
 
   @override
   Stream<List<Medicine>> watchAll() => _local
@@ -36,35 +36,22 @@ class MedicineRepositoryImpl implements MedicineRepository {
 
   @override
   Future<void> upsert(Medicine medicine) async {
-    await _local.upsert(DataMappers.medicineToTable(medicine));
+    await _local.upsert(DataMappers.medicineToTable(
+      medicine,
+      accountId: _currentUserId,
+    ));
+    SyncService.instance.sync();
   }
 
   @override
   Future<void> delete(String id) async {
-    await _local.delete(id);
+    await _local.delete(id); // Local datasource should handle soft delete
+    SyncService.instance.sync();
   }
 
   @override
-  Future<void> syncFromRemote() async {
-    try {
-      final remote = await _remote.fetchAll();
-      for (final med in remote) {
-        await _local.upsert(DataMappers.medicineToTable(med));
-      }
-    } on UnimplementedError {
-      // API not yet implemented
-    }
-  }
+  Future<void> syncFromRemote() => SyncService.instance.sync(immediate: true);
 
   @override
-  Future<void> syncToRemote() async {
-    try {
-      final local = await getAll();
-      for (final med in local) {
-        await _remote.push(med);
-      }
-    } on UnimplementedError {
-      // API not yet implemented
-    }
-  }
+  Future<void> syncToRemote() => SyncService.instance.sync(immediate: true);
 }

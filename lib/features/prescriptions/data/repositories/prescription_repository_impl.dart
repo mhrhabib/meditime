@@ -1,22 +1,22 @@
 import 'package:meditime/core/storage/data_mappers.dart';
+import 'package:meditime/core/sync/sync_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/prescription.dart';
 import '../../domain/repositories/prescription_repository.dart';
 import '../datasources/prescription_local_datasource.dart';
-import '../datasources/prescription_remote_datasource.dart';
 
 class PrescriptionRepositoryImpl implements PrescriptionRepository {
   final PrescriptionLocalDataSource _local;
-  final PrescriptionRemoteDataSource _remote;
 
   PrescriptionRepositoryImpl({
     PrescriptionLocalDataSource? local,
-    PrescriptionRemoteDataSource? remote,
-  })  : _local = local ?? PrescriptionLocalDataSourceImpl(),
-        _remote = remote ?? PrescriptionRemoteDataSourceImpl();
+  }) : _local = local ?? PrescriptionLocalDataSourceImpl();
 
   static final PrescriptionRepositoryImpl instance =
       PrescriptionRepositoryImpl();
+
+  String? get _currentUserId => Supabase.instance.client.auth.currentUser?.id;
 
   @override
   Stream<List<Prescription>> watchAll() => _local
@@ -31,35 +31,22 @@ class PrescriptionRepositoryImpl implements PrescriptionRepository {
 
   @override
   Future<void> upsert(Prescription prescription) async {
-    await _local.upsert(DataMappers.prescriptionToTable(prescription));
+    await _local.upsert(DataMappers.prescriptionToTable(
+      prescription,
+      accountId: _currentUserId,
+    ));
+    SyncService.instance.sync();
   }
 
   @override
   Future<void> delete(String id) async {
     await _local.delete(id);
+    SyncService.instance.sync();
   }
 
   @override
-  Future<void> syncFromRemote() async {
-    try {
-      final remote = await _remote.fetchAll();
-      for (final rx in remote) {
-        await _local.upsert(DataMappers.prescriptionToTable(rx));
-      }
-    } on UnimplementedError {
-      // API not yet implemented
-    }
-  }
+  Future<void> syncFromRemote() => SyncService.instance.sync(immediate: true);
 
   @override
-  Future<void> syncToRemote() async {
-    try {
-      final local = await getAll();
-      for (final rx in local) {
-        await _remote.push(rx);
-      }
-    } on UnimplementedError {
-      // API not yet implemented
-    }
-  }
+  Future<void> syncToRemote() => SyncService.instance.sync(immediate: true);
 }

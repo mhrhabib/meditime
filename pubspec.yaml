@@ -54,6 +54,12 @@ dependencies:
   # HTTP
   dio: ^5.4.0
   equatable: ^2.0.8
+
+  # Supabase (auth + realtime + remote storage)
+  supabase_flutter: ^2.8.4
+
+  # UUID generation (device identity)
+  uuid: ^4.4.0
   solar_icons: ^0.0.5
   flutter_screenutil: ^5.9.3
   fluttertoast: ^8.2.4

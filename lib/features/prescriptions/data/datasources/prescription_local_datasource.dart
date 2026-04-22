@@ -14,8 +14,7 @@ class PrescriptionLocalDataSourceImpl implements PrescriptionLocalDataSource {
       : _db = db ?? AppDatabase.instance;
 
   @override
-  Stream<List<PrescriptionTableData>> watchAll() =>
-      _db.select(_db.prescriptionTable).watch();
+  Stream<List<PrescriptionTableData>> watchAll() => _db.watchAllPrescriptions();
 
   @override
   Future<List<PrescriptionTableData>> getAll() => _db.getAllPrescriptions();
@@ -24,6 +23,5 @@ class PrescriptionLocalDataSourceImpl implements PrescriptionLocalDataSource {
   Future<void> upsert(PrescriptionTableData rx) => _db.insertPrescription(rx);
 
   @override
-  Future<void> delete(String id) =>
-      (_db.delete(_db.prescriptionTable)..where((t) => t.id.equals(id))).go();
+  Future<void> delete(String id) => _db.softDeletePrescription(id);
 }

@@ -1,21 +1,21 @@
 import 'package:meditime/core/storage/data_mappers.dart';
+import 'package:meditime/core/sync/sync_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_local_datasource.dart';
-import '../datasources/profile_remote_datasource.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
   final ProfileLocalDataSource _local;
-  final ProfileRemoteDataSource _remote;
 
   ProfileRepositoryImpl({
     ProfileLocalDataSource? local,
-    ProfileRemoteDataSource? remote,
-  })  : _local = local ?? ProfileLocalDataSourceImpl(),
-        _remote = remote ?? ProfileRemoteDataSourceImpl();
+  }) : _local = local ?? ProfileLocalDataSourceImpl();
 
   static final ProfileRepositoryImpl instance = ProfileRepositoryImpl();
+
+  String? get _currentUserId => Supabase.instance.client.auth.currentUser?.id;
 
   @override
   Stream<List<Profile>> watchAll() =>
@@ -35,37 +35,22 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
   @override
   Future<void> upsert(Profile profile) async {
-    await _local.upsert(DataMappers.profileToTable(profile));
-    // TODO(sync): enqueue _remote.push(profile) when online
+    await _local.upsert(DataMappers.profileToTable(
+      profile,
+      accountId: _currentUserId,
+    ));
+    SyncService.instance.sync();
   }
 
   @override
   Future<void> delete(String id) async {
     await _local.delete(id);
-    // TODO(sync): enqueue _remote.delete(id) when online
+    SyncService.instance.sync();
   }
 
   @override
-  Future<void> syncFromRemote() async {
-    try {
-      final remote = await _remote.fetchAll();
-      for (final profile in remote) {
-        await _local.upsert(DataMappers.profileToTable(profile));
-      }
-    } on UnimplementedError {
-      // API not yet implemented
-    }
-  }
+  Future<void> syncFromRemote() => SyncService.instance.sync(immediate: true);
 
   @override
-  Future<void> syncToRemote() async {
-    try {
-      final local = await getAll();
-      for (final profile in local) {
-        await _remote.push(profile);
-      }
-    } on UnimplementedError {
-      // API not yet implemented
-    }
-  }
+  Future<void> syncToRemote() => SyncService.instance.sync(immediate: true);
 }

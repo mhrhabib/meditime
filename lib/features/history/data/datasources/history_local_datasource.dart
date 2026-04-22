@@ -22,6 +22,5 @@ class HistoryLocalDataSourceImpl implements HistoryLocalDataSource {
   Future<void> upsert(DoseLogTableData log) => _db.insertDoseLog(log);
 
   @override
-  Future<void> delete(String id) =>
-      (_db.delete(_db.doseLogTable)..where((t) => t.id.equals(id))).go();
+  Future<void> delete(String id) => _db.softDeleteDoseLog(id);
 }

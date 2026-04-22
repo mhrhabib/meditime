@@ -21,13 +21,11 @@ class MedicineLocalDataSourceImpl implements MedicineLocalDataSource {
   Future<List<MedicineTableData>> getAll() => _db.getAllMedicines();
 
   @override
-  Future<MedicineTableData?> getById(String id) =>
-      (_db.select(_db.medicineTable)..where((t) => t.id.equals(id)))
-          .getSingleOrNull();
+  Future<MedicineTableData?> getById(String id) => _db.getMedicineById(id);
 
   @override
   Future<void> upsert(MedicineTableData medicine) => _db.insertMedicine(medicine);
 
   @override
-  Future<void> delete(String id) => _db.deleteMedicine(id);
+  Future<void> delete(String id) => _db.softDeleteMedicine(id);
 }

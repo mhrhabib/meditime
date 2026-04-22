@@ -1,21 +1,21 @@
 import 'package:meditime/core/storage/data_mappers.dart';
+import 'package:meditime/core/sync/sync_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/dose_log.dart';
 import '../../domain/repositories/history_repository.dart';
 import '../datasources/history_local_datasource.dart';
-import '../datasources/history_remote_datasource.dart';
 
 class HistoryRepositoryImpl implements HistoryRepository {
   final HistoryLocalDataSource _local;
-  final HistoryRemoteDataSource _remote;
 
   HistoryRepositoryImpl({
     HistoryLocalDataSource? local,
-    HistoryRemoteDataSource? remote,
-  })  : _local = local ?? HistoryLocalDataSourceImpl(),
-        _remote = remote ?? HistoryRemoteDataSourceImpl();
+  }) : _local = local ?? HistoryLocalDataSourceImpl();
 
   static final HistoryRepositoryImpl instance = HistoryRepositoryImpl();
+
+  String? get _currentUserId => Supabase.instance.client.auth.currentUser?.id;
 
   @override
   Stream<List<DoseLog>> watchAll() =>
@@ -29,35 +29,22 @@ class HistoryRepositoryImpl implements HistoryRepository {
 
   @override
   Future<void> add(DoseLog log) async {
-    await _local.upsert(DataMappers.doseLogToTable(log));
+    await _local.upsert(DataMappers.doseLogToTable(
+      log,
+      accountId: _currentUserId,
+    ));
+    SyncService.instance.sync();
   }
 
   @override
   Future<void> delete(String id) async {
     await _local.delete(id);
+    SyncService.instance.sync();
   }
 
   @override
-  Future<void> syncFromRemote() async {
-    try {
-      final remote = await _remote.fetchAll();
-      for (final log in remote) {
-        await _local.upsert(DataMappers.doseLogToTable(log));
-      }
-    } on UnimplementedError {
-      // API not yet implemented
-    }
-  }
+  Future<void> syncFromRemote() => SyncService.instance.sync(immediate: true);
 
   @override
-  Future<void> syncToRemote() async {
-    try {
-      final local = await getAll();
-      for (final log in local) {
-        await _remote.push(log);
-      }
-    } on UnimplementedError {
-      // API not yet implemented
-    }
-  }
+  Future<void> syncToRemote() => SyncService.instance.sync(immediate: true);
 }

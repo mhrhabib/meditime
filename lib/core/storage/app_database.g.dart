@@ -35,8 +35,54 @@ class $ProfileTableTable extends ProfileTable
   late final GeneratedColumn<String> gender = GeneratedColumn<String>(
       'gender', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _accountIdMeta =
+      const VerificationMeta('accountId');
   @override
-  List<GeneratedColumn> get $columns => [id, name, initials, age, gender];
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+      'account_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _deletedAtMeta =
+      const VerificationMeta('deletedAt');
+  @override
+  late final GeneratedColumn<int> deletedAt = GeneratedColumn<int>(
+      'deleted_at', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+      'dirty', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("dirty" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _lastWriterDeviceIdMeta =
+      const VerificationMeta('lastWriterDeviceId');
+  @override
+  late final GeneratedColumn<String> lastWriterDeviceId =
+      GeneratedColumn<String>('last_writer_device_id', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        initials,
+        age,
+        gender,
+        accountId,
+        updatedAt,
+        deletedAt,
+        dirty,
+        lastWriterDeviceId
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -72,6 +118,28 @@ class $ProfileTableTable extends ProfileTable
       context.handle(_genderMeta,
           gender.isAcceptableOrUnknown(data['gender']!, _genderMeta));
     }
+    if (data.containsKey('account_id')) {
+      context.handle(_accountIdMeta,
+          accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(_deletedAtMeta,
+          deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+          _dirtyMeta, dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta));
+    }
+    if (data.containsKey('last_writer_device_id')) {
+      context.handle(
+          _lastWriterDeviceIdMeta,
+          lastWriterDeviceId.isAcceptableOrUnknown(
+              data['last_writer_device_id']!, _lastWriterDeviceIdMeta));
+    }
     return context;
   }
 
@@ -91,6 +159,16 @@ class $ProfileTableTable extends ProfileTable
           .read(DriftSqlType.int, data['${effectivePrefix}age']),
       gender: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}gender']),
+      accountId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}account_id']),
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+      deletedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}deleted_at']),
+      dirty: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}dirty'])!,
+      lastWriterDeviceId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}last_writer_device_id']),
     );
   }
 
@@ -107,12 +185,22 @@ class ProfileTableData extends DataClass
   final String initials;
   final int? age;
   final String? gender;
+  final String? accountId;
+  final int updatedAt;
+  final int? deletedAt;
+  final bool dirty;
+  final String? lastWriterDeviceId;
   const ProfileTableData(
       {required this.id,
       required this.name,
       required this.initials,
       this.age,
-      this.gender});
+      this.gender,
+      this.accountId,
+      required this.updatedAt,
+      this.deletedAt,
+      required this.dirty,
+      this.lastWriterDeviceId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -125,6 +213,17 @@ class ProfileTableData extends DataClass
     if (!nullToAbsent || gender != null) {
       map['gender'] = Variable<String>(gender);
     }
+    if (!nullToAbsent || accountId != null) {
+      map['account_id'] = Variable<String>(accountId);
+    }
+    map['updated_at'] = Variable<int>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<int>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
+    if (!nullToAbsent || lastWriterDeviceId != null) {
+      map['last_writer_device_id'] = Variable<String>(lastWriterDeviceId);
+    }
     return map;
   }
 
@@ -136,6 +235,17 @@ class ProfileTableData extends DataClass
       age: age == null && nullToAbsent ? const Value.absent() : Value(age),
       gender:
           gender == null && nullToAbsent ? const Value.absent() : Value(gender),
+      accountId: accountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountId),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      dirty: Value(dirty),
+      lastWriterDeviceId: lastWriterDeviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastWriterDeviceId),
     );
   }
 
@@ -148,6 +258,12 @@ class ProfileTableData extends DataClass
       initials: serializer.fromJson<String>(json['initials']),
       age: serializer.fromJson<int?>(json['age']),
       gender: serializer.fromJson<String?>(json['gender']),
+      accountId: serializer.fromJson<String?>(json['accountId']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      deletedAt: serializer.fromJson<int?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      lastWriterDeviceId:
+          serializer.fromJson<String?>(json['lastWriterDeviceId']),
     );
   }
   @override
@@ -159,6 +275,11 @@ class ProfileTableData extends DataClass
       'initials': serializer.toJson<String>(initials),
       'age': serializer.toJson<int?>(age),
       'gender': serializer.toJson<String?>(gender),
+      'accountId': serializer.toJson<String?>(accountId),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+      'deletedAt': serializer.toJson<int?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'lastWriterDeviceId': serializer.toJson<String?>(lastWriterDeviceId),
     };
   }
 
@@ -167,13 +288,25 @@ class ProfileTableData extends DataClass
           String? name,
           String? initials,
           Value<int?> age = const Value.absent(),
-          Value<String?> gender = const Value.absent()}) =>
+          Value<String?> gender = const Value.absent(),
+          Value<String?> accountId = const Value.absent(),
+          int? updatedAt,
+          Value<int?> deletedAt = const Value.absent(),
+          bool? dirty,
+          Value<String?> lastWriterDeviceId = const Value.absent()}) =>
       ProfileTableData(
         id: id ?? this.id,
         name: name ?? this.name,
         initials: initials ?? this.initials,
         age: age.present ? age.value : this.age,
         gender: gender.present ? gender.value : this.gender,
+        accountId: accountId.present ? accountId.value : this.accountId,
+        updatedAt: updatedAt ?? this.updatedAt,
+        deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+        dirty: dirty ?? this.dirty,
+        lastWriterDeviceId: lastWriterDeviceId.present
+            ? lastWriterDeviceId.value
+            : this.lastWriterDeviceId,
       );
   ProfileTableData copyWithCompanion(ProfileTableCompanion data) {
     return ProfileTableData(
@@ -182,6 +315,13 @@ class ProfileTableData extends DataClass
       initials: data.initials.present ? data.initials.value : this.initials,
       age: data.age.present ? data.age.value : this.age,
       gender: data.gender.present ? data.gender.value : this.gender,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      lastWriterDeviceId: data.lastWriterDeviceId.present
+          ? data.lastWriterDeviceId.value
+          : this.lastWriterDeviceId,
     );
   }
 
@@ -192,13 +332,19 @@ class ProfileTableData extends DataClass
           ..write('name: $name, ')
           ..write('initials: $initials, ')
           ..write('age: $age, ')
-          ..write('gender: $gender')
+          ..write('gender: $gender, ')
+          ..write('accountId: $accountId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('lastWriterDeviceId: $lastWriterDeviceId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, initials, age, gender);
+  int get hashCode => Object.hash(id, name, initials, age, gender, accountId,
+      updatedAt, deletedAt, dirty, lastWriterDeviceId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -207,7 +353,12 @@ class ProfileTableData extends DataClass
           other.name == this.name &&
           other.initials == this.initials &&
           other.age == this.age &&
-          other.gender == this.gender);
+          other.gender == this.gender &&
+          other.accountId == this.accountId &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty &&
+          other.lastWriterDeviceId == this.lastWriterDeviceId);
 }
 
 class ProfileTableCompanion extends UpdateCompanion<ProfileTableData> {
@@ -216,6 +367,11 @@ class ProfileTableCompanion extends UpdateCompanion<ProfileTableData> {
   final Value<String> initials;
   final Value<int?> age;
   final Value<String?> gender;
+  final Value<String?> accountId;
+  final Value<int> updatedAt;
+  final Value<int?> deletedAt;
+  final Value<bool> dirty;
+  final Value<String?> lastWriterDeviceId;
   final Value<int> rowid;
   const ProfileTableCompanion({
     this.id = const Value.absent(),
@@ -223,6 +379,11 @@ class ProfileTableCompanion extends UpdateCompanion<ProfileTableData> {
     this.initials = const Value.absent(),
     this.age = const Value.absent(),
     this.gender = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.lastWriterDeviceId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ProfileTableCompanion.insert({
@@ -231,6 +392,11 @@ class ProfileTableCompanion extends UpdateCompanion<ProfileTableData> {
     required String initials,
     this.age = const Value.absent(),
     this.gender = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.lastWriterDeviceId = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         name = Value(name),
@@ -241,6 +407,11 @@ class ProfileTableCompanion extends UpdateCompanion<ProfileTableData> {
     Expression<String>? initials,
     Expression<int>? age,
     Expression<String>? gender,
+    Expression<String>? accountId,
+    Expression<int>? updatedAt,
+    Expression<int>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<String>? lastWriterDeviceId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -249,6 +420,12 @@ class ProfileTableCompanion extends UpdateCompanion<ProfileTableData> {
       if (initials != null) 'initials': initials,
       if (age != null) 'age': age,
       if (gender != null) 'gender': gender,
+      if (accountId != null) 'account_id': accountId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (lastWriterDeviceId != null)
+        'last_writer_device_id': lastWriterDeviceId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -259,6 +436,11 @@ class ProfileTableCompanion extends UpdateCompanion<ProfileTableData> {
       Value<String>? initials,
       Value<int?>? age,
       Value<String?>? gender,
+      Value<String?>? accountId,
+      Value<int>? updatedAt,
+      Value<int?>? deletedAt,
+      Value<bool>? dirty,
+      Value<String?>? lastWriterDeviceId,
       Value<int>? rowid}) {
     return ProfileTableCompanion(
       id: id ?? this.id,
@@ -266,6 +448,11 @@ class ProfileTableCompanion extends UpdateCompanion<ProfileTableData> {
       initials: initials ?? this.initials,
       age: age ?? this.age,
       gender: gender ?? this.gender,
+      accountId: accountId ?? this.accountId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      lastWriterDeviceId: lastWriterDeviceId ?? this.lastWriterDeviceId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -288,6 +475,21 @@ class ProfileTableCompanion extends UpdateCompanion<ProfileTableData> {
     if (gender.present) {
       map['gender'] = Variable<String>(gender.value);
     }
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<int>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (lastWriterDeviceId.present) {
+      map['last_writer_device_id'] = Variable<String>(lastWriterDeviceId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -302,6 +504,11 @@ class ProfileTableCompanion extends UpdateCompanion<ProfileTableData> {
           ..write('initials: $initials, ')
           ..write('age: $age, ')
           ..write('gender: $gender, ')
+          ..write('accountId: $accountId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('lastWriterDeviceId: $lastWriterDeviceId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -401,6 +608,41 @@ class $MedicineTableTable extends MedicineTable
   late final GeneratedColumn<String> reminderTimes = GeneratedColumn<String>(
       'reminder_times', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _accountIdMeta =
+      const VerificationMeta('accountId');
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+      'account_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _deletedAtMeta =
+      const VerificationMeta('deletedAt');
+  @override
+  late final GeneratedColumn<int> deletedAt = GeneratedColumn<int>(
+      'deleted_at', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+      'dirty', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("dirty" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _lastWriterDeviceIdMeta =
+      const VerificationMeta('lastWriterDeviceId');
+  @override
+  late final GeneratedColumn<String> lastWriterDeviceId =
+      GeneratedColumn<String>('last_writer_device_id', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -416,7 +658,12 @@ class $MedicineTableTable extends MedicineTable
         amount,
         strength,
         unit,
-        reminderTimes
+        reminderTimes,
+        accountId,
+        updatedAt,
+        deletedAt,
+        dirty,
+        lastWriterDeviceId
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -507,6 +754,28 @@ class $MedicineTableTable extends MedicineTable
           reminderTimes.isAcceptableOrUnknown(
               data['reminder_times']!, _reminderTimesMeta));
     }
+    if (data.containsKey('account_id')) {
+      context.handle(_accountIdMeta,
+          accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(_deletedAtMeta,
+          deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+          _dirtyMeta, dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta));
+    }
+    if (data.containsKey('last_writer_device_id')) {
+      context.handle(
+          _lastWriterDeviceIdMeta,
+          lastWriterDeviceId.isAcceptableOrUnknown(
+              data['last_writer_device_id']!, _lastWriterDeviceIdMeta));
+    }
     return context;
   }
 
@@ -544,6 +813,16 @@ class $MedicineTableTable extends MedicineTable
           .read(DriftSqlType.string, data['${effectivePrefix}unit']),
       reminderTimes: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}reminder_times']),
+      accountId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}account_id']),
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+      deletedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}deleted_at']),
+      dirty: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}dirty'])!,
+      lastWriterDeviceId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}last_writer_device_id']),
     );
   }
 
@@ -569,6 +848,11 @@ class MedicineTableData extends DataClass
   final String? strength;
   final String? unit;
   final String? reminderTimes;
+  final String? accountId;
+  final int updatedAt;
+  final int? deletedAt;
+  final bool dirty;
+  final String? lastWriterDeviceId;
   const MedicineTableData(
       {required this.id,
       this.profileId,
@@ -583,7 +867,12 @@ class MedicineTableData extends DataClass
       required this.amount,
       this.strength,
       this.unit,
-      this.reminderTimes});
+      this.reminderTimes,
+      this.accountId,
+      required this.updatedAt,
+      this.deletedAt,
+      required this.dirty,
+      this.lastWriterDeviceId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -610,6 +899,17 @@ class MedicineTableData extends DataClass
     }
     if (!nullToAbsent || reminderTimes != null) {
       map['reminder_times'] = Variable<String>(reminderTimes);
+    }
+    if (!nullToAbsent || accountId != null) {
+      map['account_id'] = Variable<String>(accountId);
+    }
+    map['updated_at'] = Variable<int>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<int>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
+    if (!nullToAbsent || lastWriterDeviceId != null) {
+      map['last_writer_device_id'] = Variable<String>(lastWriterDeviceId);
     }
     return map;
   }
@@ -638,6 +938,17 @@ class MedicineTableData extends DataClass
       reminderTimes: reminderTimes == null && nullToAbsent
           ? const Value.absent()
           : Value(reminderTimes),
+      accountId: accountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountId),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      dirty: Value(dirty),
+      lastWriterDeviceId: lastWriterDeviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastWriterDeviceId),
     );
   }
 
@@ -659,6 +970,12 @@ class MedicineTableData extends DataClass
       strength: serializer.fromJson<String?>(json['strength']),
       unit: serializer.fromJson<String?>(json['unit']),
       reminderTimes: serializer.fromJson<String?>(json['reminderTimes']),
+      accountId: serializer.fromJson<String?>(json['accountId']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      deletedAt: serializer.fromJson<int?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      lastWriterDeviceId:
+          serializer.fromJson<String?>(json['lastWriterDeviceId']),
     );
   }
   @override
@@ -679,6 +996,11 @@ class MedicineTableData extends DataClass
       'strength': serializer.toJson<String?>(strength),
       'unit': serializer.toJson<String?>(unit),
       'reminderTimes': serializer.toJson<String?>(reminderTimes),
+      'accountId': serializer.toJson<String?>(accountId),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+      'deletedAt': serializer.toJson<int?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'lastWriterDeviceId': serializer.toJson<String?>(lastWriterDeviceId),
     };
   }
 
@@ -696,7 +1018,12 @@ class MedicineTableData extends DataClass
           double? amount,
           Value<String?> strength = const Value.absent(),
           Value<String?> unit = const Value.absent(),
-          Value<String?> reminderTimes = const Value.absent()}) =>
+          Value<String?> reminderTimes = const Value.absent(),
+          Value<String?> accountId = const Value.absent(),
+          int? updatedAt,
+          Value<int?> deletedAt = const Value.absent(),
+          bool? dirty,
+          Value<String?> lastWriterDeviceId = const Value.absent()}) =>
       MedicineTableData(
         id: id ?? this.id,
         profileId: profileId.present ? profileId.value : this.profileId,
@@ -713,6 +1040,13 @@ class MedicineTableData extends DataClass
         unit: unit.present ? unit.value : this.unit,
         reminderTimes:
             reminderTimes.present ? reminderTimes.value : this.reminderTimes,
+        accountId: accountId.present ? accountId.value : this.accountId,
+        updatedAt: updatedAt ?? this.updatedAt,
+        deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+        dirty: dirty ?? this.dirty,
+        lastWriterDeviceId: lastWriterDeviceId.present
+            ? lastWriterDeviceId.value
+            : this.lastWriterDeviceId,
       );
   MedicineTableData copyWithCompanion(MedicineTableCompanion data) {
     return MedicineTableData(
@@ -736,6 +1070,13 @@ class MedicineTableData extends DataClass
       reminderTimes: data.reminderTimes.present
           ? data.reminderTimes.value
           : this.reminderTimes,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      lastWriterDeviceId: data.lastWriterDeviceId.present
+          ? data.lastWriterDeviceId.value
+          : this.lastWriterDeviceId,
     );
   }
 
@@ -755,7 +1096,12 @@ class MedicineTableData extends DataClass
           ..write('amount: $amount, ')
           ..write('strength: $strength, ')
           ..write('unit: $unit, ')
-          ..write('reminderTimes: $reminderTimes')
+          ..write('reminderTimes: $reminderTimes, ')
+          ..write('accountId: $accountId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('lastWriterDeviceId: $lastWriterDeviceId')
           ..write(')'))
         .toString();
   }
@@ -775,7 +1121,12 @@ class MedicineTableData extends DataClass
       amount,
       strength,
       unit,
-      reminderTimes);
+      reminderTimes,
+      accountId,
+      updatedAt,
+      deletedAt,
+      dirty,
+      lastWriterDeviceId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -793,7 +1144,12 @@ class MedicineTableData extends DataClass
           other.amount == this.amount &&
           other.strength == this.strength &&
           other.unit == this.unit &&
-          other.reminderTimes == this.reminderTimes);
+          other.reminderTimes == this.reminderTimes &&
+          other.accountId == this.accountId &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty &&
+          other.lastWriterDeviceId == this.lastWriterDeviceId);
 }
 
 class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
@@ -811,6 +1167,11 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
   final Value<String?> strength;
   final Value<String?> unit;
   final Value<String?> reminderTimes;
+  final Value<String?> accountId;
+  final Value<int> updatedAt;
+  final Value<int?> deletedAt;
+  final Value<bool> dirty;
+  final Value<String?> lastWriterDeviceId;
   final Value<int> rowid;
   const MedicineTableCompanion({
     this.id = const Value.absent(),
@@ -827,6 +1188,11 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
     this.strength = const Value.absent(),
     this.unit = const Value.absent(),
     this.reminderTimes = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.lastWriterDeviceId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MedicineTableCompanion.insert({
@@ -844,6 +1210,11 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
     this.strength = const Value.absent(),
     this.unit = const Value.absent(),
     this.reminderTimes = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.lastWriterDeviceId = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         name = Value(name),
@@ -868,6 +1239,11 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
     Expression<String>? strength,
     Expression<String>? unit,
     Expression<String>? reminderTimes,
+    Expression<String>? accountId,
+    Expression<int>? updatedAt,
+    Expression<int>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<String>? lastWriterDeviceId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -885,6 +1261,12 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
       if (strength != null) 'strength': strength,
       if (unit != null) 'unit': unit,
       if (reminderTimes != null) 'reminder_times': reminderTimes,
+      if (accountId != null) 'account_id': accountId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (lastWriterDeviceId != null)
+        'last_writer_device_id': lastWriterDeviceId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -904,6 +1286,11 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
       Value<String?>? strength,
       Value<String?>? unit,
       Value<String?>? reminderTimes,
+      Value<String?>? accountId,
+      Value<int>? updatedAt,
+      Value<int?>? deletedAt,
+      Value<bool>? dirty,
+      Value<String?>? lastWriterDeviceId,
       Value<int>? rowid}) {
     return MedicineTableCompanion(
       id: id ?? this.id,
@@ -920,6 +1307,11 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
       strength: strength ?? this.strength,
       unit: unit ?? this.unit,
       reminderTimes: reminderTimes ?? this.reminderTimes,
+      accountId: accountId ?? this.accountId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      lastWriterDeviceId: lastWriterDeviceId ?? this.lastWriterDeviceId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -969,6 +1361,21 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
     if (reminderTimes.present) {
       map['reminder_times'] = Variable<String>(reminderTimes.value);
     }
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<int>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (lastWriterDeviceId.present) {
+      map['last_writer_device_id'] = Variable<String>(lastWriterDeviceId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -992,6 +1399,11 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
           ..write('strength: $strength, ')
           ..write('unit: $unit, ')
           ..write('reminderTimes: $reminderTimes, ')
+          ..write('accountId: $accountId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('lastWriterDeviceId: $lastWriterDeviceId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1046,6 +1458,47 @@ class $DoseLogTableTable extends DoseLogTable
   late final GeneratedColumn<DateTime> scheduledDateTime =
       GeneratedColumn<DateTime>('scheduled_date_time', aliasedName, true,
           type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _accountIdMeta =
+      const VerificationMeta('accountId');
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+      'account_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _profileIdMeta =
+      const VerificationMeta('profileId');
+  @override
+  late final GeneratedColumn<String> profileId = GeneratedColumn<String>(
+      'profile_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _deletedAtMeta =
+      const VerificationMeta('deletedAt');
+  @override
+  late final GeneratedColumn<int> deletedAt = GeneratedColumn<int>(
+      'deleted_at', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+      'dirty', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("dirty" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _lastWriterDeviceIdMeta =
+      const VerificationMeta('lastWriterDeviceId');
+  @override
+  late final GeneratedColumn<String> lastWriterDeviceId =
+      GeneratedColumn<String>('last_writer_device_id', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -1054,7 +1507,13 @@ class $DoseLogTableTable extends DoseLogTable
         logDateTime,
         status,
         note,
-        scheduledDateTime
+        scheduledDateTime,
+        accountId,
+        profileId,
+        updatedAt,
+        deletedAt,
+        dirty,
+        lastWriterDeviceId
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1111,6 +1570,32 @@ class $DoseLogTableTable extends DoseLogTable
           scheduledDateTime.isAcceptableOrUnknown(
               data['scheduled_date_time']!, _scheduledDateTimeMeta));
     }
+    if (data.containsKey('account_id')) {
+      context.handle(_accountIdMeta,
+          accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta));
+    }
+    if (data.containsKey('profile_id')) {
+      context.handle(_profileIdMeta,
+          profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(_deletedAtMeta,
+          deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+          _dirtyMeta, dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta));
+    }
+    if (data.containsKey('last_writer_device_id')) {
+      context.handle(
+          _lastWriterDeviceIdMeta,
+          lastWriterDeviceId.isAcceptableOrUnknown(
+              data['last_writer_device_id']!, _lastWriterDeviceIdMeta));
+    }
     return context;
   }
 
@@ -1134,6 +1619,18 @@ class $DoseLogTableTable extends DoseLogTable
           .read(DriftSqlType.string, data['${effectivePrefix}note']),
       scheduledDateTime: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}scheduled_date_time']),
+      accountId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}account_id']),
+      profileId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}profile_id']),
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+      deletedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}deleted_at']),
+      dirty: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}dirty'])!,
+      lastWriterDeviceId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}last_writer_device_id']),
     );
   }
 
@@ -1152,6 +1649,12 @@ class DoseLogTableData extends DataClass
   final int status;
   final String? note;
   final DateTime? scheduledDateTime;
+  final String? accountId;
+  final String? profileId;
+  final int updatedAt;
+  final int? deletedAt;
+  final bool dirty;
+  final String? lastWriterDeviceId;
   const DoseLogTableData(
       {required this.id,
       required this.medicineId,
@@ -1159,7 +1662,13 @@ class DoseLogTableData extends DataClass
       required this.logDateTime,
       required this.status,
       this.note,
-      this.scheduledDateTime});
+      this.scheduledDateTime,
+      this.accountId,
+      this.profileId,
+      required this.updatedAt,
+      this.deletedAt,
+      required this.dirty,
+      this.lastWriterDeviceId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1173,6 +1682,20 @@ class DoseLogTableData extends DataClass
     }
     if (!nullToAbsent || scheduledDateTime != null) {
       map['scheduled_date_time'] = Variable<DateTime>(scheduledDateTime);
+    }
+    if (!nullToAbsent || accountId != null) {
+      map['account_id'] = Variable<String>(accountId);
+    }
+    if (!nullToAbsent || profileId != null) {
+      map['profile_id'] = Variable<String>(profileId);
+    }
+    map['updated_at'] = Variable<int>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<int>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
+    if (!nullToAbsent || lastWriterDeviceId != null) {
+      map['last_writer_device_id'] = Variable<String>(lastWriterDeviceId);
     }
     return map;
   }
@@ -1188,6 +1711,20 @@ class DoseLogTableData extends DataClass
       scheduledDateTime: scheduledDateTime == null && nullToAbsent
           ? const Value.absent()
           : Value(scheduledDateTime),
+      accountId: accountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountId),
+      profileId: profileId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(profileId),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      dirty: Value(dirty),
+      lastWriterDeviceId: lastWriterDeviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastWriterDeviceId),
     );
   }
 
@@ -1203,6 +1740,13 @@ class DoseLogTableData extends DataClass
       note: serializer.fromJson<String?>(json['note']),
       scheduledDateTime:
           serializer.fromJson<DateTime?>(json['scheduledDateTime']),
+      accountId: serializer.fromJson<String?>(json['accountId']),
+      profileId: serializer.fromJson<String?>(json['profileId']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      deletedAt: serializer.fromJson<int?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      lastWriterDeviceId:
+          serializer.fromJson<String?>(json['lastWriterDeviceId']),
     );
   }
   @override
@@ -1216,6 +1760,12 @@ class DoseLogTableData extends DataClass
       'status': serializer.toJson<int>(status),
       'note': serializer.toJson<String?>(note),
       'scheduledDateTime': serializer.toJson<DateTime?>(scheduledDateTime),
+      'accountId': serializer.toJson<String?>(accountId),
+      'profileId': serializer.toJson<String?>(profileId),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+      'deletedAt': serializer.toJson<int?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'lastWriterDeviceId': serializer.toJson<String?>(lastWriterDeviceId),
     };
   }
 
@@ -1226,7 +1776,13 @@ class DoseLogTableData extends DataClass
           DateTime? logDateTime,
           int? status,
           Value<String?> note = const Value.absent(),
-          Value<DateTime?> scheduledDateTime = const Value.absent()}) =>
+          Value<DateTime?> scheduledDateTime = const Value.absent(),
+          Value<String?> accountId = const Value.absent(),
+          Value<String?> profileId = const Value.absent(),
+          int? updatedAt,
+          Value<int?> deletedAt = const Value.absent(),
+          bool? dirty,
+          Value<String?> lastWriterDeviceId = const Value.absent()}) =>
       DoseLogTableData(
         id: id ?? this.id,
         medicineId: medicineId ?? this.medicineId,
@@ -1237,6 +1793,14 @@ class DoseLogTableData extends DataClass
         scheduledDateTime: scheduledDateTime.present
             ? scheduledDateTime.value
             : this.scheduledDateTime,
+        accountId: accountId.present ? accountId.value : this.accountId,
+        profileId: profileId.present ? profileId.value : this.profileId,
+        updatedAt: updatedAt ?? this.updatedAt,
+        deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+        dirty: dirty ?? this.dirty,
+        lastWriterDeviceId: lastWriterDeviceId.present
+            ? lastWriterDeviceId.value
+            : this.lastWriterDeviceId,
       );
   DoseLogTableData copyWithCompanion(DoseLogTableCompanion data) {
     return DoseLogTableData(
@@ -1253,6 +1817,14 @@ class DoseLogTableData extends DataClass
       scheduledDateTime: data.scheduledDateTime.present
           ? data.scheduledDateTime.value
           : this.scheduledDateTime,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      lastWriterDeviceId: data.lastWriterDeviceId.present
+          ? data.lastWriterDeviceId.value
+          : this.lastWriterDeviceId,
     );
   }
 
@@ -1265,14 +1837,32 @@ class DoseLogTableData extends DataClass
           ..write('logDateTime: $logDateTime, ')
           ..write('status: $status, ')
           ..write('note: $note, ')
-          ..write('scheduledDateTime: $scheduledDateTime')
+          ..write('scheduledDateTime: $scheduledDateTime, ')
+          ..write('accountId: $accountId, ')
+          ..write('profileId: $profileId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('lastWriterDeviceId: $lastWriterDeviceId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, medicineId, medicineName, logDateTime,
-      status, note, scheduledDateTime);
+  int get hashCode => Object.hash(
+      id,
+      medicineId,
+      medicineName,
+      logDateTime,
+      status,
+      note,
+      scheduledDateTime,
+      accountId,
+      profileId,
+      updatedAt,
+      deletedAt,
+      dirty,
+      lastWriterDeviceId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1283,7 +1873,13 @@ class DoseLogTableData extends DataClass
           other.logDateTime == this.logDateTime &&
           other.status == this.status &&
           other.note == this.note &&
-          other.scheduledDateTime == this.scheduledDateTime);
+          other.scheduledDateTime == this.scheduledDateTime &&
+          other.accountId == this.accountId &&
+          other.profileId == this.profileId &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty &&
+          other.lastWriterDeviceId == this.lastWriterDeviceId);
 }
 
 class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
@@ -1294,6 +1890,12 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
   final Value<int> status;
   final Value<String?> note;
   final Value<DateTime?> scheduledDateTime;
+  final Value<String?> accountId;
+  final Value<String?> profileId;
+  final Value<int> updatedAt;
+  final Value<int?> deletedAt;
+  final Value<bool> dirty;
+  final Value<String?> lastWriterDeviceId;
   final Value<int> rowid;
   const DoseLogTableCompanion({
     this.id = const Value.absent(),
@@ -1303,6 +1905,12 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
     this.status = const Value.absent(),
     this.note = const Value.absent(),
     this.scheduledDateTime = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.profileId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.lastWriterDeviceId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   DoseLogTableCompanion.insert({
@@ -1313,6 +1921,12 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
     required int status,
     this.note = const Value.absent(),
     this.scheduledDateTime = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.profileId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.lastWriterDeviceId = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         medicineId = Value(medicineId),
@@ -1327,6 +1941,12 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
     Expression<int>? status,
     Expression<String>? note,
     Expression<DateTime>? scheduledDateTime,
+    Expression<String>? accountId,
+    Expression<String>? profileId,
+    Expression<int>? updatedAt,
+    Expression<int>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<String>? lastWriterDeviceId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1337,6 +1957,13 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
       if (status != null) 'status': status,
       if (note != null) 'note': note,
       if (scheduledDateTime != null) 'scheduled_date_time': scheduledDateTime,
+      if (accountId != null) 'account_id': accountId,
+      if (profileId != null) 'profile_id': profileId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (lastWriterDeviceId != null)
+        'last_writer_device_id': lastWriterDeviceId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1349,6 +1976,12 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
       Value<int>? status,
       Value<String?>? note,
       Value<DateTime?>? scheduledDateTime,
+      Value<String?>? accountId,
+      Value<String?>? profileId,
+      Value<int>? updatedAt,
+      Value<int?>? deletedAt,
+      Value<bool>? dirty,
+      Value<String?>? lastWriterDeviceId,
       Value<int>? rowid}) {
     return DoseLogTableCompanion(
       id: id ?? this.id,
@@ -1358,6 +1991,12 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
       status: status ?? this.status,
       note: note ?? this.note,
       scheduledDateTime: scheduledDateTime ?? this.scheduledDateTime,
+      accountId: accountId ?? this.accountId,
+      profileId: profileId ?? this.profileId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      lastWriterDeviceId: lastWriterDeviceId ?? this.lastWriterDeviceId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1386,6 +2025,24 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
     if (scheduledDateTime.present) {
       map['scheduled_date_time'] = Variable<DateTime>(scheduledDateTime.value);
     }
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (profileId.present) {
+      map['profile_id'] = Variable<String>(profileId.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<int>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (lastWriterDeviceId.present) {
+      map['last_writer_device_id'] = Variable<String>(lastWriterDeviceId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1402,6 +2059,12 @@ class DoseLogTableCompanion extends UpdateCompanion<DoseLogTableData> {
           ..write('status: $status, ')
           ..write('note: $note, ')
           ..write('scheduledDateTime: $scheduledDateTime, ')
+          ..write('accountId: $accountId, ')
+          ..write('profileId: $profileId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('lastWriterDeviceId: $lastWriterDeviceId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1871,9 +2534,63 @@ class $PrescriptionTableTable extends PrescriptionTable
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("is_scanned" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _accountIdMeta =
+      const VerificationMeta('accountId');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, doctorName, date, reason, imageUrl, medicines, isScanned];
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+      'account_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _profileIdMeta =
+      const VerificationMeta('profileId');
+  @override
+  late final GeneratedColumn<String> profileId = GeneratedColumn<String>(
+      'profile_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _deletedAtMeta =
+      const VerificationMeta('deletedAt');
+  @override
+  late final GeneratedColumn<int> deletedAt = GeneratedColumn<int>(
+      'deleted_at', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+      'dirty', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("dirty" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _lastWriterDeviceIdMeta =
+      const VerificationMeta('lastWriterDeviceId');
+  @override
+  late final GeneratedColumn<String> lastWriterDeviceId =
+      GeneratedColumn<String>('last_writer_device_id', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        doctorName,
+        date,
+        reason,
+        imageUrl,
+        medicines,
+        isScanned,
+        accountId,
+        profileId,
+        updatedAt,
+        deletedAt,
+        dirty,
+        lastWriterDeviceId
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1924,6 +2641,32 @@ class $PrescriptionTableTable extends PrescriptionTable
       context.handle(_isScannedMeta,
           isScanned.isAcceptableOrUnknown(data['is_scanned']!, _isScannedMeta));
     }
+    if (data.containsKey('account_id')) {
+      context.handle(_accountIdMeta,
+          accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta));
+    }
+    if (data.containsKey('profile_id')) {
+      context.handle(_profileIdMeta,
+          profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(_deletedAtMeta,
+          deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+          _dirtyMeta, dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta));
+    }
+    if (data.containsKey('last_writer_device_id')) {
+      context.handle(
+          _lastWriterDeviceIdMeta,
+          lastWriterDeviceId.isAcceptableOrUnknown(
+              data['last_writer_device_id']!, _lastWriterDeviceIdMeta));
+    }
     return context;
   }
 
@@ -1947,6 +2690,18 @@ class $PrescriptionTableTable extends PrescriptionTable
           .read(DriftSqlType.string, data['${effectivePrefix}medicines'])!,
       isScanned: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_scanned'])!,
+      accountId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}account_id']),
+      profileId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}profile_id']),
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+      deletedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}deleted_at']),
+      dirty: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}dirty'])!,
+      lastWriterDeviceId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}last_writer_device_id']),
     );
   }
 
@@ -1965,6 +2720,12 @@ class PrescriptionTableData extends DataClass
   final String? imageUrl;
   final String medicines;
   final bool isScanned;
+  final String? accountId;
+  final String? profileId;
+  final int updatedAt;
+  final int? deletedAt;
+  final bool dirty;
+  final String? lastWriterDeviceId;
   const PrescriptionTableData(
       {required this.id,
       required this.doctorName,
@@ -1972,7 +2733,13 @@ class PrescriptionTableData extends DataClass
       required this.reason,
       this.imageUrl,
       required this.medicines,
-      required this.isScanned});
+      required this.isScanned,
+      this.accountId,
+      this.profileId,
+      required this.updatedAt,
+      this.deletedAt,
+      required this.dirty,
+      this.lastWriterDeviceId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1985,6 +2752,20 @@ class PrescriptionTableData extends DataClass
     }
     map['medicines'] = Variable<String>(medicines);
     map['is_scanned'] = Variable<bool>(isScanned);
+    if (!nullToAbsent || accountId != null) {
+      map['account_id'] = Variable<String>(accountId);
+    }
+    if (!nullToAbsent || profileId != null) {
+      map['profile_id'] = Variable<String>(profileId);
+    }
+    map['updated_at'] = Variable<int>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<int>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
+    if (!nullToAbsent || lastWriterDeviceId != null) {
+      map['last_writer_device_id'] = Variable<String>(lastWriterDeviceId);
+    }
     return map;
   }
 
@@ -1999,6 +2780,20 @@ class PrescriptionTableData extends DataClass
           : Value(imageUrl),
       medicines: Value(medicines),
       isScanned: Value(isScanned),
+      accountId: accountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountId),
+      profileId: profileId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(profileId),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      dirty: Value(dirty),
+      lastWriterDeviceId: lastWriterDeviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastWriterDeviceId),
     );
   }
 
@@ -2013,6 +2808,13 @@ class PrescriptionTableData extends DataClass
       imageUrl: serializer.fromJson<String?>(json['imageUrl']),
       medicines: serializer.fromJson<String>(json['medicines']),
       isScanned: serializer.fromJson<bool>(json['isScanned']),
+      accountId: serializer.fromJson<String?>(json['accountId']),
+      profileId: serializer.fromJson<String?>(json['profileId']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      deletedAt: serializer.fromJson<int?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      lastWriterDeviceId:
+          serializer.fromJson<String?>(json['lastWriterDeviceId']),
     );
   }
   @override
@@ -2026,6 +2828,12 @@ class PrescriptionTableData extends DataClass
       'imageUrl': serializer.toJson<String?>(imageUrl),
       'medicines': serializer.toJson<String>(medicines),
       'isScanned': serializer.toJson<bool>(isScanned),
+      'accountId': serializer.toJson<String?>(accountId),
+      'profileId': serializer.toJson<String?>(profileId),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+      'deletedAt': serializer.toJson<int?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'lastWriterDeviceId': serializer.toJson<String?>(lastWriterDeviceId),
     };
   }
 
@@ -2036,7 +2844,13 @@ class PrescriptionTableData extends DataClass
           String? reason,
           Value<String?> imageUrl = const Value.absent(),
           String? medicines,
-          bool? isScanned}) =>
+          bool? isScanned,
+          Value<String?> accountId = const Value.absent(),
+          Value<String?> profileId = const Value.absent(),
+          int? updatedAt,
+          Value<int?> deletedAt = const Value.absent(),
+          bool? dirty,
+          Value<String?> lastWriterDeviceId = const Value.absent()}) =>
       PrescriptionTableData(
         id: id ?? this.id,
         doctorName: doctorName ?? this.doctorName,
@@ -2045,6 +2859,14 @@ class PrescriptionTableData extends DataClass
         imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
         medicines: medicines ?? this.medicines,
         isScanned: isScanned ?? this.isScanned,
+        accountId: accountId.present ? accountId.value : this.accountId,
+        profileId: profileId.present ? profileId.value : this.profileId,
+        updatedAt: updatedAt ?? this.updatedAt,
+        deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+        dirty: dirty ?? this.dirty,
+        lastWriterDeviceId: lastWriterDeviceId.present
+            ? lastWriterDeviceId.value
+            : this.lastWriterDeviceId,
       );
   PrescriptionTableData copyWithCompanion(PrescriptionTableCompanion data) {
     return PrescriptionTableData(
@@ -2056,6 +2878,14 @@ class PrescriptionTableData extends DataClass
       imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
       medicines: data.medicines.present ? data.medicines.value : this.medicines,
       isScanned: data.isScanned.present ? data.isScanned.value : this.isScanned,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      lastWriterDeviceId: data.lastWriterDeviceId.present
+          ? data.lastWriterDeviceId.value
+          : this.lastWriterDeviceId,
     );
   }
 
@@ -2068,14 +2898,32 @@ class PrescriptionTableData extends DataClass
           ..write('reason: $reason, ')
           ..write('imageUrl: $imageUrl, ')
           ..write('medicines: $medicines, ')
-          ..write('isScanned: $isScanned')
+          ..write('isScanned: $isScanned, ')
+          ..write('accountId: $accountId, ')
+          ..write('profileId: $profileId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('lastWriterDeviceId: $lastWriterDeviceId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, doctorName, date, reason, imageUrl, medicines, isScanned);
+  int get hashCode => Object.hash(
+      id,
+      doctorName,
+      date,
+      reason,
+      imageUrl,
+      medicines,
+      isScanned,
+      accountId,
+      profileId,
+      updatedAt,
+      deletedAt,
+      dirty,
+      lastWriterDeviceId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2086,7 +2934,13 @@ class PrescriptionTableData extends DataClass
           other.reason == this.reason &&
           other.imageUrl == this.imageUrl &&
           other.medicines == this.medicines &&
-          other.isScanned == this.isScanned);
+          other.isScanned == this.isScanned &&
+          other.accountId == this.accountId &&
+          other.profileId == this.profileId &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty &&
+          other.lastWriterDeviceId == this.lastWriterDeviceId);
 }
 
 class PrescriptionTableCompanion
@@ -2098,6 +2952,12 @@ class PrescriptionTableCompanion
   final Value<String?> imageUrl;
   final Value<String> medicines;
   final Value<bool> isScanned;
+  final Value<String?> accountId;
+  final Value<String?> profileId;
+  final Value<int> updatedAt;
+  final Value<int?> deletedAt;
+  final Value<bool> dirty;
+  final Value<String?> lastWriterDeviceId;
   final Value<int> rowid;
   const PrescriptionTableCompanion({
     this.id = const Value.absent(),
@@ -2107,6 +2967,12 @@ class PrescriptionTableCompanion
     this.imageUrl = const Value.absent(),
     this.medicines = const Value.absent(),
     this.isScanned = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.profileId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.lastWriterDeviceId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PrescriptionTableCompanion.insert({
@@ -2117,6 +2983,12 @@ class PrescriptionTableCompanion
     this.imageUrl = const Value.absent(),
     required String medicines,
     this.isScanned = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.profileId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.lastWriterDeviceId = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         doctorName = Value(doctorName),
@@ -2131,6 +3003,12 @@ class PrescriptionTableCompanion
     Expression<String>? imageUrl,
     Expression<String>? medicines,
     Expression<bool>? isScanned,
+    Expression<String>? accountId,
+    Expression<String>? profileId,
+    Expression<int>? updatedAt,
+    Expression<int>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<String>? lastWriterDeviceId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2141,6 +3019,13 @@ class PrescriptionTableCompanion
       if (imageUrl != null) 'image_url': imageUrl,
       if (medicines != null) 'medicines': medicines,
       if (isScanned != null) 'is_scanned': isScanned,
+      if (accountId != null) 'account_id': accountId,
+      if (profileId != null) 'profile_id': profileId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (lastWriterDeviceId != null)
+        'last_writer_device_id': lastWriterDeviceId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2153,6 +3038,12 @@ class PrescriptionTableCompanion
       Value<String?>? imageUrl,
       Value<String>? medicines,
       Value<bool>? isScanned,
+      Value<String?>? accountId,
+      Value<String?>? profileId,
+      Value<int>? updatedAt,
+      Value<int?>? deletedAt,
+      Value<bool>? dirty,
+      Value<String?>? lastWriterDeviceId,
       Value<int>? rowid}) {
     return PrescriptionTableCompanion(
       id: id ?? this.id,
@@ -2162,6 +3053,12 @@ class PrescriptionTableCompanion
       imageUrl: imageUrl ?? this.imageUrl,
       medicines: medicines ?? this.medicines,
       isScanned: isScanned ?? this.isScanned,
+      accountId: accountId ?? this.accountId,
+      profileId: profileId ?? this.profileId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      lastWriterDeviceId: lastWriterDeviceId ?? this.lastWriterDeviceId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2190,6 +3087,24 @@ class PrescriptionTableCompanion
     if (isScanned.present) {
       map['is_scanned'] = Variable<bool>(isScanned.value);
     }
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (profileId.present) {
+      map['profile_id'] = Variable<String>(profileId.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<int>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (lastWriterDeviceId.present) {
+      map['last_writer_device_id'] = Variable<String>(lastWriterDeviceId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2206,6 +3121,12 @@ class PrescriptionTableCompanion
           ..write('imageUrl: $imageUrl, ')
           ..write('medicines: $medicines, ')
           ..write('isScanned: $isScanned, ')
+          ..write('accountId: $accountId, ')
+          ..write('profileId: $profileId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('lastWriterDeviceId: $lastWriterDeviceId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2588,6 +3509,11 @@ typedef $$ProfileTableTableCreateCompanionBuilder = ProfileTableCompanion
   required String initials,
   Value<int?> age,
   Value<String?> gender,
+  Value<String?> accountId,
+  Value<int> updatedAt,
+  Value<int?> deletedAt,
+  Value<bool> dirty,
+  Value<String?> lastWriterDeviceId,
   Value<int> rowid,
 });
 typedef $$ProfileTableTableUpdateCompanionBuilder = ProfileTableCompanion
@@ -2597,6 +3523,11 @@ typedef $$ProfileTableTableUpdateCompanionBuilder = ProfileTableCompanion
   Value<String> initials,
   Value<int?> age,
   Value<String?> gender,
+  Value<String?> accountId,
+  Value<int> updatedAt,
+  Value<int?> deletedAt,
+  Value<bool> dirty,
+  Value<String?> lastWriterDeviceId,
   Value<int> rowid,
 });
 
@@ -2644,6 +3575,22 @@ class $$ProfileTableTableFilterComposer
   ColumnFilters<String> get gender => $composableBuilder(
       column: $table.gender, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get accountId => $composableBuilder(
+      column: $table.accountId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+      column: $table.dirty, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get lastWriterDeviceId => $composableBuilder(
+      column: $table.lastWriterDeviceId,
+      builder: (column) => ColumnFilters(column));
+
   Expression<bool> medicineTableRefs(
       Expression<bool> Function($$MedicineTableTableFilterComposer f) f) {
     final $$MedicineTableTableFilterComposer composer = $composerBuilder(
@@ -2689,6 +3636,22 @@ class $$ProfileTableTableOrderingComposer
 
   ColumnOrderings<String> get gender => $composableBuilder(
       column: $table.gender, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get accountId => $composableBuilder(
+      column: $table.accountId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+      column: $table.dirty, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get lastWriterDeviceId => $composableBuilder(
+      column: $table.lastWriterDeviceId,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$ProfileTableTableAnnotationComposer
@@ -2714,6 +3677,21 @@ class $$ProfileTableTableAnnotationComposer
 
   GeneratedColumn<String> get gender =>
       $composableBuilder(column: $table.gender, builder: (column) => column);
+
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<String> get lastWriterDeviceId => $composableBuilder(
+      column: $table.lastWriterDeviceId, builder: (column) => column);
 
   Expression<T> medicineTableRefs<T extends Object>(
       Expression<T> Function($$MedicineTableTableAnnotationComposer a) f) {
@@ -2765,6 +3743,11 @@ class $$ProfileTableTableTableManager extends RootTableManager<
             Value<String> initials = const Value.absent(),
             Value<int?> age = const Value.absent(),
             Value<String?> gender = const Value.absent(),
+            Value<String?> accountId = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+            Value<int?> deletedAt = const Value.absent(),
+            Value<bool> dirty = const Value.absent(),
+            Value<String?> lastWriterDeviceId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ProfileTableCompanion(
@@ -2773,6 +3756,11 @@ class $$ProfileTableTableTableManager extends RootTableManager<
             initials: initials,
             age: age,
             gender: gender,
+            accountId: accountId,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
+            dirty: dirty,
+            lastWriterDeviceId: lastWriterDeviceId,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -2781,6 +3769,11 @@ class $$ProfileTableTableTableManager extends RootTableManager<
             required String initials,
             Value<int?> age = const Value.absent(),
             Value<String?> gender = const Value.absent(),
+            Value<String?> accountId = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+            Value<int?> deletedAt = const Value.absent(),
+            Value<bool> dirty = const Value.absent(),
+            Value<String?> lastWriterDeviceId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ProfileTableCompanion.insert(
@@ -2789,6 +3782,11 @@ class $$ProfileTableTableTableManager extends RootTableManager<
             initials: initials,
             age: age,
             gender: gender,
+            accountId: accountId,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
+            dirty: dirty,
+            lastWriterDeviceId: lastWriterDeviceId,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -2854,6 +3852,11 @@ typedef $$MedicineTableTableCreateCompanionBuilder = MedicineTableCompanion
   Value<String?> strength,
   Value<String?> unit,
   Value<String?> reminderTimes,
+  Value<String?> accountId,
+  Value<int> updatedAt,
+  Value<int?> deletedAt,
+  Value<bool> dirty,
+  Value<String?> lastWriterDeviceId,
   Value<int> rowid,
 });
 typedef $$MedicineTableTableUpdateCompanionBuilder = MedicineTableCompanion
@@ -2872,6 +3875,11 @@ typedef $$MedicineTableTableUpdateCompanionBuilder = MedicineTableCompanion
   Value<String?> strength,
   Value<String?> unit,
   Value<String?> reminderTimes,
+  Value<String?> accountId,
+  Value<int> updatedAt,
+  Value<int?> deletedAt,
+  Value<bool> dirty,
+  Value<String?> lastWriterDeviceId,
   Value<int> rowid,
 });
 
@@ -2959,6 +3967,22 @@ class $$MedicineTableTableFilterComposer
 
   ColumnFilters<String> get reminderTimes => $composableBuilder(
       column: $table.reminderTimes, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get accountId => $composableBuilder(
+      column: $table.accountId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+      column: $table.dirty, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get lastWriterDeviceId => $composableBuilder(
+      column: $table.lastWriterDeviceId,
+      builder: (column) => ColumnFilters(column));
 
   $$ProfileTableTableFilterComposer get profileId {
     final $$ProfileTableTableFilterComposer composer = $composerBuilder(
@@ -3052,6 +4076,22 @@ class $$MedicineTableTableOrderingComposer
       column: $table.reminderTimes,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get accountId => $composableBuilder(
+      column: $table.accountId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+      column: $table.dirty, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get lastWriterDeviceId => $composableBuilder(
+      column: $table.lastWriterDeviceId,
+      builder: (column) => ColumnOrderings(column));
+
   $$ProfileTableTableOrderingComposer get profileId {
     final $$ProfileTableTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -3120,6 +4160,21 @@ class $$MedicineTableTableAnnotationComposer
 
   GeneratedColumn<String> get reminderTimes => $composableBuilder(
       column: $table.reminderTimes, builder: (column) => column);
+
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<String> get lastWriterDeviceId => $composableBuilder(
+      column: $table.lastWriterDeviceId, builder: (column) => column);
 
   $$ProfileTableTableAnnotationComposer get profileId {
     final $$ProfileTableTableAnnotationComposer composer = $composerBuilder(
@@ -3200,6 +4255,11 @@ class $$MedicineTableTableTableManager extends RootTableManager<
             Value<String?> strength = const Value.absent(),
             Value<String?> unit = const Value.absent(),
             Value<String?> reminderTimes = const Value.absent(),
+            Value<String?> accountId = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+            Value<int?> deletedAt = const Value.absent(),
+            Value<bool> dirty = const Value.absent(),
+            Value<String?> lastWriterDeviceId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               MedicineTableCompanion(
@@ -3217,6 +4277,11 @@ class $$MedicineTableTableTableManager extends RootTableManager<
             strength: strength,
             unit: unit,
             reminderTimes: reminderTimes,
+            accountId: accountId,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
+            dirty: dirty,
+            lastWriterDeviceId: lastWriterDeviceId,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -3234,6 +4299,11 @@ class $$MedicineTableTableTableManager extends RootTableManager<
             Value<String?> strength = const Value.absent(),
             Value<String?> unit = const Value.absent(),
             Value<String?> reminderTimes = const Value.absent(),
+            Value<String?> accountId = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+            Value<int?> deletedAt = const Value.absent(),
+            Value<bool> dirty = const Value.absent(),
+            Value<String?> lastWriterDeviceId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               MedicineTableCompanion.insert(
@@ -3251,6 +4321,11 @@ class $$MedicineTableTableTableManager extends RootTableManager<
             strength: strength,
             unit: unit,
             reminderTimes: reminderTimes,
+            accountId: accountId,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
+            dirty: dirty,
+            lastWriterDeviceId: lastWriterDeviceId,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -3333,6 +4408,12 @@ typedef $$DoseLogTableTableCreateCompanionBuilder = DoseLogTableCompanion
   required int status,
   Value<String?> note,
   Value<DateTime?> scheduledDateTime,
+  Value<String?> accountId,
+  Value<String?> profileId,
+  Value<int> updatedAt,
+  Value<int?> deletedAt,
+  Value<bool> dirty,
+  Value<String?> lastWriterDeviceId,
   Value<int> rowid,
 });
 typedef $$DoseLogTableTableUpdateCompanionBuilder = DoseLogTableCompanion
@@ -3344,6 +4425,12 @@ typedef $$DoseLogTableTableUpdateCompanionBuilder = DoseLogTableCompanion
   Value<int> status,
   Value<String?> note,
   Value<DateTime?> scheduledDateTime,
+  Value<String?> accountId,
+  Value<String?> profileId,
+  Value<int> updatedAt,
+  Value<int?> deletedAt,
+  Value<bool> dirty,
+  Value<String?> lastWriterDeviceId,
   Value<int> rowid,
 });
 
@@ -3393,6 +4480,25 @@ class $$DoseLogTableTableFilterComposer
 
   ColumnFilters<DateTime> get scheduledDateTime => $composableBuilder(
       column: $table.scheduledDateTime,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get accountId => $composableBuilder(
+      column: $table.accountId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get profileId => $composableBuilder(
+      column: $table.profileId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+      column: $table.dirty, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get lastWriterDeviceId => $composableBuilder(
+      column: $table.lastWriterDeviceId,
       builder: (column) => ColumnFilters(column));
 
   $$MedicineTableTableFilterComposer get medicineId {
@@ -3445,6 +4551,25 @@ class $$DoseLogTableTableOrderingComposer
       column: $table.scheduledDateTime,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get accountId => $composableBuilder(
+      column: $table.accountId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get profileId => $composableBuilder(
+      column: $table.profileId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+      column: $table.dirty, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get lastWriterDeviceId => $composableBuilder(
+      column: $table.lastWriterDeviceId,
+      builder: (column) => ColumnOrderings(column));
+
   $$MedicineTableTableOrderingComposer get medicineId {
     final $$MedicineTableTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -3492,6 +4617,24 @@ class $$DoseLogTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get scheduledDateTime => $composableBuilder(
       column: $table.scheduledDateTime, builder: (column) => column);
+
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get profileId =>
+      $composableBuilder(column: $table.profileId, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<String> get lastWriterDeviceId => $composableBuilder(
+      column: $table.lastWriterDeviceId, builder: (column) => column);
 
   $$MedicineTableTableAnnotationComposer get medicineId {
     final $$MedicineTableTableAnnotationComposer composer = $composerBuilder(
@@ -3544,6 +4687,12 @@ class $$DoseLogTableTableTableManager extends RootTableManager<
             Value<int> status = const Value.absent(),
             Value<String?> note = const Value.absent(),
             Value<DateTime?> scheduledDateTime = const Value.absent(),
+            Value<String?> accountId = const Value.absent(),
+            Value<String?> profileId = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+            Value<int?> deletedAt = const Value.absent(),
+            Value<bool> dirty = const Value.absent(),
+            Value<String?> lastWriterDeviceId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               DoseLogTableCompanion(
@@ -3554,6 +4703,12 @@ class $$DoseLogTableTableTableManager extends RootTableManager<
             status: status,
             note: note,
             scheduledDateTime: scheduledDateTime,
+            accountId: accountId,
+            profileId: profileId,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
+            dirty: dirty,
+            lastWriterDeviceId: lastWriterDeviceId,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -3564,6 +4719,12 @@ class $$DoseLogTableTableTableManager extends RootTableManager<
             required int status,
             Value<String?> note = const Value.absent(),
             Value<DateTime?> scheduledDateTime = const Value.absent(),
+            Value<String?> accountId = const Value.absent(),
+            Value<String?> profileId = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+            Value<int?> deletedAt = const Value.absent(),
+            Value<bool> dirty = const Value.absent(),
+            Value<String?> lastWriterDeviceId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               DoseLogTableCompanion.insert(
@@ -3574,6 +4735,12 @@ class $$DoseLogTableTableTableManager extends RootTableManager<
             status: status,
             note: note,
             scheduledDateTime: scheduledDateTime,
+            accountId: accountId,
+            profileId: profileId,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
+            dirty: dirty,
+            lastWriterDeviceId: lastWriterDeviceId,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -3852,6 +5019,12 @@ typedef $$PrescriptionTableTableCreateCompanionBuilder
   Value<String?> imageUrl,
   required String medicines,
   Value<bool> isScanned,
+  Value<String?> accountId,
+  Value<String?> profileId,
+  Value<int> updatedAt,
+  Value<int?> deletedAt,
+  Value<bool> dirty,
+  Value<String?> lastWriterDeviceId,
   Value<int> rowid,
 });
 typedef $$PrescriptionTableTableUpdateCompanionBuilder
@@ -3863,6 +5036,12 @@ typedef $$PrescriptionTableTableUpdateCompanionBuilder
   Value<String?> imageUrl,
   Value<String> medicines,
   Value<bool> isScanned,
+  Value<String?> accountId,
+  Value<String?> profileId,
+  Value<int> updatedAt,
+  Value<int?> deletedAt,
+  Value<bool> dirty,
+  Value<String?> lastWriterDeviceId,
   Value<int> rowid,
 });
 
@@ -3895,6 +5074,25 @@ class $$PrescriptionTableTableFilterComposer
 
   ColumnFilters<bool> get isScanned => $composableBuilder(
       column: $table.isScanned, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get accountId => $composableBuilder(
+      column: $table.accountId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get profileId => $composableBuilder(
+      column: $table.profileId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+      column: $table.dirty, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get lastWriterDeviceId => $composableBuilder(
+      column: $table.lastWriterDeviceId,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$PrescriptionTableTableOrderingComposer
@@ -3926,6 +5124,25 @@ class $$PrescriptionTableTableOrderingComposer
 
   ColumnOrderings<bool> get isScanned => $composableBuilder(
       column: $table.isScanned, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get accountId => $composableBuilder(
+      column: $table.accountId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get profileId => $composableBuilder(
+      column: $table.profileId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+      column: $table.dirty, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get lastWriterDeviceId => $composableBuilder(
+      column: $table.lastWriterDeviceId,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$PrescriptionTableTableAnnotationComposer
@@ -3957,6 +5174,24 @@ class $$PrescriptionTableTableAnnotationComposer
 
   GeneratedColumn<bool> get isScanned =>
       $composableBuilder(column: $table.isScanned, builder: (column) => column);
+
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get profileId =>
+      $composableBuilder(column: $table.profileId, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<String> get lastWriterDeviceId => $composableBuilder(
+      column: $table.lastWriterDeviceId, builder: (column) => column);
 }
 
 class $$PrescriptionTableTableTableManager extends RootTableManager<
@@ -3995,6 +5230,12 @@ class $$PrescriptionTableTableTableManager extends RootTableManager<
             Value<String?> imageUrl = const Value.absent(),
             Value<String> medicines = const Value.absent(),
             Value<bool> isScanned = const Value.absent(),
+            Value<String?> accountId = const Value.absent(),
+            Value<String?> profileId = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+            Value<int?> deletedAt = const Value.absent(),
+            Value<bool> dirty = const Value.absent(),
+            Value<String?> lastWriterDeviceId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               PrescriptionTableCompanion(
@@ -4005,6 +5246,12 @@ class $$PrescriptionTableTableTableManager extends RootTableManager<
             imageUrl: imageUrl,
             medicines: medicines,
             isScanned: isScanned,
+            accountId: accountId,
+            profileId: profileId,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
+            dirty: dirty,
+            lastWriterDeviceId: lastWriterDeviceId,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -4015,6 +5262,12 @@ class $$PrescriptionTableTableTableManager extends RootTableManager<
             Value<String?> imageUrl = const Value.absent(),
             required String medicines,
             Value<bool> isScanned = const Value.absent(),
+            Value<String?> accountId = const Value.absent(),
+            Value<String?> profileId = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+            Value<int?> deletedAt = const Value.absent(),
+            Value<bool> dirty = const Value.absent(),
+            Value<String?> lastWriterDeviceId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               PrescriptionTableCompanion.insert(
@@ -4025,6 +5278,12 @@ class $$PrescriptionTableTableTableManager extends RootTableManager<
             imageUrl: imageUrl,
             medicines: medicines,
             isScanned: isScanned,
+            accountId: accountId,
+            profileId: profileId,
+            updatedAt: updatedAt,
+            deletedAt: deletedAt,
+            dirty: dirty,
+            lastWriterDeviceId: lastWriterDeviceId,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

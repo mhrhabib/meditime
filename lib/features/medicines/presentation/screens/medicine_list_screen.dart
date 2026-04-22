@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:meditime/core/sync/sync_service.dart';
 import 'package:meditime/core/widgets/components.dart';
 import 'package:meditime/features/medicines/domain/refill_predictor.dart';
 import 'package:meditime/features/medicines/presentation/cubit/medicine_cubit.dart';
@@ -137,101 +138,112 @@ class _MedicineListTab extends StatelessWidget {
         }).toList();
 
         if (filteredMeds.isEmpty) {
-          return Center(
-            child: Text(
-              'No medicines found.',
-              style: TextStyle(fontSize: 14.sp, color: Theme.of(context).colorScheme.outline),
+          return RefreshIndicator(
+            onRefresh: () => SyncService.instance.sync(immediate: true),
+            child: ListView(
+              children: [
+                SizedBox(height: 200.h),
+                Center(
+                  child: Text(
+                    'No medicines found.',
+                    style: TextStyle(fontSize: 14.sp, color: Theme.of(context).colorScheme.outline),
+                  ),
+                ),
+              ],
             ),
           );
         }
 
-        return ListView.builder(
-          padding: EdgeInsets.all(16.r),
-          itemCount: filteredMeds.length + 1,
-          itemBuilder: (context, index) {
-            if (index == filteredMeds.length) {
-              return SizedBox(height: 80.h);
-            }
-            final med = filteredMeds[index];
-            return Padding(
-              padding: EdgeInsets.only(bottom: 12.h),
-              child: MedicineCard(
-                name: med.name,
-                type: med.type,
-                schedule: med.schedule,
-                stockRemaining: med.stockRemaining,
-                stockTotal: med.stockTotal,
-                daysLeft: med.daysLeft,
-                isLowStock: med.isLowStock,
-                onEdit: () async {
-                  final updated = await EditMedicineSheet.show(context, med);
-                  if (updated == null) return;
-                  if (!context.mounted) return;
-                  await context.read<MedicineCubit>().updateMedicine(updated);
-                  _toast('Updated ${updated.name}');
-                },
-                onRestock: () async {
-                  final amount = await RestockDialog.show(context, med);
-                  if (amount == null) return;
-                  if (!context.mounted) return;
-                  final newRemaining = (med.stockRemaining + amount)
-                      .clamp(0, med.stockTotal + amount);
-                  final newTotal = newRemaining > med.stockTotal
-                      ? newRemaining
-                      : med.stockTotal;
-                  final dosesPerDay =
-                      RefillPredictor.parseDosesPerDay(med.schedule);
-                  final prediction = RefillPredictor.predict(
-                    currentStock: newRemaining,
-                    dosesPerDay: dosesPerDay,
-                  );
-                  await context.read<MedicineCubit>().updateMedicine(
-                        med.copyWith(
-                          stockRemaining: newRemaining,
-                          stockTotal: newTotal,
-                          daysLeft: prediction.daysRemaining,
-                          isLowStock: prediction.isWarning,
-                        ),
-                      );
-                  _toast('Restocked ${med.name} (+$amount)');
-                },
-                onRefill: med.isLowStock
-                    ? () async {
-                        final amount =
-                            await RestockDialog.show(context, med);
-                        if (amount == null) return;
-                        if (!context.mounted) return;
-                        final newRemaining = (med.stockRemaining + amount)
-                            .clamp(0, med.stockTotal + amount);
-                        final newTotal = newRemaining > med.stockTotal
-                            ? newRemaining
-                            : med.stockTotal;
-                        final dosesPerDay = RefillPredictor.parseDosesPerDay(
-                            med.schedule);
-                        final prediction = RefillPredictor.predict(
-                          currentStock: newRemaining,
-                          dosesPerDay: dosesPerDay,
+        return RefreshIndicator(
+          onRefresh: () => SyncService.instance.sync(immediate: true),
+          child: ListView.builder(
+            padding: EdgeInsets.all(16.r),
+            itemCount: filteredMeds.length + 1,
+            itemBuilder: (context, index) {
+              if (index == filteredMeds.length) {
+                return SizedBox(height: 80.h);
+              }
+              final med = filteredMeds[index];
+              return Padding(
+                padding: EdgeInsets.only(bottom: 12.h),
+                child: MedicineCard(
+                  name: med.name,
+                  type: med.type,
+                  schedule: med.schedule,
+                  stockRemaining: med.stockRemaining,
+                  stockTotal: med.stockTotal,
+                  daysLeft: med.daysLeft,
+                  isLowStock: med.isLowStock,
+                  onEdit: () async {
+                    final updated = await EditMedicineSheet.show(context, med);
+                    if (updated == null) return;
+                    if (!context.mounted) return;
+                    await context.read<MedicineCubit>().updateMedicine(updated);
+                    _toast('Updated ${updated.name}');
+                  },
+                  onRestock: () async {
+                    final amount = await RestockDialog.show(context, med);
+                    if (amount == null) return;
+                    if (!context.mounted) return;
+                    final newRemaining = (med.stockRemaining + amount)
+                        .clamp(0, med.stockTotal + amount);
+                    final newTotal = newRemaining > med.stockTotal
+                        ? newRemaining
+                        : med.stockTotal;
+                    final dosesPerDay =
+                        RefillPredictor.parseDosesPerDay(med.schedule);
+                    final prediction = RefillPredictor.predict(
+                      currentStock: newRemaining,
+                      dosesPerDay: dosesPerDay,
+                    );
+                    await context.read<MedicineCubit>().updateMedicine(
+                          med.copyWith(
+                            stockRemaining: newRemaining,
+                            stockTotal: newTotal,
+                            daysLeft: prediction.daysRemaining,
+                            isLowStock: prediction.isWarning,
+                          ),
                         );
-                        await context
-                            .read<MedicineCubit>()
-                            .updateMedicine(
-                              med.copyWith(
-                                stockRemaining: newRemaining,
-                                stockTotal: newTotal,
-                                daysLeft: prediction.daysRemaining,
-                                isLowStock: prediction.isWarning,
-                              ),
-                            );
-                        _toast('Refilled ${med.name} (+$amount)');
-                      }
-                    : null,
-                onDelete: () {
-                  context.read<MedicineCubit>().deleteMedicine(med.id);
-                  _toast('Removed ${med.name}');
-                },
-              ),
-            );
-          },
+                    _toast('Restocked ${med.name} (+$amount)');
+                  },
+                  onRefill: med.isLowStock
+                      ? () async {
+                          final amount =
+                              await RestockDialog.show(context, med);
+                          if (amount == null) return;
+                          if (!context.mounted) return;
+                          final newRemaining = (med.stockRemaining + amount)
+                              .clamp(0, med.stockTotal + amount);
+                          final newTotal = newRemaining > med.stockTotal
+                              ? newRemaining
+                              : med.stockTotal;
+                          final dosesPerDay = RefillPredictor.parseDosesPerDay(
+                              med.schedule);
+                          final prediction = RefillPredictor.predict(
+                            currentStock: newRemaining,
+                            dosesPerDay: dosesPerDay,
+                          );
+                          await context
+                              .read<MedicineCubit>()
+                              .updateMedicine(
+                                med.copyWith(
+                                  stockRemaining: newRemaining,
+                                  stockTotal: newTotal,
+                                  daysLeft: prediction.daysRemaining,
+                                  isLowStock: prediction.isWarning,
+                                ),
+                              );
+                          _toast('Refilled ${med.name} (+$amount)');
+                        }
+                      : null,
+                  onDelete: () {
+                    context.read<MedicineCubit>().deleteMedicine(med.id);
+                    _toast('Removed ${med.name}');
+                  },
+                ),
+              );
+            },
+          ),
         );
       },
     );

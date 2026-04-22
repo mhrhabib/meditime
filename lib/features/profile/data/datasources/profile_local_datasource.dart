@@ -14,19 +14,21 @@ class ProfileLocalDataSourceImpl implements ProfileLocalDataSource {
   ProfileLocalDataSourceImpl({AppDatabase? db}) : _db = db ?? AppDatabase.instance;
 
   @override
-  Stream<List<ProfileTableData>> watchAll() => _db.select(_db.profileTable).watch();
+  Stream<List<ProfileTableData>> watchAll() => _db.watchAllProfiles();
 
   @override
   Future<List<ProfileTableData>> getAll() => _db.getAllProfiles();
 
   @override
   Future<ProfileTableData?> getById(String id) =>
-      (_db.select(_db.profileTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+      (_db.select(_db.profileTable)
+            ..where((t) => t.id.equals(id))
+            ..where((t) => t.deletedAt.isNull()))
+          .getSingleOrNull();
 
   @override
   Future<void> upsert(ProfileTableData profile) => _db.insertProfile(profile);
 
   @override
-  Future<void> delete(String id) =>
-      (_db.delete(_db.profileTable)..where((t) => t.id.equals(id))).go();
+  Future<void> delete(String id) => _db.softDeleteProfile(id);
 }

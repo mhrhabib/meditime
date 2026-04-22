@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:meditime/core/storage/app_database.dart';
 import 'package:meditime/core/theme/cubit/theme_cubit.dart';
+import 'package:meditime/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:meditime/features/auth/presentation/cubit/auth_state.dart';
 import 'package:meditime/features/history/domain/entities/dose_log.dart';
 import 'package:meditime/features/history/presentation/cubit/history_cubit.dart';
 import 'package:meditime/features/medicines/presentation/cubit/medicine_cubit.dart';
@@ -141,7 +144,6 @@ class SettingsScreen extends StatelessWidget {
 
           SizedBox(height: 32.h),
 
-          // Sign Out
           Center(
             child: TextButton(
               onPressed: () => _showSignOutDialog(context),
@@ -187,14 +189,22 @@ class SettingsScreen extends StatelessWidget {
       builder: (context) => AlertDialog(
         title: const Text('Sign out?'),
         content: const Text(
-            'Are you sure you want to sign out? Your local data will be safely encrypted.'),
+            'Are you sure you want to sign out? Your local data will be removed from this device but kept in the cloud.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () async {
+              Navigator.pop(context);
+              // 1. Wipe local DB (v5 helper)
+              await AppDatabase.instance.clearAllUserData();
+              // 2. Clear Supabase session (router will redirect to sign-in)
+              if (context.mounted) {
+                await context.read<AuthCubit>().signOut();
+              }
+            },
             style: FilledButton.styleFrom(
                 backgroundColor: cs.error, foregroundColor: cs.onError),
             child: const Text('Sign out'),
@@ -222,110 +232,117 @@ class _ProfileCard extends StatelessWidget {
         if (profile?.gender != null && profile!.gender!.isNotEmpty) {
           subtitleParts.add(profile.gender!);
         }
-        final subtitle =
-            subtitleParts.isEmpty ? 'Tap to complete profile' : subtitleParts.join(' · ');
+        
+        return BlocBuilder<AuthCubit, AuthState>(
+          builder: (context, authState) {
+            final email = authState is AuthAuthenticated ? authState.email : '';
+            final subtitle = subtitleParts.isEmpty 
+              ? email
+              : '${subtitleParts.join(' · ')} · $email';
 
-        return Container(
-          padding: EdgeInsets.all(20.r),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [cs.primary, cs.secondary],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(24.r),
-            boxShadow: [
-              BoxShadow(
-                color: cs.primary.withValues(alpha: 0.3),
-                blurRadius: 12.r,
-                offset: Offset(0, 4.h),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 64.r,
-                    height: 64.r,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          width: 3.w),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(initials,
-                        style: tt.headlineSmall?.copyWith(
-                            color: cs.primary,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 18.sp)),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(name,
-                            style: tt.titleLarge?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 18.sp)),
-                        Text(subtitle,
-                            style: tt.bodySmall?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                fontSize: 11.sp)),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.edit_note_rounded,
-                        color: Colors.white, size: 24.r),
-                    onPressed: () {},
+            return Container(
+              padding: EdgeInsets.all(20.r),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [cs.primary, cs.secondary],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: cs.primary.withValues(alpha: 0.3),
+                    blurRadius: 12.r,
+                    offset: Offset(0, 4.h),
                   ),
                 ],
               ),
-              SizedBox(height: 20.h),
-              Container(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-                child: BlocBuilder<MedicineCubit, MedicineState>(
-                  builder: (context, medState) {
-                    return BlocBuilder<HistoryCubit, HistoryState>(
-                      builder: (context, historyState) {
-                        final medicineCount = medState.medicines.length;
-                        final streakDays =
-                            _currentStreakDays(historyState.events);
-                        final adherencePct =
-                            (historyState.adherenceRate * 100).round();
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 64.r,
+                        height: 64.r,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              width: 3.w),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(initials,
+                            style: tt.headlineSmall?.copyWith(
+                                color: cs.primary,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 18.sp)),
+                      ),
+                      SizedBox(width: 16.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _StatItem(
-                                label: 'Medicines',
-                                value: '$medicineCount'),
-                            _StatDivider(),
-                            _StatItem(
-                                label: 'Streak', value: '${streakDays}d'),
-                            _StatDivider(),
-                            _StatItem(
-                                label: 'Adherence',
-                                value: '$adherencePct%'),
+                            Text(name,
+                                style: tt.titleLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 18.sp)),
+                            Text(subtitle,
+                                style: tt.bodySmall?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                    fontSize: 11.sp)),
                           ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.edit_note_rounded,
+                            color: Colors.white, size: 24.r),
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20.h),
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    child: BlocBuilder<MedicineCubit, MedicineState>(
+                      builder: (context, medState) {
+                        return BlocBuilder<HistoryCubit, HistoryState>(
+                          builder: (context, historyState) {
+                            final medicineCount = medState.medicines.length;
+                            final streakDays =
+                                _currentStreakDays(historyState.events);
+                            final adherencePct =
+                                (historyState.adherenceRate * 100).round();
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _StatItem(
+                                    label: 'Medicines',
+                                    value: '$medicineCount'),
+                                _StatDivider(),
+                                _StatItem(
+                                    label: 'Streak', value: '${streakDays}d'),
+                                _StatDivider(),
+                                _StatItem(
+                                    label: 'Adherence',
+                                    value: '$adherencePct%'),
+                              ],
+                            );
+                          },
                         );
                       },
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
