@@ -52,6 +52,18 @@ class MedicineScheduler {
     }
   }
 
+  /// Public helper: returns concrete dose times (as Durations since midnight)
+  /// for a given `Medicine` taking into account `times` (if present) or
+  /// falling back to schedule defaults.
+  static List<Duration> doseTimesForMedicine(Medicine medicine) {
+    if (medicine.times.isNotEmpty) {
+      return medicine.times
+          .map((t) => Duration(hours: t.hour, minutes: t.minute))
+          .toList();
+    }
+    return _parseDoseTimes(medicine.schedule);
+  }
+
   /// Schedule notifications for a single medicine for the next 14 days.
   static Future<void> scheduleForMedicine(Medicine medicine) async {
     final service = NotificationService.instance;
@@ -65,6 +77,13 @@ class MedicineScheduler {
 
     for (int day = 0; day < _scheduleDays; day++) {
       final date = today.add(Duration(days: day));
+
+      // ── Filter by Active Window ──
+      final daysSinceStart = date.difference(medicine.startDate).inDays;
+      if (daysSinceStart < 0) continue; // Not started yet
+      if (medicine.durationDays != -1 && daysSinceStart >= medicine.durationDays) {
+        continue; // Course finished
+      }
 
       for (int doseIdx = 0; doseIdx < doseTimes.length; doseIdx++) {
         final scheduledTime = date.add(doseTimes[doseIdx]);

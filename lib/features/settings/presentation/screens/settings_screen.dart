@@ -10,6 +10,7 @@ import 'package:meditime/features/history/presentation/cubit/history_cubit.dart'
 import 'package:meditime/features/medicines/presentation/cubit/medicine_cubit.dart';
 import 'package:meditime/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:meditime/features/reminders/presentation/screens/reminders_screen.dart';
+import 'package:meditime/features/settings/presentation/screens/device_watch_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -32,6 +33,17 @@ class SettingsScreen extends StatelessWidget {
 
           // ── Preferences Section ──────────────────────────────────
           const _SectionTitle('Preferences'),
+          _SettingsTile(
+            icon: Icons.remove_red_eye_outlined,
+            title: 'This device watches',
+            subtitle: 'Choose which profiles this device schedules for',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (ctx) => const DeviceWatchScreen()),
+              );
+            },
+          ),
           _SettingsTile(
             icon: Icons.notifications_active_outlined,
             title: 'Notifications & Reminders',
@@ -165,7 +177,7 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: 48.h),
+          SizedBox(height: 90.h),
         ],
       ),
     );

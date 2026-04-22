@@ -39,18 +39,15 @@ class _EditMedicineSheetState extends State<EditMedicineSheet> {
     super.initState();
     final m = widget.medicine;
     _nameController = TextEditingController(text: m.name);
-    _amountController =
-        TextEditingController(text: _fmt(m.amount));
+    _amountController = TextEditingController(text: _fmt(m.amount));
     _strengthController = TextEditingController(text: m.strength ?? '');
-    _stockController =
-        TextEditingController(text: m.stockTotal.toString());
+    _stockController = TextEditingController(text: m.stockTotal.toString());
     _type = _types.contains(m.type) ? m.type : 'Tablet';
     _unit = _units.contains(m.unit) ? m.unit! : 'mg';
     _times = List<TimeOfDay>.from(m.times);
   }
 
-  String _fmt(double v) =>
-      v % 1 == 0 ? v.toInt().toString() : v.toString();
+  String _fmt(double v) => v % 1 == 0 ? v.toInt().toString() : v.toString();
 
   @override
   void dispose() {
@@ -188,25 +185,27 @@ class _EditMedicineSheetState extends State<EditMedicineSheet> {
                                   child: Text(t),
                                 ))
                             .toList(),
-                        onChanged: (v) =>
-                            setState(() => _type = v ?? _type),
+                        onChanged: (v) => setState(() => _type = v ?? _type),
                       ),
-                      SizedBox(height: 12.h),
+                      SizedBox(height: 8.h),
                       Row(
                         children: [
                           Expanded(
+                            flex: 2,
                             child: TextFormField(
                               controller: _amountController,
                               keyboardType:
                                   const TextInputType.numberWithOptions(
                                       decimal: true),
-                              decoration: const InputDecoration(
-                                labelText: 'Amount per dose',
-                                border: OutlineInputBorder(),
+                              decoration: InputDecoration(
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 6.w, vertical: 12.h),
+                                labelText: 'Dose',
+                                border: const OutlineInputBorder(),
                               ),
                               validator: (v) {
-                                final n =
-                                    double.tryParse((v ?? '').trim());
+                                final n = double.tryParse((v ?? '').trim());
                                 if (n == null || n <= 0) {
                                   return 'Invalid';
                                 }
@@ -214,25 +213,33 @@ class _EditMedicineSheetState extends State<EditMedicineSheet> {
                               },
                             ),
                           ),
-                          SizedBox(width: 10.w),
+                          SizedBox(width: 4.w),
                           Expanded(
+                            flex: 3,
                             child: TextFormField(
                               controller: _strengthController,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 6.w, vertical: 12.h),
                                 labelText: 'Strength',
-                                hintText: 'e.g. 500',
-                                border: OutlineInputBorder(),
+                                hintText: '500',
+                                border: const OutlineInputBorder(),
                               ),
                             ),
                           ),
-                          SizedBox(width: 10.w),
-                          SizedBox(
-                            width: 90.w,
+                          SizedBox(width: 4.w),
+                          Expanded(
+                            flex: 2,
                             child: DropdownButtonFormField<String>(
                               initialValue: _unit,
-                              decoration: const InputDecoration(
+                              isDense: true,
+                              decoration: InputDecoration(
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 6.w, vertical: 12.h),
                                 labelText: 'Unit',
-                                border: OutlineInputBorder(),
+                                border: const OutlineInputBorder(),
                               ),
                               items: _units
                                   .map((u) => DropdownMenuItem(
@@ -264,7 +271,10 @@ class _EditMedicineSheetState extends State<EditMedicineSheet> {
                         children: [
                           for (int i = 0; i < _times.length; i++)
                             InputChip(
-                              label: Text(_times[i].format(context)),
+                              label: Text(
+                                _times[i].format(context),
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
                               onPressed: () => _editTime(i),
                               onDeleted: () =>
                                   setState(() => _times.removeAt(i)),

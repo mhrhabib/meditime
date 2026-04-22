@@ -13,6 +13,7 @@ import 'package:meditime/features/medicines/domain/entities/medicine.dart';
 import 'package:meditime/features/medicines/domain/refill_predictor.dart';
 import 'package:meditime/features/medicines/domain/repositories/medicine_repository.dart';
 import 'package:meditime/features/profile/presentation/cubit/profile_cubit.dart';
+import 'package:uuid/uuid.dart';
 
 class MedicineState {
   final List<Medicine> medicines;
@@ -100,8 +101,9 @@ class MedicineCubit extends Cubit<MedicineState> {
     await _repo.upsert(updated);
 
     await _historyRepo.add(DoseLog(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: const Uuid().v4(),
       medicineId: medicineId,
+      profileId: med.profileId ?? 'me',
       medicineName: med.name,
       dateTime: DateTime.now(),
       status: DoseStatus.taken,
@@ -169,8 +171,9 @@ class MedicineCubit extends Cubit<MedicineState> {
     }
 
     await _historyRepo.add(DoseLog(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: const Uuid().v4(),
       medicineId: medicineId,
+      profileId: med.profileId ?? 'me',
       medicineName: med.name,
       dateTime: DateTime.now(),
       status: DoseStatus.skipped,
@@ -194,8 +197,9 @@ class MedicineCubit extends Cubit<MedicineState> {
     );
 
     await _historyRepo.add(DoseLog(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: const Uuid().v4(),
       medicineId: medicineId,
+      profileId: med.profileId ?? 'me',
       medicineName: med.name,
       dateTime: DateTime.now(),
       status: DoseStatus.snoozed,

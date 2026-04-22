@@ -64,6 +64,8 @@ create table profiles (
   account_id uuid not null references auth.users(id) on delete cascade,
   name text not null,
   initials text not null,
+  age int,
+  gender text,
   dependents text[] default '{}',
   updated_at timestamptz not null default now(),
   deleted_at timestamptz,
@@ -79,15 +81,15 @@ create table medicines (
   name text not null,
   type text not null,
   schedule text not null,
-  amount numeric not null default 1,
-  strength text,
-  unit text,
-  times jsonb not null default '[]',         -- list of {hour, minute}
-  stock_remaining int not null,
+  stock_remaining int not null default 0,
   stock_total int not null,
   days_left int not null,
   is_low_stock boolean not null default false,
-  image_path text,                            -- local-only path; don't sync the file in v1
+  image_path text,
+  amount numeric not null default 1,
+  strength text,
+  unit text,
+  reminder_times text,                -- JSON string from Drift
   updated_at timestamptz not null default now(),
   deleted_at timestamptz,
   last_writer_device_id text
@@ -102,27 +104,34 @@ create table dose_logs (
   profile_id uuid not null references profiles(id) on delete cascade,
   medicine_id uuid not null references medicines(id) on delete cascade,
   medicine_name text not null,
-  date_time timestamptz not null,
-  scheduled_date_time timestamptz,
-  status text not null,                       -- 'taken' | 'skipped' | 'snoozed'
+  log_date_time timestamptz not null,
+  status text not null,               -- 'taken' | 'skipped' | 'snoozed'
   note text,
+  scheduled_date_time timestamptz,
   updated_at timestamptz not null default now(),
   deleted_at timestamptz,
   last_writer_device_id text
 );
 create index on dose_logs (account_id, updated_at);
-create index on dose_logs (medicine_id, scheduled_date_time);
+create index on dose_logs (medicine_id);
 
--- Prescriptions (mirror existing fields)
+-- Prescriptions
 create table prescriptions (
   id uuid primary key default uuid_generate_v4(),
   account_id uuid not null references auth.users(id) on delete cascade,
   profile_id uuid not null references profiles(id) on delete cascade,
-  -- ... existing fields ...
+  doctor_name text not null,
+  date timestamptz not null,
+  reason text not null,
+  image_url text,
+  medicines text,                     -- comma-separated or JSON
+  is_scanned boolean default false,
   updated_at timestamptz not null default now(),
   deleted_at timestamptz,
   last_writer_device_id text
 );
+create index on prescriptions (account_id, updated_at);
+create index on prescriptions (profile_id);
 ```
 
 ### 3.3 Row-Level Security (RLS)

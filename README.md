@@ -236,3 +236,14 @@ Weights used: 400 (body), 600 (labels), 700 (titles), 800 (display/hero numbers)
 - [x] Caregiver module (permissions + invite link)
 - [x] Reminder settings (quiet hours, snooze config)
 - [x] Settings (theme, language, backup)
+
+
+
+
+## project todos
+
+- [x] prescription ocr
+- [x] suggest medicine from prescription
+- [x] best price alternative medicine suggestion
+- [x] localization
+- [x] alert tone selection from user  

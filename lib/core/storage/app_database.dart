@@ -44,6 +44,8 @@ class MedicineTable extends Table {
   TextColumn get strength => text().nullable()();
   TextColumn get unit => text().nullable()();
   TextColumn get reminderTimes => text().nullable()();
+  DateTimeColumn get startDate => dateTime().nullable()();
+  IntColumn get durationDays => integer().nullable()();
 
   // ── Sync columns (v5) ──
   TextColumn get accountId => text().nullable()();
@@ -146,7 +148,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase._internal() : super(_openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -199,6 +201,10 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(prescriptionTable, prescriptionTable.dirty);
             await m.addColumn(
                 prescriptionTable, prescriptionTable.lastWriterDeviceId);
+          }
+          if (from < 6) {
+            await m.addColumn(medicineTable, medicineTable.startDate);
+            await m.addColumn(medicineTable, medicineTable.durationDays);
           }
         },
       );
@@ -354,12 +360,35 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
+  /// Repairs missing profileIds for dose logs and prescriptions.
+  /// This is critical for sync to succeed when legacy data is present.
+  Future<void> repairMissingSyncData() async {
+    // 1. Repair DoseLogs (join with medicines to find profileId)
+    final logsWithMissingProfile = await (select(doseLogTable)
+          ..where((t) => t.profileId.isNull()))
+        .get();
+
+    for (final log in logsWithMissingProfile) {
+      final med = await getMedicineById(log.medicineId);
+      if (med != null && med.profileId != null) {
+        await (update(doseLogTable)..where((t) => t.id.equals(log.id))).write(
+          DoseLogTableCompanion(profileId: Value(med.profileId)),
+        );
+      }
+    }
+
+    // 2. Repair Prescriptions (if any are missing profileId, use the active one if available)
+    // For now, we mainly focus on dose logs as they are the source of current failures.
+  }
+
   /// Clear all user data on sign-out.
   Future<void> clearAllUserData() async {
     await delete(medicineTable).go();
     await delete(profileTable).go();
     await delete(doseLogTable).go();
     await delete(prescriptionTable).go();
+    await delete(emergencyCardTable).go();
+    await delete(reminderSettingsTable).go();
   }
 }
 

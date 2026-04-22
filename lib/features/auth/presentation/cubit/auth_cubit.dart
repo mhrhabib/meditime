@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meditime/core/storage/app_database.dart';
 import 'package:meditime/core/sync/sync_service.dart';
+import 'package:meditime/core/sync/realtime_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'auth_state.dart';
 
@@ -21,7 +22,8 @@ class AuthCubit extends Cubit<AuthState> {
         email: session.user.email ?? '',
       ));
       // Trigger sync on restore
-      SyncService.instance.sync();
+      SyncService.instance.sync(immediate: true);
+      RealtimeService.instance.start(userId);
     }
 
     // Listen to future auth changes (token refresh, sign-out, etc.)
@@ -41,8 +43,13 @@ class AuthCubit extends Cubit<AuthState> {
         ));
 
         // 2. Trigger initial sync
-        SyncService.instance.sync();
+        SyncService.instance.sync(immediate: true);
+        RealtimeService.instance.start(userId);
       } else if (event == AuthChangeEvent.signedOut) {
+        // stop realtime subscriptions and clear local data
+        RealtimeService.instance.stop();
+        await AppDatabase.instance.clearAllUserData();
+        await SyncService.instance.clearSyncMetadata();
         emit(const AuthUnauthenticated());
       }
     });
@@ -92,6 +99,15 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> signOut() async {
+    // Try to push any pending local changes before signing out so we don't
+    // lose user data that hasn't been uploaded yet. Don't block sign-out
+    // indefinitely — use a short timeout.
+    try {
+      await SyncService.instance.sync(immediate: true).timeout(const Duration(seconds: 5));
+    } catch (_) {
+      // ignore sync errors/timeouts and proceed to sign out
+    }
+
     await _client.auth.signOut();
     // Listener handles the state transition to AuthUnauthenticated
   }

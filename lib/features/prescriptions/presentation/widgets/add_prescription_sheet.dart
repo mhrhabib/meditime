@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:meditime/features/prescriptions/domain/entities/prescription.dart';
 import 'package:meditime/features/prescriptions/presentation/cubit/prescription_cubit.dart';
+import 'package:uuid/uuid.dart';
 
 class AddPrescriptionSheet extends StatefulWidget {
   final Prescription? initial;
@@ -104,8 +105,7 @@ class _AddPrescriptionSheetState extends State<AddPrescriptionSheet> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final rx = Prescription(
-      id: widget.initial?.id ??
-          DateTime.now().millisecondsSinceEpoch.toString(),
+      id: widget.initial?.id ?? const Uuid().v4(),
       doctorName: _doctorCtrl.text.trim(),
       date: _date,
       reason: _reasonCtrl.text.trim(),
@@ -126,8 +126,18 @@ class _AddPrescriptionSheetState extends State<AddPrescriptionSheet> {
 
   String _formatDate(DateTime d) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${d.day} ${months[d.month - 1]} ${d.year}';
   }
@@ -175,8 +185,7 @@ class _AddPrescriptionSheetState extends State<AddPrescriptionSheet> {
                 child: InputDecorator(
                   decoration: InputDecoration(
                     labelText: 'Visit date',
-                    prefixIcon:
-                        Icon(Icons.calendar_today_outlined, size: 20.r),
+                    prefixIcon: Icon(Icons.calendar_today_outlined, size: 20.r),
                   ),
                   child: Text(_formatDate(_date),
                       style: TextStyle(fontSize: 14.sp)),
@@ -197,8 +206,8 @@ class _AddPrescriptionSheetState extends State<AddPrescriptionSheet> {
               ),
               SizedBox(height: 16.h),
               Text('Medicines',
-                  style: tt.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w700, fontSize: 13.sp)),
+                  style: tt.labelLarge
+                      ?.copyWith(fontWeight: FontWeight.w700, fontSize: 13.sp)),
               SizedBox(height: 8.h),
               Row(
                 children: [
@@ -210,8 +219,7 @@ class _AddPrescriptionSheetState extends State<AddPrescriptionSheet> {
                       decoration: InputDecoration(
                         hintText: 'Add medicine name',
                         isDense: true,
-                        prefixIcon:
-                            Icon(Icons.medication_outlined, size: 20.r),
+                        prefixIcon: Icon(Icons.medication_outlined, size: 20.r),
                       ),
                     ),
                   ),
@@ -225,12 +233,16 @@ class _AddPrescriptionSheetState extends State<AddPrescriptionSheet> {
               ),
               if (_medicines.isNotEmpty) ...[
                 SizedBox(height: 12.h),
-                Wrap( 
+                Wrap(
                   spacing: 8.w,
                   runSpacing: 8.h,
                   children: _medicines
                       .map((m) => Chip(
-                            label: Text(m, style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 13.sp)),
+                            label: Text(m,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .copyWith(fontSize: 13.sp)),
                             onDeleted: () => _removeMedicine(m),
                             deleteIcon: Icon(Icons.close_rounded, size: 16.r),
                           ))
@@ -240,7 +252,8 @@ class _AddPrescriptionSheetState extends State<AddPrescriptionSheet> {
               if (_imageUrl != null) ...[
                 SizedBox(height: 16.h),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
                   decoration: BoxDecoration(
                     color: cs.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(10.r),

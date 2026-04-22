@@ -19,6 +19,9 @@ import 'package:meditime/features/medicines/presentation/screens/add_medicine_sc
 import 'package:meditime/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:meditime/features/medicines/presentation/cubit/medicine_cubit.dart';
 import 'package:meditime/features/profile/presentation/screens/profile_setup_screen.dart';
+import 'package:meditime/core/sync/sync_service.dart';
+import 'package:meditime/features/home/presentation/widgets/home_shimmer_skeleton.dart';
+import 'package:meditime/features/profile/presentation/screens/main_user_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -36,6 +39,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final List<DoseEvent> events = [];
 
     for (final med in medicines) {
+      // ── Filter by Active Window ──
+      final daysSinceStart = date.difference(med.startDate).inDays;
+
+      if (daysSinceStart < 0) continue; // Not started yet
+      if (med.durationDays != -1 && daysSinceStart >= med.durationDays) {
+        continue; // Course finished
+      }
+
       final times =
           med.times.isEmpty ? [const TimeOfDay(hour: 8, minute: 0)] : med.times;
 
@@ -107,10 +118,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return 'in $hours hr $minutes min';
   }
 
-  Future<bool> _confirmTakeEarly(
-      BuildContext context, DoseEvent event) async {
-    final scheduled = TimeOfDay.fromDateTime(event.scheduledDateTime)
-        .format(context);
+  Future<bool> _confirmTakeEarly(BuildContext context, DoseEvent event) async {
+    final scheduled =
+        TimeOfDay.fromDateTime(event.scheduledDateTime).format(context);
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -158,15 +168,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _toast('Skipped: ${event.medicine.name}');
   }
 
-  Future<void> _handleTakeEarly(
-      BuildContext context, DoseEvent event) async {
+  Future<void> _handleTakeEarly(BuildContext context, DoseEvent event) async {
     final confirmed = await _confirmTakeEarly(context, event);
     if (!confirmed || !context.mounted) return;
     _logTakeWithUndo(context, event);
   }
 
-  Future<void> _showSnoozeSheet(
-      BuildContext context, DoseEvent event) async {
+  Future<void> _showSnoozeSheet(BuildContext context, DoseEvent event) async {
     final cs = Theme.of(context).colorScheme;
     final cubit = context.read<MedicineCubit>();
 
@@ -199,8 +207,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: SizedBox(
                     height: 56.h,
                     child: FilledButton.tonalIcon(
-                      onPressed: () => Navigator.pop(
-                          ctx, Duration(minutes: minutes)),
+                      onPressed: () =>
+                          Navigator.pop(ctx, Duration(minutes: minutes)),
                       icon: Icon(Icons.snooze_rounded, size: 22.r),
                       label: Text(
                         minutes < 60
@@ -238,8 +246,18 @@ class _HomeScreenState extends State<HomeScreen> {
     if (diff == -1) return 'Yesterday';
     if (diff == 1) return 'Tomorrow';
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
     return '${months[_selectedDate.month - 1]} ${_selectedDate.day}';
   }
@@ -247,271 +265,304 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-
     return Scaffold(
       backgroundColor: cs.surface,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            pinned: true,
-            toolbarHeight: 64.h,
-            backgroundColor: cs.surface,
-            surfaceTintColor: cs.surface,
-            elevation: 0,
-            scrolledUnderElevation: 3,
-            shadowColor: cs.shadow.withValues(alpha: 0.08),
-            automaticallyImplyLeading: false,
-            titleSpacing: 16.w,
-            title: BlocBuilder<ProfileCubit, ProfileState>(
-              builder: (context, state) {
-                return ProfileSwitcher(
-                  name: state.activeProfileName,
-                  initials: state.initials,
-                  profiles: state.profiles,
-                  onSwitch: (id) {
-                    if (id == 'add') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ProfileSetupScreen(
-                            onComplete: () => Navigator.pop(context),
-                          ),
-                        ),
-                      );
-                    } else {
-                      context.read<ProfileCubit>().switchProfile(id);
-                      context.read<MedicineCubit>().setProfile(id);
-                    }
-                  },
-                );
-              },
-            ),
-            actions: [
-              HeaderIconButton(
-                icon: Icons.emergency_rounded,
-                background: Colors.red.withValues(alpha: 0.12),
-                iconColor: Colors.red.shade700,
-                tooltip: 'Medical ID',
-                onPressed: () {
-                  final profileName =
-                      context.read<ProfileCubit>().state.activeProfileName;
-                  final meds =
-                      context.read<MedicineCubit>().state.medicines;
-                  MedicalIdSheet.show(
-                    context,
-                    profileName: profileName,
-                    medicines: meds,
-                  );
-                },
+      body: BlocListener<ProfileCubit, ProfileState>(
+        listenWhen: (prev, curr) =>
+            curr.needsMainUserSelection && !prev.needsMainUserSelection,
+        listener: (context, state) {
+          if (state.needsMainUserSelection) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                fullscreenDialog: true,
+                builder: (_) => const MainUserSelectionScreen(),
               ),
-              SizedBox(width: 8.w),
-              HeaderIconButton(
-                icon: Icons.notifications_none_rounded,
-                background: cs.surfaceContainerHighest,
-                iconColor: cs.onSurface,
-                onPressed: () {},
-              ),
-              SizedBox(width: 12.w),
-            ],
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 20.h),
-              child: BlocBuilder<ProfileCubit, ProfileState>(
-                builder: (context, state) {
-                  final firstName = state.activeProfileName.split(' ').first;
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        '${_greeting()},',
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                      SizedBox(width: 2.w),
-                      Text(
-                        firstName,
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 30.sp,
-                          fontWeight: FontWeight.w800,
-                          color: cs.onSurface,
-                          height: 1.1,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(16.r, 0, 16.r, 0),
-              child: BlocBuilder<MedicineCubit, MedicineState>(
-                builder: (context, medState) {
-                  return BlocBuilder<HistoryCubit, HistoryState>(
-                    builder: (context, historyState) {
-                      final allEvents = _getDoseEvents(
-                        medState.medicines,
-                        historyState.events,
-                        _selectedDate,
-                      );
-
-                      final now = DateTime.now();
-                      final pendingAll = allEvents
-                          .where((e) => !e.isTaken && !e.isSkipped)
-                          .toList();
-                      final overdue = _isToday
-                          ? pendingAll
-                              .where((e) =>
-                                  e.scheduledDateTime.isBefore(now))
-                              .toList()
-                          : <DoseEvent>[];
-                      final upcoming = _isToday
-                          ? pendingAll
-                              .where((e) =>
-                                  !e.scheduledDateTime.isBefore(now))
-                              .toList()
-                          : pendingAll;
-                      final pending = [...overdue, ...upcoming];
-                      final taken = allEvents.where((e) => e.isTaken).toList();
-                      final skipped =
-                          allEvents.where((e) => e.isSkipped).toList();
-                      final nextDose =
-                          _isToday && upcoming.isNotEmpty ? upcoming.first : null;
-
-                      if (medState.medicines.isEmpty) {
-                        return HomeEmptyState(
-                          onAdd: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const AddMedicineScreen()),
-                          ),
-                        );
-                      }
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TodaySummary(
-                            pendingCount: pending.length,
-                            takenCount: taken.length,
-                          ),
-                          SizedBox(height: 20.h),
-                          CalendarStrip(
-                            onDateSelected: (date) {
-                              setState(() {
-                                _selectedDate = DateTime(
-                                    date.year, date.month, date.day);
-                              });
-                            },
-                          ),
-                          SizedBox(height: 20.h),
-                          if (nextDose != null &&
-                              nextDose.scheduledDateTime
-                                      .difference(now) <=
-                                  _earlyWindow)
-                            NextDoseBanner(
-                              medicine: nextDose.medicine,
-                              scheduledDateTime: nextDose.scheduledDateTime,
-                              onTake: () =>
-                                  _logTakeWithUndo(context, nextDose),
-                            ),
-                          if (pending.isNotEmpty) ...[
-                            SectionTitle(
-                              title: _isToday
-                                  ? (overdue.isNotEmpty
-                                      ? 'Overdue & upcoming'
-                                      : 'Up next')
-                                  : '${_dateLabel()} · pending',
-                              subtitle: _isToday
-                                  ? 'Tap the big green button when you take it'
-                                  : null,
-                            ),
-                            SizedBox(height: 12.h),
-                            ...pending.map((event) {
-                              final isOverdue = _isToday &&
-                                  event.scheduledDateTime.isBefore(now);
-                              final isLockedEarly = _isToday &&
-                                  !isOverdue &&
-                                  event.scheduledDateTime
-                                          .difference(now) >
-                                      _earlyWindow;
-                              final lockedHint = isLockedEarly
-                                  ? 'Available at ${event.scheduledTime.format(context)} · ${_hoursMinutesUntil(event.scheduledDateTime)}'
-                                  : null;
-                              return ElderMedicineTile(
-                                time: event.scheduledTime.format(context),
-                                name: event.medicine.name,
-                                dose:
-                                    '${event.medicine.amount % 1 == 0 ? event.medicine.amount.toInt() : event.medicine.amount} ${event.medicine.type.toLowerCase()}${event.medicine.strength != null && event.medicine.strength!.isNotEmpty ? ' · ${event.medicine.strength}${event.medicine.unit ?? ''}' : ''}',
-                                imagePath: event.medicine.imagePath,
-                                status: MedicineStatus.pending,
-                                isOverdue: isOverdue,
-                                isLockedEarly: isLockedEarly,
-                                lockedHint: lockedHint,
-                                isLowStock: event.medicine.isLowStock,
-                                daysLeft: event.medicine.daysLeft,
-                                onSnooze: () =>
-                                    _showSnoozeSheet(context, event),
-                                onTake: () =>
-                                    _logTakeWithUndo(context, event),
-                                onSkip: () =>
-                                    _logSkipWithUndo(context, event),
-                                onTakeEarly: () =>
-                                    _handleTakeEarly(context, event),
-                              );
-                            }),
-                          ],
-                          if (skipped.isNotEmpty) ...[
-                            SizedBox(height: 12.h),
-                            const SectionTitle(title: 'Skipped'),
-                            SizedBox(height: 12.h),
-                            ...skipped.map((event) => ElderMedicineTile(
-                                  time: event.scheduledTime.format(context),
-                                  name: event.medicine.name,
-                                  dose:
-                                      '${event.medicine.amount % 1 == 0 ? event.medicine.amount.toInt() : event.medicine.amount} ${event.medicine.type.toLowerCase()}${event.medicine.strength != null && event.medicine.strength!.isNotEmpty ? ' · ${event.medicine.strength}${event.medicine.unit ?? ''}' : ''}',
-                                  imagePath: event.medicine.imagePath,
-                                  status: MedicineStatus.missed,
-                                  isLowStock: event.medicine.isLowStock,
-                                  daysLeft: event.medicine.daysLeft,
-                                )),
-                          ],
-                          if (taken.isNotEmpty) ...[
-                            SizedBox(height: 12.h),
-                            const SectionTitle(title: 'Already taken'),
-                            SizedBox(height: 12.h),
-                            ...taken.map((event) => ElderMedicineTile(
-                                  time: event.scheduledTime.format(context),
-                                  name: event.medicine.name,
-                                  dose:
-                                      '${event.medicine.amount % 1 == 0 ? event.medicine.amount.toInt() : event.medicine.amount} ${event.medicine.type.toLowerCase()}${event.medicine.strength != null && event.medicine.strength!.isNotEmpty ? ' · ${event.medicine.strength}${event.medicine.unit ?? ''}' : ''}',
-                                  imagePath: event.medicine.imagePath,
-                                  status: MedicineStatus.taken,
-                                  isLowStock: event.medicine.isLowStock,
-                                  daysLeft: event.medicine.daysLeft,
-                                )),
-                          ],
-                          SizedBox(height: 24.h),
-                          AdherenceSummary(historyState: historyState),
-                          SizedBox(height: 120.h),
-                        ],
+            );
+          }
+        },
+        child: Stack(
+          children: [
+            CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  pinned: true,
+                  toolbarHeight: 64.h,
+                  backgroundColor: cs.surface,
+                  surfaceTintColor: cs.surface,
+                  elevation: 0,
+                  scrolledUnderElevation: 3,
+                  shadowColor: cs.shadow.withValues(alpha: 0.08),
+                  automaticallyImplyLeading: false,
+                  titleSpacing: 16.w,
+                  title: BlocBuilder<ProfileCubit, ProfileState>(
+                    builder: (context, state) {
+                      return ProfileSwitcher(
+                        name: state.activeProfileName,
+                        initials: state.initials,
+                        profiles: state.profiles,
+                        onSwitch: (id) {
+                          if (id == 'add') {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ProfileSetupScreen(
+                                  onComplete: () => Navigator.pop(context),
+                                ),
+                              ),
+                            );
+                          } else {
+                            context.read<ProfileCubit>().switchProfile(id);
+                            context.read<MedicineCubit>().setProfile(id);
+                          }
+                        },
                       );
                     },
-                  );
-                },
-              ),
+                  ),
+                  actions: [
+                    HeaderIconButton(
+                      icon: Icons.emergency_rounded,
+                      background: Colors.red.withValues(alpha: 0.12),
+                      iconColor: Colors.red.shade700,
+                      tooltip: 'Medical ID',
+                      onPressed: () {
+                        final profileName =
+                            context.read<ProfileCubit>().state.activeProfileName;
+                        final meds =
+                            context.read<MedicineCubit>().state.medicines;
+                        MedicalIdSheet.show(
+                          context,
+                          profileName: profileName,
+                          medicines: meds,
+                        );
+                      },
+                    ),
+                    SizedBox(width: 8.w),
+                    HeaderIconButton(
+                      icon: Icons.notifications_none_rounded,
+                      background: cs.surfaceContainerHighest,
+                      iconColor: cs.onSurface,
+                      onPressed: () {},
+                    ),
+                    SizedBox(width: 12.w),
+                  ],
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 20.h),
+                    child: BlocBuilder<ProfileCubit, ProfileState>(
+                      builder: (context, state) {
+                        final firstName =
+                            state.activeProfileName.split(' ').first;
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              '${_greeting()},',
+                              style: TextStyle(
+                                fontFamily: 'Nunito',
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w600,
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                            SizedBox(width: 2.w),
+                            Text(
+                              firstName,
+                              style: TextStyle(
+                                fontFamily: 'Nunito',
+                                fontSize: 30.sp,
+                                fontWeight: FontWeight.w800,
+                                color: cs.onSurface,
+                                height: 1.1,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(16.r, 0, 16.r, 0),
+                    child: BlocBuilder<MedicineCubit, MedicineState>(
+                      builder: (context, medState) {
+                        return BlocBuilder<HistoryCubit, HistoryState>(
+                          builder: (context, historyState) {
+                            final allEvents = _getDoseEvents(
+                              medState.medicines,
+                              historyState.events,
+                              _selectedDate,
+                            );
+
+                            final now = DateTime.now();
+                            final pendingAll = allEvents
+                                .where((e) => !e.isTaken && !e.isSkipped)
+                                .toList();
+                            final overdue = _isToday
+                                ? pendingAll
+                                    .where((e) =>
+                                        e.scheduledDateTime.isBefore(now))
+                                    .toList()
+                                : <DoseEvent>[];
+                            final upcoming = _isToday
+                                ? pendingAll
+                                    .where((e) =>
+                                        !e.scheduledDateTime.isBefore(now))
+                                    .toList()
+                                : pendingAll;
+                            final pending = [...overdue, ...upcoming];
+                            final taken =
+                                allEvents.where((e) => e.isTaken).toList();
+                            final skipped =
+                                allEvents.where((e) => e.isSkipped).toList();
+                            final nextDose = _isToday && upcoming.isNotEmpty
+                                ? upcoming.first
+                                : null;
+
+                            if (medState.medicines.isEmpty) {
+                              return ValueListenableBuilder<bool>(
+                                valueListenable: SyncService.instance.syncing,
+                                builder: (context, syncing, child) {
+                                  if (syncing) {
+                                    return const HomeShimmerSkeleton();
+                                  }
+                                  return HomeEmptyState(
+                                    onAdd: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              const AddMedicineScreen()),
+                                    ),
+                                  );
+                                },
+                              );
+                            }
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TodaySummary(
+                                  pendingCount: pending.length,
+                                  takenCount: taken.length,
+                                ),
+                                SizedBox(height: 20.h),
+                                CalendarStrip(
+                                  onDateSelected: (date) {
+                                    setState(() {
+                                      _selectedDate = DateTime(
+                                          date.year, date.month, date.day);
+                                    });
+                                  },
+                                ),
+                                SizedBox(height: 20.h),
+                                if (nextDose != null &&
+                                    nextDose.scheduledDateTime
+                                            .difference(now) <=
+                                        _earlyWindow)
+                                  NextDoseBanner(
+                                    medicine: nextDose.medicine,
+                                    scheduledDateTime:
+                                        nextDose.scheduledDateTime,
+                                    onTake: () =>
+                                        _logTakeWithUndo(context, nextDose),
+                                  ),
+                                if (pending.isNotEmpty) ...[
+                                  SectionTitle(
+                                    title: _isToday
+                                        ? (overdue.isNotEmpty
+                                            ? 'Overdue & upcoming'
+                                            : 'Up next')
+                                        : '${_dateLabel()} · pending',
+                                    subtitle: _isToday
+                                        ? 'Tap the big green button when you take it'
+                                        : null,
+                                  ),
+                                  SizedBox(height: 12.h),
+                                  ...pending.map((event) {
+                                    final isOverdue = _isToday &&
+                                        event.scheduledDateTime.isBefore(now);
+                                    final isLockedEarly = _isToday &&
+                                        !isOverdue &&
+                                        event.scheduledDateTime
+                                                .difference(now) >
+                                            _earlyWindow;
+                                    final lockedHint = isLockedEarly
+                                        ? 'Available at ${event.scheduledTime.format(context)} · ${_hoursMinutesUntil(event.scheduledDateTime)}'
+                                        : null;
+                                    return ElderMedicineTile(
+                                      time: event.scheduledTime.format(context),
+                                      name: event.medicine.name,
+                                      dose:
+                                          '${event.medicine.amount % 1 == 0 ? event.medicine.amount.toInt() : event.medicine.amount} ${event.medicine.type.toLowerCase()}${event.medicine.strength != null && event.medicine.strength!.isNotEmpty ? ' · ${event.medicine.strength}${event.medicine.unit ?? ''}' : ''}',
+                                      imagePath: event.medicine.imagePath,
+                                      status: MedicineStatus.pending,
+                                      isOverdue: isOverdue,
+                                      isLockedEarly: isLockedEarly,
+                                      lockedHint: lockedHint,
+                                      isLowStock: event.medicine.isLowStock,
+                                      daysLeft: event.medicine.daysLeft,
+                                      onSnooze: () =>
+                                          _showSnoozeSheet(context, event),
+                                      onTake: () =>
+                                          _logTakeWithUndo(context, event),
+                                      onSkip: () =>
+                                          _logSkipWithUndo(context, event),
+                                      onTakeEarly: () =>
+                                          _handleTakeEarly(context, event),
+                                    );
+                                  }),
+                                ],
+                                if (skipped.isNotEmpty) ...[
+                                  SizedBox(height: 12.h),
+                                  const SectionTitle(title: 'Skipped'),
+                                  SizedBox(height: 12.h),
+                                  ...skipped.map((event) => ElderMedicineTile(
+                                        time:
+                                            event.scheduledTime.format(context),
+                                        name: event.medicine.name,
+                                        dose:
+                                            '${event.medicine.amount % 1 == 0 ? event.medicine.amount.toInt() : event.medicine.amount} ${event.medicine.type.toLowerCase()}${event.medicine.strength != null && event.medicine.strength!.isNotEmpty ? ' · ${event.medicine.strength}${event.medicine.unit ?? ''}' : ''}',
+                                        imagePath: event.medicine.imagePath,
+                                        status: MedicineStatus.missed,
+                                        isLowStock: event.medicine.isLowStock,
+                                        daysLeft: event.medicine.daysLeft,
+                                      )),
+                                ],
+                                if (taken.isNotEmpty) ...[
+                                  SizedBox(height: 12.h),
+                                  const SectionTitle(title: 'Already taken'),
+                                  SizedBox(height: 12.h),
+                                  ...taken.map((event) => ElderMedicineTile(
+                                        time:
+                                            event.scheduledTime.format(context),
+                                        name: event.medicine.name,
+                                        dose:
+                                            '${event.medicine.amount % 1 == 0 ? event.medicine.amount.toInt() : event.medicine.amount} ${event.medicine.type.toLowerCase()}${event.medicine.strength != null && event.medicine.strength!.isNotEmpty ? ' · ${event.medicine.strength}${event.medicine.unit ?? ''}' : ''}',
+                                        imagePath: event.medicine.imagePath,
+                                        status: MedicineStatus.taken,
+                                        isLowStock: event.medicine.isLowStock,
+                                        daysLeft: event.medicine.daysLeft,
+                                      )),
+                                ],
+                                SizedBox(height: 24.h),
+                                AdherenceSummary(historyState: historyState),
+                                SizedBox(height: 120.h),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

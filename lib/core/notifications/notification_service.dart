@@ -8,6 +8,7 @@ import 'package:timezone/data/latest_all.dart' as tz_data;
 import '../alarm/medicine_alarm_service.dart';
 import '../storage/app_database.dart';
 import '../storage/data_mappers.dart';
+import 'package:uuid/uuid.dart';
 import '../../features/history/domain/entities/dose_log.dart';
 import '../../features/medicines/domain/refill_predictor.dart';
 import 'notification_channels.dart';
@@ -50,8 +51,7 @@ void _handleNotificationAction(String? actionId, String? payload) async {
     if (scheduled != null) {
       final today = DateTime.now();
       final todayMid = DateTime(today.year, today.month, today.day);
-      final schedDay =
-          DateTime(scheduled.year, scheduled.month, scheduled.day);
+      final schedDay = DateTime(scheduled.year, scheduled.month, scheduled.day);
       final dayOffset = schedDay.difference(todayMid).inDays;
       final notifId = medId.hashCode ^ (dayOffset * 100 + doseIdx);
       await MedicineAlarmService.instance.cancel(notifId);
@@ -81,8 +81,9 @@ void _handleNotificationAction(String? actionId, String? payload) async {
 
     // 3. Log event
     final log = DoseLog(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: const Uuid().v4(),
       medicineId: medId,
+      profileId: med.profileId ?? 'me',
       medicineName: med.name,
       dateTime: DateTime.now(),
       status: DoseStatus.taken,
@@ -104,11 +105,14 @@ void _handleNotificationAction(String? actionId, String? payload) async {
       );
     }
   } else if (actionId == 'skip') {
+    final allMeds = await db.getAllMedicines();
+    final medData = allMeds.firstWhere((m) => m.id == medId);
+
     final log = DoseLog(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: const Uuid().v4(),
       medicineId: medId,
-      medicineName:
-          'Unknown', // Ideally we'd fetch it, but skipping is often quick
+      profileId: medData.profileId ?? 'me',
+      medicineName: medData.name,
       dateTime: DateTime.now(),
       status: DoseStatus.skipped,
     );

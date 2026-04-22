@@ -608,6 +608,18 @@ class $MedicineTableTable extends MedicineTable
   late final GeneratedColumn<String> reminderTimes = GeneratedColumn<String>(
       'reminder_times', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _startDateMeta =
+      const VerificationMeta('startDate');
+  @override
+  late final GeneratedColumn<DateTime> startDate = GeneratedColumn<DateTime>(
+      'start_date', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _durationDaysMeta =
+      const VerificationMeta('durationDays');
+  @override
+  late final GeneratedColumn<int> durationDays = GeneratedColumn<int>(
+      'duration_days', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _accountIdMeta =
       const VerificationMeta('accountId');
   @override
@@ -659,6 +671,8 @@ class $MedicineTableTable extends MedicineTable
         strength,
         unit,
         reminderTimes,
+        startDate,
+        durationDays,
         accountId,
         updatedAt,
         deletedAt,
@@ -754,6 +768,16 @@ class $MedicineTableTable extends MedicineTable
           reminderTimes.isAcceptableOrUnknown(
               data['reminder_times']!, _reminderTimesMeta));
     }
+    if (data.containsKey('start_date')) {
+      context.handle(_startDateMeta,
+          startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta));
+    }
+    if (data.containsKey('duration_days')) {
+      context.handle(
+          _durationDaysMeta,
+          durationDays.isAcceptableOrUnknown(
+              data['duration_days']!, _durationDaysMeta));
+    }
     if (data.containsKey('account_id')) {
       context.handle(_accountIdMeta,
           accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta));
@@ -813,6 +837,10 @@ class $MedicineTableTable extends MedicineTable
           .read(DriftSqlType.string, data['${effectivePrefix}unit']),
       reminderTimes: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}reminder_times']),
+      startDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}start_date']),
+      durationDays: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}duration_days']),
       accountId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}account_id']),
       updatedAt: attachedDatabase.typeMapping
@@ -848,6 +876,8 @@ class MedicineTableData extends DataClass
   final String? strength;
   final String? unit;
   final String? reminderTimes;
+  final DateTime? startDate;
+  final int? durationDays;
   final String? accountId;
   final int updatedAt;
   final int? deletedAt;
@@ -868,6 +898,8 @@ class MedicineTableData extends DataClass
       this.strength,
       this.unit,
       this.reminderTimes,
+      this.startDate,
+      this.durationDays,
       this.accountId,
       required this.updatedAt,
       this.deletedAt,
@@ -899,6 +931,12 @@ class MedicineTableData extends DataClass
     }
     if (!nullToAbsent || reminderTimes != null) {
       map['reminder_times'] = Variable<String>(reminderTimes);
+    }
+    if (!nullToAbsent || startDate != null) {
+      map['start_date'] = Variable<DateTime>(startDate);
+    }
+    if (!nullToAbsent || durationDays != null) {
+      map['duration_days'] = Variable<int>(durationDays);
     }
     if (!nullToAbsent || accountId != null) {
       map['account_id'] = Variable<String>(accountId);
@@ -938,6 +976,12 @@ class MedicineTableData extends DataClass
       reminderTimes: reminderTimes == null && nullToAbsent
           ? const Value.absent()
           : Value(reminderTimes),
+      startDate: startDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(startDate),
+      durationDays: durationDays == null && nullToAbsent
+          ? const Value.absent()
+          : Value(durationDays),
       accountId: accountId == null && nullToAbsent
           ? const Value.absent()
           : Value(accountId),
@@ -970,6 +1014,8 @@ class MedicineTableData extends DataClass
       strength: serializer.fromJson<String?>(json['strength']),
       unit: serializer.fromJson<String?>(json['unit']),
       reminderTimes: serializer.fromJson<String?>(json['reminderTimes']),
+      startDate: serializer.fromJson<DateTime?>(json['startDate']),
+      durationDays: serializer.fromJson<int?>(json['durationDays']),
       accountId: serializer.fromJson<String?>(json['accountId']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
@@ -996,6 +1042,8 @@ class MedicineTableData extends DataClass
       'strength': serializer.toJson<String?>(strength),
       'unit': serializer.toJson<String?>(unit),
       'reminderTimes': serializer.toJson<String?>(reminderTimes),
+      'startDate': serializer.toJson<DateTime?>(startDate),
+      'durationDays': serializer.toJson<int?>(durationDays),
       'accountId': serializer.toJson<String?>(accountId),
       'updatedAt': serializer.toJson<int>(updatedAt),
       'deletedAt': serializer.toJson<int?>(deletedAt),
@@ -1019,6 +1067,8 @@ class MedicineTableData extends DataClass
           Value<String?> strength = const Value.absent(),
           Value<String?> unit = const Value.absent(),
           Value<String?> reminderTimes = const Value.absent(),
+          Value<DateTime?> startDate = const Value.absent(),
+          Value<int?> durationDays = const Value.absent(),
           Value<String?> accountId = const Value.absent(),
           int? updatedAt,
           Value<int?> deletedAt = const Value.absent(),
@@ -1040,6 +1090,9 @@ class MedicineTableData extends DataClass
         unit: unit.present ? unit.value : this.unit,
         reminderTimes:
             reminderTimes.present ? reminderTimes.value : this.reminderTimes,
+        startDate: startDate.present ? startDate.value : this.startDate,
+        durationDays:
+            durationDays.present ? durationDays.value : this.durationDays,
         accountId: accountId.present ? accountId.value : this.accountId,
         updatedAt: updatedAt ?? this.updatedAt,
         deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -1070,6 +1123,10 @@ class MedicineTableData extends DataClass
       reminderTimes: data.reminderTimes.present
           ? data.reminderTimes.value
           : this.reminderTimes,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      durationDays: data.durationDays.present
+          ? data.durationDays.value
+          : this.durationDays,
       accountId: data.accountId.present ? data.accountId.value : this.accountId,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -1097,6 +1154,8 @@ class MedicineTableData extends DataClass
           ..write('strength: $strength, ')
           ..write('unit: $unit, ')
           ..write('reminderTimes: $reminderTimes, ')
+          ..write('startDate: $startDate, ')
+          ..write('durationDays: $durationDays, ')
           ..write('accountId: $accountId, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -1107,26 +1166,29 @@ class MedicineTableData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
-      id,
-      profileId,
-      name,
-      type,
-      schedule,
-      stockRemaining,
-      stockTotal,
-      daysLeft,
-      isLowStock,
-      imagePath,
-      amount,
-      strength,
-      unit,
-      reminderTimes,
-      accountId,
-      updatedAt,
-      deletedAt,
-      dirty,
-      lastWriterDeviceId);
+  int get hashCode => Object.hashAll([
+        id,
+        profileId,
+        name,
+        type,
+        schedule,
+        stockRemaining,
+        stockTotal,
+        daysLeft,
+        isLowStock,
+        imagePath,
+        amount,
+        strength,
+        unit,
+        reminderTimes,
+        startDate,
+        durationDays,
+        accountId,
+        updatedAt,
+        deletedAt,
+        dirty,
+        lastWriterDeviceId
+      ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1145,6 +1207,8 @@ class MedicineTableData extends DataClass
           other.strength == this.strength &&
           other.unit == this.unit &&
           other.reminderTimes == this.reminderTimes &&
+          other.startDate == this.startDate &&
+          other.durationDays == this.durationDays &&
           other.accountId == this.accountId &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -1167,6 +1231,8 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
   final Value<String?> strength;
   final Value<String?> unit;
   final Value<String?> reminderTimes;
+  final Value<DateTime?> startDate;
+  final Value<int?> durationDays;
   final Value<String?> accountId;
   final Value<int> updatedAt;
   final Value<int?> deletedAt;
@@ -1188,6 +1254,8 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
     this.strength = const Value.absent(),
     this.unit = const Value.absent(),
     this.reminderTimes = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.durationDays = const Value.absent(),
     this.accountId = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -1210,6 +1278,8 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
     this.strength = const Value.absent(),
     this.unit = const Value.absent(),
     this.reminderTimes = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.durationDays = const Value.absent(),
     this.accountId = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -1239,6 +1309,8 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
     Expression<String>? strength,
     Expression<String>? unit,
     Expression<String>? reminderTimes,
+    Expression<DateTime>? startDate,
+    Expression<int>? durationDays,
     Expression<String>? accountId,
     Expression<int>? updatedAt,
     Expression<int>? deletedAt,
@@ -1261,6 +1333,8 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
       if (strength != null) 'strength': strength,
       if (unit != null) 'unit': unit,
       if (reminderTimes != null) 'reminder_times': reminderTimes,
+      if (startDate != null) 'start_date': startDate,
+      if (durationDays != null) 'duration_days': durationDays,
       if (accountId != null) 'account_id': accountId,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -1286,6 +1360,8 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
       Value<String?>? strength,
       Value<String?>? unit,
       Value<String?>? reminderTimes,
+      Value<DateTime?>? startDate,
+      Value<int?>? durationDays,
       Value<String?>? accountId,
       Value<int>? updatedAt,
       Value<int?>? deletedAt,
@@ -1307,6 +1383,8 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
       strength: strength ?? this.strength,
       unit: unit ?? this.unit,
       reminderTimes: reminderTimes ?? this.reminderTimes,
+      startDate: startDate ?? this.startDate,
+      durationDays: durationDays ?? this.durationDays,
       accountId: accountId ?? this.accountId,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -1361,6 +1439,12 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
     if (reminderTimes.present) {
       map['reminder_times'] = Variable<String>(reminderTimes.value);
     }
+    if (startDate.present) {
+      map['start_date'] = Variable<DateTime>(startDate.value);
+    }
+    if (durationDays.present) {
+      map['duration_days'] = Variable<int>(durationDays.value);
+    }
     if (accountId.present) {
       map['account_id'] = Variable<String>(accountId.value);
     }
@@ -1399,6 +1483,8 @@ class MedicineTableCompanion extends UpdateCompanion<MedicineTableData> {
           ..write('strength: $strength, ')
           ..write('unit: $unit, ')
           ..write('reminderTimes: $reminderTimes, ')
+          ..write('startDate: $startDate, ')
+          ..write('durationDays: $durationDays, ')
           ..write('accountId: $accountId, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -3852,6 +3938,8 @@ typedef $$MedicineTableTableCreateCompanionBuilder = MedicineTableCompanion
   Value<String?> strength,
   Value<String?> unit,
   Value<String?> reminderTimes,
+  Value<DateTime?> startDate,
+  Value<int?> durationDays,
   Value<String?> accountId,
   Value<int> updatedAt,
   Value<int?> deletedAt,
@@ -3875,6 +3963,8 @@ typedef $$MedicineTableTableUpdateCompanionBuilder = MedicineTableCompanion
   Value<String?> strength,
   Value<String?> unit,
   Value<String?> reminderTimes,
+  Value<DateTime?> startDate,
+  Value<int?> durationDays,
   Value<String?> accountId,
   Value<int> updatedAt,
   Value<int?> deletedAt,
@@ -3967,6 +4057,12 @@ class $$MedicineTableTableFilterComposer
 
   ColumnFilters<String> get reminderTimes => $composableBuilder(
       column: $table.reminderTimes, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get startDate => $composableBuilder(
+      column: $table.startDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get durationDays => $composableBuilder(
+      column: $table.durationDays, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get accountId => $composableBuilder(
       column: $table.accountId, builder: (column) => ColumnFilters(column));
@@ -4076,6 +4172,13 @@ class $$MedicineTableTableOrderingComposer
       column: $table.reminderTimes,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get startDate => $composableBuilder(
+      column: $table.startDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get durationDays => $composableBuilder(
+      column: $table.durationDays,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get accountId => $composableBuilder(
       column: $table.accountId, builder: (column) => ColumnOrderings(column));
 
@@ -4160,6 +4263,12 @@ class $$MedicineTableTableAnnotationComposer
 
   GeneratedColumn<String> get reminderTimes => $composableBuilder(
       column: $table.reminderTimes, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<int> get durationDays => $composableBuilder(
+      column: $table.durationDays, builder: (column) => column);
 
   GeneratedColumn<String> get accountId =>
       $composableBuilder(column: $table.accountId, builder: (column) => column);
@@ -4255,6 +4364,8 @@ class $$MedicineTableTableTableManager extends RootTableManager<
             Value<String?> strength = const Value.absent(),
             Value<String?> unit = const Value.absent(),
             Value<String?> reminderTimes = const Value.absent(),
+            Value<DateTime?> startDate = const Value.absent(),
+            Value<int?> durationDays = const Value.absent(),
             Value<String?> accountId = const Value.absent(),
             Value<int> updatedAt = const Value.absent(),
             Value<int?> deletedAt = const Value.absent(),
@@ -4277,6 +4388,8 @@ class $$MedicineTableTableTableManager extends RootTableManager<
             strength: strength,
             unit: unit,
             reminderTimes: reminderTimes,
+            startDate: startDate,
+            durationDays: durationDays,
             accountId: accountId,
             updatedAt: updatedAt,
             deletedAt: deletedAt,
@@ -4299,6 +4412,8 @@ class $$MedicineTableTableTableManager extends RootTableManager<
             Value<String?> strength = const Value.absent(),
             Value<String?> unit = const Value.absent(),
             Value<String?> reminderTimes = const Value.absent(),
+            Value<DateTime?> startDate = const Value.absent(),
+            Value<int?> durationDays = const Value.absent(),
             Value<String?> accountId = const Value.absent(),
             Value<int> updatedAt = const Value.absent(),
             Value<int?> deletedAt = const Value.absent(),
@@ -4321,6 +4436,8 @@ class $$MedicineTableTableTableManager extends RootTableManager<
             strength: strength,
             unit: unit,
             reminderTimes: reminderTimes,
+            startDate: startDate,
+            durationDays: durationDays,
             accountId: accountId,
             updatedAt: updatedAt,
             deletedAt: deletedAt,

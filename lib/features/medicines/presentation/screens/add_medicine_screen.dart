@@ -9,6 +9,8 @@ import 'package:meditime/features/medicines/presentation/cubit/medicine_cubit.da
 import 'package:meditime/features/medicines/domain/entities/medicine.dart';
 import 'package:meditime/features/profile/presentation/cubit/profile_cubit.dart';
 
+import 'package:uuid/uuid.dart';
+
 class AddMedicineScreen extends StatefulWidget {
   const AddMedicineScreen({super.key});
 
@@ -36,6 +38,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   final _amountController = TextEditingController(text: '1');
   String _unit = 'mg';
   String? _imagePath;
+  DateTime _startDate =
+      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  int _durationDays = -1; // -1 = Continuous
+  int _alreadyStartedDays = 0;
 
   static const _stepTitles = [
     'Medicine Details',
@@ -204,13 +210,17 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                               int.tryParse(_alertDaysController.text) ?? 3;
                           final scheduleStr =
                               '$_selectedFrequency · ${_times.length}× · $_selectedInstruction';
-                          final daysLeft =
-                              stock ~/ (_times.isEmpty ? 1 : _times.length);
+                          final dosesPerDay =
+                              _times.isEmpty ? 1 : _times.length;
+                          final daysLeft = stock ~/ dosesPerDay;
+
+                          // Subtract already started days from the selected start date
+                          final finalStartDate = _startDate.subtract(
+                            Duration(days: _alreadyStartedDays),
+                          );
 
                           final medicine = Medicine(
-                            id: DateTime.now()
-                                .millisecondsSinceEpoch
-                                .toString(),
+                            id: const Uuid().v4(),
                             name: name,
                             type: _selectedType.toLowerCase(),
                             schedule: scheduleStr,
@@ -225,6 +235,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                             unit: _unit,
                             imagePath: _imagePath,
                             times: _times,
+                            startDate: finalStartDate,
+                            durationDays: _durationDays,
                           );
 
                           context.read<MedicineCubit>().addMedicine(medicine);
@@ -658,9 +670,121 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
+    final durations = [
+      {'label': 'Continues', 'days': -1},
+      {'label': '3 Days', 'days': 3},
+      {'label': '7 Days', 'days': 7},
+      {'label': '14 Days', 'days': 14},
+      {'label': '30 Days', 'days': 30},
+      {'label': '6 Months', 'days': 180},
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _label('PRESCRIPTION DURATION'),
+        Wrap(
+          spacing: 10.w,
+          runSpacing: 8.h,
+          children: durations
+              .map((d) => ChoiceChip(
+                    label: Text(d['label'] as String,
+                        style: tt.bodyMedium?.copyWith(fontSize: 13.sp)),
+                    selected: _durationDays == d['days'],
+                    onSelected: (_) =>
+                        setState(() => _durationDays = d['days'] as int),
+                    showCheckmark: false,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.r)),
+                  ))
+              .toList(),
+        ),
+        SizedBox(height: 16.h),
+        Container(
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+          ),
+          child: Column(
+            children: [
+              ListTile(
+                leading: Icon(Icons.calendar_today_rounded,
+                    color: cs.secondary, size: 22.r),
+                title: Text('Starting from', style: TextStyle(fontSize: 14.sp)),
+                subtitle: Text(
+                  '${_startDate.day}/${_startDate.month}/${_startDate.year} ${_startDate.day == DateTime.now().day && _startDate.month == DateTime.now().month ? "(Today)" : ""}',
+                  style:
+                      TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp),
+                ),
+                trailing: TextButton(
+                  onPressed: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _startDate,
+                      firstDate:
+                          DateTime.now().subtract(const Duration(days: 365)),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (picked != null) setState(() => _startDate = picked);
+                  },
+                  child: const Text('Change'),
+                ),
+              ),
+              if (_durationDays != -1) ...[
+                Divider(
+                    height: 1, color: cs.outlineVariant.withValues(alpha: 0.5)),
+                Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  child: Row(
+                    children: [
+                      Icon(Icons.history_toggle_off_rounded,
+                          color: cs.secondary, size: 22.r),
+                      SizedBox(width: 16.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Already started?',
+                                style: TextStyle(fontSize: 14.sp)),
+                            Text('Subtract days from progress',
+                                style: TextStyle(
+                                    fontSize: 11.sp,
+                                    color: cs.onSurfaceVariant)),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        width: 80.w,
+                        child: TextField(
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 15.sp, fontWeight: FontWeight.bold),
+                          decoration: InputDecoration(
+                            hintText: '0',
+                            suffixText: 'd',
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(vertical: 8.h),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                          ),
+                          onChanged: (v) {
+                            setState(() =>
+                                _alreadyStartedDays = int.tryParse(v) ?? 0);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        SizedBox(height: 32.h),
         _label('INVENTORY TRACKING'),
         TextField(
           controller: _stockController,

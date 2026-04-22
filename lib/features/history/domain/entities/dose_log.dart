@@ -5,6 +5,7 @@ enum DoseStatus { taken, skipped, snoozed }
 class DoseLog extends Equatable {
   final String id;
   final String medicineId;
+  final String profileId;
   final String medicineName;
   final DateTime dateTime;
   final DoseStatus status;
@@ -14,6 +15,7 @@ class DoseLog extends Equatable {
   const DoseLog({
     required this.id,
     required this.medicineId,
+    required this.profileId,
     required this.medicineName,
     required this.dateTime,
     required this.status,
@@ -22,5 +24,6 @@ class DoseLog extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, medicineId, medicineName, dateTime, status, note];
+  List<Object?> get props =>
+      [id, medicineId, profileId, medicineName, dateTime, status, note];
 }

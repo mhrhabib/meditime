@@ -16,8 +16,10 @@ class Medicine extends Equatable {
   final String? strength;
   final String? unit;
   final List<TimeOfDay> times;
+  final DateTime startDate;
+  final int durationDays; // -1 for continuous
 
-  const Medicine({
+  Medicine({
     required this.id,
     this.profileId = 'me',
     required this.name,
@@ -32,7 +34,9 @@ class Medicine extends Equatable {
     this.strength,
     this.unit,
     this.times = const [],
-  });
+    DateTime? startDate,
+    this.durationDays = -1,
+  }) : startDate = _DefaultDate.normalize(startDate ?? const _DefaultDate().now());
 
   Medicine copyWith({
     String? id,
@@ -49,6 +53,8 @@ class Medicine extends Equatable {
     String? strength,
     String? unit,
     List<TimeOfDay>? times,
+    DateTime? startDate,
+    int? durationDays,
   }) {
     return Medicine(
       id: id ?? this.id,
@@ -65,6 +71,8 @@ class Medicine extends Equatable {
       strength: strength ?? this.strength,
       unit: unit ?? this.unit,
       times: times ?? this.times,
+      startDate: startDate ?? this.startDate,
+      durationDays: durationDays ?? this.durationDays,
     );
   }
 
@@ -84,5 +92,19 @@ class Medicine extends Equatable {
         strength,
         unit,
         times,
+        startDate,
+        durationDays,
       ];
+}
+
+class _DefaultDate {
+  const _DefaultDate();
+  DateTime now() {
+    final n = DateTime.now();
+    return DateTime(n.year, n.month, n.day);
+  }
+
+  static DateTime normalize(DateTime d) {
+    return DateTime(d.year, d.month, d.day);
+  }
 }

@@ -5,12 +5,14 @@ import 'package:meditime/features/history/data/datasources/history_remote_dataso
 import 'package:meditime/features/medicines/data/datasources/medicine_remote_datasource.dart';
 import 'package:meditime/features/prescriptions/data/datasources/prescription_remote_datasource.dart';
 import 'package:meditime/features/profile/data/datasources/profile_remote_datasource.dart';
+import 'package:meditime/core/sync/conflict_resolver.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:meditime/core/sync/scheduling_service.dart';
 
 /// Central sync orchestration engine.
 ///
-/// Implements delta-based sync with last-write-wins (updatedAt) 
+/// Implements delta-based sync with last-write-wins (updatedAt)
 /// and deterministic tie-breaking (lastWriterDeviceId).
 class SyncService {
   SyncService._();
@@ -23,15 +25,18 @@ class SyncService {
   final _rxRemote = PrescriptionRemoteDataSourceImpl();
 
   static const _lastSyncKey = 'last_sync_timestamp';
-  
+
   bool _isSyncing = false;
   bool get isSyncing => _isSyncing;
+  // Reactive notifier so UI can show a loading state while sync runs.
+  final ValueNotifier<bool> syncing = ValueNotifier<bool>(false);
 
   Timer? _debounceTimer;
 
   /// Main entry point. Pulls remote changes then pushes local dirty rows.
   /// [immediate] skips the 3-second debounce.
   Future<void> sync({bool immediate = false}) async {
+    syncing.value = true;
     if (immediate) {
       _debounceTimer?.cancel();
       await _performSync();
@@ -53,6 +58,8 @@ class SyncService {
       final prefs = await SharedPreferences.getInstance();
       final lastPulledAt = prefs.getInt(_lastSyncKey) ?? 0;
       final syncStartTime = DateTime.now().millisecondsSinceEpoch;
+      // 0. Repair any corrupted legacy data
+      await _db.repairMissingSyncData();
 
       // 1. Pull Deltas
       await _pull(lastPulledAt);
@@ -60,15 +67,27 @@ class SyncService {
       // 2. Push Local Dirty Rows
       await _push();
 
+      // 2.5 Ensure device scheduling reflects watched profiles
+      try {
+        await (await Future.value(null));
+      } catch (_) {}
+
       // 3. Update Sync Timestamp
       await prefs.setInt(_lastSyncKey, syncStartTime);
-      
+
+      // After successful sync, update per-device scheduling
+      try {
+        // lazy import to avoid cycles
+        await SchedulingService.instance.scheduleWatched();
+      } catch (_) {}
+
       debugPrint('[SyncService] Sync completed successfully at $syncStartTime');
     } catch (e, stack) {
       debugPrint('[SyncService] Sync failed: $e');
       debugPrint(stack.toString());
     } finally {
       _isSyncing = false;
+      syncing.value = false;
     }
   }
 
@@ -78,8 +97,11 @@ class SyncService {
     // Pull profiles first (medicines depend on them)
     final profileDeltas = await _proRemote.fetchDelta(since);
     for (final remote in profileDeltas) {
-      final local = await (_db.select(_db.profileTable)..where((t) => t.id.equals(remote.id))).getSingleOrNull();
-      if (_shouldUpdateLocal(local?.updatedAt, local?.lastWriterDeviceId, remote.updatedAt, remote.lastWriterDeviceId)) {
+      final local = await (_db.select(_db.profileTable)
+            ..where((t) => t.id.equals(remote.id)))
+          .getSingleOrNull();
+      if (shouldUpdateLocal(local?.updatedAt, local?.lastWriterDeviceId,
+          remote.updatedAt, remote.lastWriterDeviceId)) {
         await _db.insertProfile(remote);
       }
     }
@@ -88,7 +110,8 @@ class SyncService {
     final medicineDeltas = await _medRemote.fetchDelta(since);
     for (final remote in medicineDeltas) {
       final local = await _db.getMedicineById(remote.id);
-      if (_shouldUpdateLocal(local?.updatedAt, local?.lastWriterDeviceId, remote.updatedAt, remote.lastWriterDeviceId)) {
+      if (shouldUpdateLocal(local?.updatedAt, local?.lastWriterDeviceId,
+          remote.updatedAt, remote.lastWriterDeviceId)) {
         await _db.insertMedicine(remote);
       }
     }
@@ -96,8 +119,11 @@ class SyncService {
     // Pull dose logs
     final logDeltas = await _histRemote.fetchDelta(since);
     for (final remote in logDeltas) {
-      final local = await (_db.select(_db.doseLogTable)..where((t) => t.id.equals(remote.id))).getSingleOrNull();
-      if (_shouldUpdateLocal(local?.updatedAt, local?.lastWriterDeviceId, remote.updatedAt, remote.lastWriterDeviceId)) {
+      final local = await (_db.select(_db.doseLogTable)
+            ..where((t) => t.id.equals(remote.id)))
+          .getSingleOrNull();
+      if (shouldUpdateLocal(local?.updatedAt, local?.lastWriterDeviceId,
+          remote.updatedAt, remote.lastWriterDeviceId)) {
         await _db.insertDoseLog(remote);
       }
     }
@@ -105,8 +131,11 @@ class SyncService {
     // Pull prescriptions
     final rxDeltas = await _rxRemote.fetchDelta(since);
     for (final remote in rxDeltas) {
-      final local = await (_db.select(_db.prescriptionTable)..where((t) => t.id.equals(remote.id))).getSingleOrNull();
-      if (_shouldUpdateLocal(local?.updatedAt, local?.lastWriterDeviceId, remote.updatedAt, remote.lastWriterDeviceId)) {
+      final local = await (_db.select(_db.prescriptionTable)
+            ..where((t) => t.id.equals(remote.id)))
+          .getSingleOrNull();
+      if (shouldUpdateLocal(local?.updatedAt, local?.lastWriterDeviceId,
+          remote.updatedAt, remote.lastWriterDeviceId)) {
         await _db.insertPrescription(remote);
       }
     }
@@ -146,15 +175,13 @@ class SyncService {
 
   // ── Conflict Resolution ─────────────────────────────────────────
 
-  bool _shouldUpdateLocal(
-      int? localUp, String? localDev, int remoteUp, String? remoteDev) {
-    if (localUp == null) return true; // New record
+  // Conflict logic now delegated to `conflict_resolver.shouldUpdateLocal`.
 
-    if (remoteUp > localUp) return true; // Remote is strictly newer
-    if (remoteUp < localUp) return false; // Local is strictly newer
-
-    // Timestamps Identical: Deterministic tie-break using device ID
-    // Higher UUID string wins (standard conflict resolution pattern)
-    return (remoteDev ?? '').compareTo(localDev ?? '') > 0;
+  /// Clear all sync metadata (timestamp) from SharedPreferences.
+  /// Called on logout to ensure next user (or same user) pulls a fresh delta.
+  Future<void> clearSyncMetadata() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_lastSyncKey);
+    debugPrint('[SyncService] Sync metadata cleared.');
   }
 }

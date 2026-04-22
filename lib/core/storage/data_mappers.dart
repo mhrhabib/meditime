@@ -26,6 +26,8 @@ class DataMappers {
       strength: data.strength,
       unit: data.unit,
       times: _timeListFromJson(data.reminderTimes),
+      startDate: data.startDate,
+      durationDays: data.durationDays ?? -1,
     );
   }
 
@@ -50,6 +52,8 @@ class DataMappers {
       strength: entity.strength,
       unit: entity.unit,
       reminderTimes: _timeListToJson(entity.times),
+      startDate: entity.startDate,
+      durationDays: entity.durationDays,
       // sync
       accountId: accountId,
       updatedAt: now,
@@ -64,6 +68,7 @@ class DataMappers {
     return entity.DoseLog(
       id: data.id,
       medicineId: data.medicineId,
+      profileId: data.profileId ?? 'me',
       medicineName: data.medicineName,
       dateTime: data.logDateTime,
       status: entity.DoseStatus.values[data.status],
@@ -75,7 +80,6 @@ class DataMappers {
   static DoseLogTableData doseLogToTable(
     entity.DoseLog data, {
     String? accountId,
-    String? profileId,
   }) {
     final now = DateTime.now().millisecondsSinceEpoch;
     return DoseLogTableData(
@@ -88,7 +92,7 @@ class DataMappers {
       scheduledDateTime: data.scheduledDateTime,
       // sync
       accountId: accountId,
-      profileId: profileId,
+      profileId: data.profileId,
       updatedAt: now,
       deletedAt: null,
       dirty: true,
