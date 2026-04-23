@@ -22,6 +22,7 @@ import 'package:meditime/features/profile/presentation/screens/profile_setup_scr
 import 'package:meditime/core/sync/sync_service.dart';
 import 'package:meditime/features/home/presentation/widgets/home_shimmer_skeleton.dart';
 import 'package:meditime/features/profile/presentation/screens/main_user_selection_screen.dart';
+import 'package:meditime/features/notifications/presentation/screens/notification_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -342,7 +343,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: Icons.notifications_none_rounded,
                       background: cs.surfaceContainerHighest,
                       iconColor: cs.onSurface,
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const NotificationScreen(),
+                          ),
+                        );
+                      },
                     ),
                     SizedBox(width: 12.w),
                   ],

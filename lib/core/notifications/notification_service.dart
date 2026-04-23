@@ -11,6 +11,8 @@ import '../storage/data_mappers.dart';
 import 'package:uuid/uuid.dart';
 import '../../features/history/domain/entities/dose_log.dart';
 import '../../features/medicines/domain/refill_predictor.dart';
+import '../../features/notifications/domain/entities/notification_item.dart';
+import '../../features/notifications/data/repositories/notification_repository_impl.dart';
 import 'notification_channels.dart';
 
 /// Callback for handling notification taps — must be top-level.
@@ -353,6 +355,17 @@ class NotificationService {
     );
 
     await _plugin.show(id, title, body, details, payload: payload);
+
+    // Save to local history
+    await NotificationRepositoryImpl.instance.add(NotificationItem(
+      id: const Uuid().v4(),
+      title: title,
+      body: body,
+      timestamp: DateTime.now(),
+      type: channelId == NotificationChannels.refillAlerts ? 'refill' : 'general',
+      isRead: false,
+      payload: payload,
+    ));
   }
 
   /// Cancel a single notification by ID.

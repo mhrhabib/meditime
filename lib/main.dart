@@ -4,11 +4,22 @@ import 'package:meditime/app/app.dart';
 import 'package:meditime/core/alarm/medicine_alarm_service.dart';
 import 'package:meditime/core/config/supabase_config.dart';
 import 'package:meditime/core/device/device_identity.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:meditime/core/notifications/fcm_service.dart';
 import 'package:meditime/core/notifications/notification_service.dart';
+import 'package:meditime/firebase_options.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ── Firebase ─────────────────────────────────────────────────────
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await FcmService.instance.init();
+  } catch (e) {
+    debugPrint('[Main] Firebase/FCM init error: $e');
+  }
 
   // ── Supabase ─────────────────────────────────────────────────────
   await Supabase.initialize(

@@ -3,6 +3,8 @@ import 'package:meditime/core/storage/app_database.dart';
 import 'package:meditime/core/sync/sync_service.dart';
 import 'package:meditime/core/sync/realtime_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:meditime/core/notifications/fcm_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
@@ -45,6 +47,12 @@ class AuthCubit extends Cubit<AuthState> {
         // 2. Trigger initial sync
         SyncService.instance.sync(immediate: true);
         RealtimeService.instance.start(userId);
+
+        // 3. Save FCM token to Supabase
+        final token = await FirebaseMessaging.instance.getToken();
+        if (token != null) {
+          await FcmService.instance.saveTokenToSupabase(token);
+        }
       } else if (event == AuthChangeEvent.signedOut) {
         // stop realtime subscriptions and clear local data
         RealtimeService.instance.stop();

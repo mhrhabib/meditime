@@ -1,42 +1,104 @@
 import 'dart:async';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-// Note: `firebase_messaging` is optional for this scaffold. We avoid a
-// hard dependency here by keeping the runtime type dynamic so the app
-// can adopt the package when ready.
+import 'package:meditime/features/notifications/data/repositories/notification_repository_impl.dart';
+import 'package:meditime/features/notifications/domain/entities/notification_item.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
-/// Lightweight FCM helper. This file is a scaffold: it initializes
-/// `FirebaseMessaging` for receiving notifications and provides a
-/// server-side trigger method stub that calls our Supabase Edge Function
-/// to deliver caregiver alerts.
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  debugPrint('[FcmService] Handling background message: ${message.messageId}');
+  
+  await NotificationRepositoryImpl.instance.add(NotificationItem(
+    id: const Uuid().v4(),
+    title: message.notification?.title ?? 'Notification',
+    body: message.notification?.body ?? '',
+    timestamp: DateTime.now(),
+    type: 'general',
+    isRead: false,
+    payload: message.data.toString(),
+  ));
+}
+
 class FcmService {
   FcmService._();
   static final instance = FcmService._();
 
-  // Use dynamic to avoid compile failures if `firebase_messaging` is not
-  // included in the project yet. If you add the package, you can change
-  // this back to `FirebaseMessaging` for stronger typing.
-  final dynamic _messaging = null;
+  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
   Future<void> init() async {
     try {
-      // Request permission on iOS/macOS
-      await _messaging.requestPermission();
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-      // Obtain token and register with backend if needed
+      NotificationSettings settings = await _messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      debugPrint('[FcmService] User granted permission: ${settings.authorizationStatus}');
+
       final token = await _messaging.getToken();
       debugPrint('[FcmService] FCM token: $token');
+      if (token != null) {
+        await saveTokenToSupabase(token);
+      }
 
-      // Optionally send token to backend (Supabase) via a function
-      // or REST endpoint so server-side edge functions can target this device.
+      // Listen for token refresh
+      _messaging.onTokenRefresh.listen((newToken) {
+        saveTokenToSupabase(newToken);
+      });
+
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+        debugPrint('[FcmService] Handling foreground message: ${message.messageId}');
+        
+        await NotificationRepositoryImpl.instance.add(NotificationItem(
+          id: const Uuid().v4(),
+          title: message.notification?.title ?? 'Notification',
+          body: message.notification?.body ?? '',
+          timestamp: DateTime.now(),
+          type: 'general',
+          isRead: false,
+          payload: message.data.toString(),
+        ));
+      });
+
+      RemoteMessage? initialMessage = await _messaging.getInitialMessage();
+      if (initialMessage != null) {
+        _handleMessageAction(initialMessage);
+      }
+
+      FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageAction);
+
     } catch (e) {
       debugPrint('[FcmService] init error: $e');
     }
   }
 
-  /// Call a Supabase Edge Function to notify a caregiver.
-  /// The edge function is expected to look up caregiver tokens and send
-  /// the notification via FCM server API.
+  Future<void> saveTokenToSupabase(String token) async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        debugPrint('[FcmService] No user logged in, skipping token save');
+        return;
+      }
+
+      await Supabase.instance.client.from('fcm_tokens').upsert({
+        'user_id': user.id,
+        'token': token,
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'user_id, token');
+      
+      debugPrint('[FcmService] Token saved to Supabase');
+    } catch (e) {
+      debugPrint('[FcmService] Error saving token to Supabase: $e');
+    }
+  }
+
+  void _handleMessageAction(RemoteMessage message) {
+    debugPrint('[FcmService] User tapped notification: ${message.messageId}');
+  }
+
   Future<dynamic> notifyCaregiver({
     required String caregiverId,
     required String title,
@@ -45,14 +107,13 @@ class FcmService {
   }) async {
     final client = Supabase.instance.client;
     final payload = {
-      'caregiver_id': caregiverId,
+      'user_id': caregiverId,
       'title': title,
       'body': body,
       'data': data ?? {},
     };
 
-    // Replace `notify_caregiver` with your deployed edge function name/path
-    final res = await client.functions.invoke('notify_caregiver', body: payload);
+    final res = await client.functions.invoke('send-notification', body: payload);
     return res;
   }
 }

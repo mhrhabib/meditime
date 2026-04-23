@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "174825875609",
+    "project_id": "meditime-clearwave",
+    "storage_bucket": "meditime-clearwave.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:174825875609:android:59e47db28d703849d47008",
+        "android_client_info": {
+          "package_name": "com.clearwavesystems.meditime"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxHnnHneBrKcMuWemDeupap-3QRaLXjmg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

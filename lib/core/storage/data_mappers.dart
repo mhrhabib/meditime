@@ -7,6 +7,7 @@ import 'package:meditime/features/history/domain/entities/dose_log.dart' as enti
 import 'package:meditime/features/profile/domain/entities/profile.dart' as profile_entity;
 import 'package:meditime/features/emergency_card/domain/entities/emergencycard.dart';
 import 'package:meditime/features/prescriptions/domain/entities/prescription.dart';
+import 'package:meditime/features/notifications/domain/entities/notification_item.dart';
 
 class DataMappers {
   // ── Medicine ─────────────────────────────────────────────────────
@@ -208,6 +209,31 @@ class DataMappers {
       deletedAt: null,
       dirty: true,
       lastWriterDeviceId: DeviceIdentity.cachedId,
+    );
+  }
+
+  // ── Notification ─────────────────────────────────────────────────
+  static NotificationItem notificationFromTable(NotificationTableData data) {
+    return NotificationItem(
+      id: data.id,
+      title: data.title,
+      body: data.body,
+      timestamp: data.timestamp,
+      type: data.type,
+      isRead: data.isRead,
+      payload: data.payload,
+    );
+  }
+
+  static NotificationTableData notificationToTable(NotificationItem data) {
+    return NotificationTableData(
+      id: data.id,
+      title: data.title,
+      body: data.body,
+      timestamp: data.timestamp,
+      type: data.type,
+      isRead: data.isRead,
+      payload: data.payload,
     );
   }
 }

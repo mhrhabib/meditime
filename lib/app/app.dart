@@ -11,6 +11,7 @@ import 'package:meditime/features/history/presentation/cubit/history_cubit.dart'
 import 'package:meditime/features/medicines/presentation/cubit/medicine_cubit.dart';
 import 'package:meditime/features/prescriptions/presentation/cubit/prescription_cubit.dart';
 import 'package:meditime/features/reminders/presentation/cubit/settings_cubit.dart';
+import 'package:meditime/features/notifications/presentation/cubit/notification_cubit.dart';
 import 'package:meditime/core/sync/sync_service.dart';
 
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -67,6 +68,7 @@ class _MediTimeAppState extends State<MediTimeApp> with WidgetsBindingObserver {
             BlocProvider<HistoryCubit>(create: (_) => HistoryCubit()),
             BlocProvider<PrescriptionCubit>(create: (_) => PrescriptionCubit()),
             BlocProvider<SettingsCubit>(create: (_) => SettingsCubit()),
+            BlocProvider<NotificationCubit>(create: (_) => NotificationCubit()),
           ],
           child: BlocBuilder<ThemeCubit, ThemeState>(
             builder: (context, themeState) {

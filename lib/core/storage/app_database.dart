@@ -132,6 +132,20 @@ class ReminderSettingsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@DataClassName('NotificationTableData')
+class NotificationTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text()();
+  TextColumn get body => text()();
+  DateTimeColumn get timestamp => dateTime().withDefault(currentDateAndTime)();
+  TextColumn get type => text().withDefault(const Constant('general'))();
+  BoolColumn get isRead => boolean().withDefault(const Constant(false))();
+  TextColumn get payload => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // ── Database ───────────────────────────────────────────────────────
 
 @DriftDatabase(tables: [
@@ -141,6 +155,7 @@ class ReminderSettingsTable extends Table {
   EmergencyCardTable,
   PrescriptionTable,
   ReminderSettingsTable,
+  NotificationTable,
 ])
 class AppDatabase extends _$AppDatabase {
   static final AppDatabase instance = AppDatabase._internal();
@@ -148,7 +163,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase._internal() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -206,10 +221,32 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(medicineTable, medicineTable.startDate);
             await m.addColumn(medicineTable, medicineTable.durationDays);
           }
+          if (from < 7) {
+            await m.createTable(notificationTable);
+          }
         },
       );
 
   // ── Helper Methods ───────────────────────────────────────────────
+
+  // Notifications
+  Future<List<NotificationTableData>> getAllNotifications() =>
+      (select(notificationTable)..orderBy([(t) => OrderingTerm.desc(t.timestamp)])).get();
+
+  Stream<List<NotificationTableData>> watchAllNotifications() =>
+      (select(notificationTable)..orderBy([(t) => OrderingTerm.desc(t.timestamp)])).watch();
+
+  Future insertNotification(NotificationTableData notif) =>
+      into(notificationTable).insert(notif, mode: InsertMode.insertOrReplace);
+
+  Future markNotificationRead(String id) =>
+      (update(notificationTable)..where((t) => t.id.equals(id)))
+          .write(const NotificationTableCompanion(isRead: Value(true)));
+
+  Future markAllNotificationsRead() =>
+      update(notificationTable).write(const NotificationTableCompanion(isRead: Value(true)));
+
+  Future clearNotifications() => delete(notificationTable).go();
 
   // Medicines
   Future<List<MedicineTableData>> getAllMedicines() =>
@@ -389,6 +426,7 @@ class AppDatabase extends _$AppDatabase {
     await delete(prescriptionTable).go();
     await delete(emergencyCardTable).go();
     await delete(reminderSettingsTable).go();
+    await delete(notificationTable).go();
   }
 }
 
