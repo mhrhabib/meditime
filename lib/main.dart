@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:meditime/app/app.dart';
@@ -33,6 +35,9 @@ void main() async {
   // ── Notifications + Alarms ────────────────────────────────────────
   await NotificationService.instance.initialize();
   await MedicineAlarmService.instance.initialize();
+  // Daily 10pm "check your meds" prompt — no-op if already scheduled since
+  // zonedSchedule upserts by ID. Fire-and-forget.
+  unawaited(NotificationService.instance.scheduleDailyReviewReminder());
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

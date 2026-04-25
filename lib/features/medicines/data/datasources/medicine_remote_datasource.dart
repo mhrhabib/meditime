@@ -39,7 +39,11 @@ class MedicineRemoteDataSourceImpl implements MedicineRemoteDataSource {
       stockTotal: json['stock_total'],
       daysLeft: json['days_left'],
       isLowStock: json['is_low_stock'],
-      imagePath: json['image_path'],
+      // image_path is a device-local filesystem path — not portable across
+      // devices / reinstalls. Ignore what the server sent; leave any existing
+      // local value intact by passing null so the Drift column stays null here
+      // and the local-side upsert handles merge (see conflict resolver).
+      imagePath: null,
       amount: (json['amount'] as num).toDouble(),
       strength: json['strength'],
       unit: json['unit'],
@@ -66,7 +70,9 @@ class MedicineRemoteDataSourceImpl implements MedicineRemoteDataSource {
       'stock_total': data.stockTotal,
       'days_left': data.daysLeft,
       'is_low_stock': data.isLowStock,
-      'image_path': data.imagePath,
+      // image_path is device-local — don't push it. Storing in Supabase
+      // Storage (with a public URL) would be the proper cross-device fix.
+      'image_path': null,
       'amount': data.amount,
       'strength': data.strength,
       'unit': data.unit,

@@ -20,6 +20,7 @@ import 'package:meditime/features/profile/presentation/cubit/profile_cubit.dart'
 import 'package:meditime/features/medicines/presentation/cubit/medicine_cubit.dart';
 import 'package:meditime/features/profile/presentation/screens/profile_setup_screen.dart';
 import 'package:meditime/core/sync/sync_service.dart';
+import 'package:meditime/core/theme/app_theme.dart';
 import 'package:meditime/features/home/presentation/widgets/home_shimmer_skeleton.dart';
 import 'package:meditime/features/profile/presentation/screens/main_user_selection_screen.dart';
 import 'package:meditime/features/notifications/presentation/screens/notification_screen.dart';
@@ -37,12 +38,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<DoseEvent> _getDoseEvents(
       List<Medicine> medicines, List<DoseLog> logs, DateTime date) {
-    final List<DoseEvent> events = [];
+    // Pre-filter logs to the target day once, then key by "medId|HH:mm".
+    // Keeps per-slot lookup O(1) instead of scanning the full log list twice
+    // per medicine × dose time.
+    final dayLogs = <String, DoseStatus>{};
+    for (final log in logs) {
+      final s = log.scheduledDateTime;
+      if (s == null) continue;
+      if (s.year != date.year || s.month != date.month || s.day != date.day) {
+        continue;
+      }
+      final key = '${log.medicineId}|${s.hour}:${s.minute}';
+      // Prefer terminal states (taken/skipped) over intermediate ones.
+      final existing = dayLogs[key];
+      if (existing == DoseStatus.taken || existing == DoseStatus.skipped) {
+        continue;
+      }
+      dayLogs[key] = log.status;
+    }
 
+    final List<DoseEvent> events = [];
     for (final med in medicines) {
       // ── Filter by Active Window ──
       final daysSinceStart = date.difference(med.startDate).inDays;
-
       if (daysSinceStart < 0) continue; // Not started yet
       if (med.durationDays != -1 && daysSinceStart >= med.durationDays) {
         continue; // Course finished
@@ -59,26 +77,13 @@ class _HomeScreenState extends State<HomeScreen> {
           time.hour,
           time.minute,
         );
-
-        bool matchesSlot(DoseLog log) =>
-            log.medicineId == med.id &&
-            log.scheduledDateTime != null &&
-            log.scheduledDateTime!.year == scheduledDateTime.year &&
-            log.scheduledDateTime!.month == scheduledDateTime.month &&
-            log.scheduledDateTime!.day == scheduledDateTime.day &&
-            log.scheduledDateTime!.hour == scheduledDateTime.hour &&
-            log.scheduledDateTime!.minute == scheduledDateTime.minute;
-
-        final isTaken =
-            logs.any((l) => matchesSlot(l) && l.status == DoseStatus.taken);
-        final isSkipped =
-            logs.any((l) => matchesSlot(l) && l.status == DoseStatus.skipped);
+        final status = dayLogs['${med.id}|${time.hour}:${time.minute}'];
 
         events.add(DoseEvent(
           medicine: med,
           scheduledTime: time,
-          isTaken: isTaken,
-          isSkipped: isSkipped,
+          isTaken: status == DoseStatus.taken,
+          isSkipped: status == DoseStatus.skipped,
           scheduledDateTime: scheduledDateTime,
         ));
       }
@@ -89,7 +94,6 @@ class _HomeScreenState extends State<HomeScreen> {
       final bVal = b.scheduledTime.hour * 60 + b.scheduledTime.minute;
       return aVal.compareTo(bVal);
     });
-
     return events;
   }
 
@@ -108,6 +112,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   static const Duration _earlyWindow = Duration(minutes: 60);
+  // Grace after a scheduled time before a pending slot is treated as missed.
+  static const Duration _missedGrace = Duration(minutes: 30);
 
   String _hoursMinutesUntil(DateTime target) {
     final diff = target.difference(DateTime.now());
@@ -407,21 +413,38 @@ class _HomeScreenState extends State<HomeScreen> {
                             );
 
                             final now = DateTime.now();
-                            final pendingAll = allEvents
+                            final untracked = allEvents
                                 .where((e) => !e.isTaken && !e.isSkipped)
                                 .toList();
+
+                            // A slot is "missed" once now > scheduledTime + grace.
+                            // For non-today past dates, the whole day is past —
+                            // everything untracked is missed.
+                            bool isMissedSlot(DoseEvent e) {
+                              if (!_isToday) {
+                                return _selectedDate.isBefore(DateTime(
+                                    now.year, now.month, now.day));
+                              }
+                              return e.scheduledDateTime
+                                  .add(_missedGrace)
+                                  .isBefore(now);
+                            }
+
+                            final missed =
+                                untracked.where(isMissedSlot).toList();
                             final overdue = _isToday
-                                ? pendingAll
+                                ? untracked
                                     .where((e) =>
-                                        e.scheduledDateTime.isBefore(now))
+                                        e.scheduledDateTime.isBefore(now) &&
+                                        !isMissedSlot(e))
                                     .toList()
                                 : <DoseEvent>[];
                             final upcoming = _isToday
-                                ? pendingAll
+                                ? untracked
                                     .where((e) =>
                                         !e.scheduledDateTime.isBefore(now))
                                     .toList()
-                                : pendingAll;
+                                : <DoseEvent>[];
                             final pending = [...overdue, ...upcoming];
                             final taken =
                                 allEvents.where((e) => e.isTaken).toList();
@@ -456,6 +479,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 TodaySummary(
                                   pendingCount: pending.length,
                                   takenCount: taken.length,
+                                  missedCount: missed.length,
                                 ),
                                 SizedBox(height: 20.h),
                                 CalendarStrip(
@@ -467,6 +491,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                   },
                                 ),
                                 SizedBox(height: 20.h),
+                                if (_isToday &&
+                                    now.hour >= 22 &&
+                                    missed.isNotEmpty)
+                                  _EndOfDayMissedBanner(
+                                    missedCount: missed.length,
+                                  ),
                                 if (nextDose != null &&
                                     nextDose.scheduledDateTime
                                             .difference(now) <=
@@ -523,6 +553,29 @@ class _HomeScreenState extends State<HomeScreen> {
                                           _handleTakeEarly(context, event),
                                     );
                                   }),
+                                ],
+                                if (missed.isNotEmpty) ...[
+                                  SizedBox(height: 12.h),
+                                  SectionTitle(
+                                    title: _isToday
+                                        ? 'Missed today'
+                                        : '${_dateLabel()} · missed',
+                                    subtitle: 'Tap "I actually took it" if you remember taking it',
+                                  ),
+                                  SizedBox(height: 12.h),
+                                  ...missed.map((event) => ElderMedicineTile(
+                                        time:
+                                            event.scheduledTime.format(context),
+                                        name: event.medicine.name,
+                                        dose:
+                                            '${event.medicine.amount % 1 == 0 ? event.medicine.amount.toInt() : event.medicine.amount} ${event.medicine.type.toLowerCase()}${event.medicine.strength != null && event.medicine.strength!.isNotEmpty ? ' · ${event.medicine.strength}${event.medicine.unit ?? ''}' : ''}',
+                                        imagePath: event.medicine.imagePath,
+                                        status: MedicineStatus.missed,
+                                        isLowStock: event.medicine.isLowStock,
+                                        daysLeft: event.medicine.daysLeft,
+                                        onLogLate: () =>
+                                            _logTakeWithUndo(context, event),
+                                      )),
                                 ],
                                 if (skipped.isNotEmpty) ...[
                                   SizedBox(height: 12.h),
@@ -590,4 +643,64 @@ class DoseEvent {
     this.isSkipped = false,
     required this.scheduledDateTime,
   });
+}
+
+/// Shown on home screen after 10pm if any of today's doses are still untracked.
+/// Closes the loop on the daily 10pm push — the push reminds the user to open
+/// the app; this banner tells them exactly what's outstanding once they do.
+class _EndOfDayMissedBanner extends StatelessWidget {
+  final int missedCount;
+  const _EndOfDayMissedBanner({required this.missedCount});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final missedColor = StatusColors.getMissed(context);
+    final bg = StatusColors.getMissedContainer(context);
+    return Container(
+      margin: EdgeInsets.only(bottom: 14.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(18.r),
+        border: Border.all(
+            color: missedColor.withValues(alpha: 0.35), width: 1.5.w),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.nightlight_round, size: 28.r, color: missedColor),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  missedCount == 1
+                      ? 'You have 1 missed dose today'
+                      : 'You have $missedCount missed doses today',
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w800,
+                    color: cs.onSurface,
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  'Review below — tap "I actually took it" if you took any.',
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

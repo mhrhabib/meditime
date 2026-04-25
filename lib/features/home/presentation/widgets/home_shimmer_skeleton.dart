@@ -7,7 +7,6 @@ class HomeShimmerSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;

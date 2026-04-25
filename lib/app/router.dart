@@ -22,16 +22,21 @@ class AppRouter {
         final onSplash = state.matchedLocation == '/splash';
         final onBoarding = state.matchedLocation == '/onboarding';
 
-        // Always let splash and onboarding through
-        if (onSplash || onBoarding) return null;
+        // Splash is always allowed — it's the gate that decides next hop.
+        if (onSplash) return null;
 
-        // If not authenticated and not already on an auth screen → sign in
+        // Not authenticated: only auth routes are reachable.
         if (authState is! AuthAuthenticated) {
           return onAuthRoute ? null : '/sign-in';
         }
 
-        // If authenticated and on an auth screen → home
-        if (onAuthRoute) return '/';
+        // Authenticated: bounce off auth routes via splash so we can
+        // wait for the initial sync and inspect profiles before deciding
+        // whether to show onboarding or go home.
+        if (onAuthRoute) return '/splash';
+
+        // Authenticated users are allowed on onboarding (post-auth new-user flow).
+        if (onBoarding) return null;
 
         return null;
       },

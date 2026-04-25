@@ -71,14 +71,23 @@ class ProfileSwitcher extends StatelessWidget {
           children: [
             _Avatar(initials: initials, size: 32.r),
             SizedBox(width: 8.w),
-            Text(name, style: tt.labelLarge?.copyWith(color: cs.primary, fontSize: 14.sp)),
+            Flexible(
+              child: Text(name,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: tt.labelLarge?.copyWith(color: cs.primary, fontSize: 14.sp)),
+            ),
             if (otherProfiles.isNotEmpty) ...[
               SizedBox(width: 6.w),
               Container(width: 1, height: 16.h, color: cs.outlineVariant),
               SizedBox(width: 6.w),
-              Text(
-                otherProfiles.take(1).map((p) => p.name).join(''),
-                style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 11.sp),
+              Flexible(
+                child: Text(
+                  otherProfiles.take(1).map((p) => p.name).join(''),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 11.sp),
+                ),
               ),
               if (otherProfiles.length > 1)
                 Text(' +${otherProfiles.length - 1}',

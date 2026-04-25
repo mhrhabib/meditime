@@ -11,6 +11,12 @@ class SchedulingService {
 
   final _db = AppDatabase.instance;
 
+  // Guards `scheduleWatchedIfStale` — re-running the full cancel+reschedule
+  // cycle on every foreground blip is wasteful (each cycle hits native
+  // notification + alarm APIs hundreds of times).
+  DateTime? _lastScheduled;
+  static const Duration _rescheduleCooldown = Duration(hours: 6);
+
   /// Schedule notifications for the profiles this device is watching.
   Future<void> scheduleWatched() async {
     final watched = await DevicePreferences.getWatchedProfileIds();
@@ -32,6 +38,20 @@ class SchedulingService {
     if (toSchedule.isNotEmpty) {
       await MedicineScheduler.scheduleAll(toSchedule);
     }
+    _lastScheduled = DateTime.now();
+  }
+
+  /// Roll the 7-day notification window forward when the user resumes the
+  /// app, but only if we haven't already run in the cooldown window. Called
+  /// from app lifecycle resume so late-reminders for "tomorrow" exist even
+  /// when sync fails (offline). Idempotent; cheap no-op during cooldown.
+  Future<void> scheduleWatchedIfStale() async {
+    final last = _lastScheduled;
+    if (last != null &&
+        DateTime.now().difference(last) < _rescheduleCooldown) {
+      return;
+    }
+    await scheduleWatched();
   }
 
   Medicine _toDomain(MedicineTableData t) {

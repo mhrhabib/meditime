@@ -419,4 +419,55 @@ class NotificationService {
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
   }
+
+  // Fixed ID for the daily end-of-day review prompt — re-scheduling overwrites
+  // the previous day's notification rather than piling them up.
+  static const int _dailyReviewId = 777;
+
+  /// Schedule a daily 10pm prompt: "Did you take all your meds today?".
+  /// Content is fixed at schedule time (flutter_local_notifications can't
+  /// inject live data), so the body points users back into the app where
+  /// the missed section shows the real count.
+  Future<void> scheduleDailyReviewReminder({int hour = 22, int minute = 0}) async {
+    final now = tz.TZDateTime.now(tz.local);
+    var fire = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    if (!fire.isAfter(now)) {
+      fire = fire.add(const Duration(days: 1));
+    }
+
+    const androidDetails = AndroidNotificationDetails(
+      NotificationChannels.weeklyInsights,
+      'Daily medication review',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+      category: AndroidNotificationCategory.reminder,
+      actions: [],
+    );
+    const darwinDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: false,
+    );
+    const details =
+        NotificationDetails(android: androidDetails, iOS: darwinDetails);
+
+    final scheduleMode = await _canUseExactAlarms()
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle;
+
+    await _plugin.zonedSchedule(
+      _dailyReviewId,
+      'Daily medication check-in',
+      'Did you take all your meds today? Tap to review any missed doses.',
+      fire,
+      details,
+      androidScheduleMode: scheduleMode,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time,
+      payload: 'daily_review',
+    );
+  }
+
+  Future<void> cancelDailyReviewReminder() => _plugin.cancel(_dailyReviewId);
 }

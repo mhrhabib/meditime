@@ -6,11 +6,37 @@ import 'package:meditime/features/medicines/domain/entities/medicine.dart';
 /// Converts a Medicine + its schedule string into real scheduled notifications.
 /// Schedules one notification per dose per day for the next 14 days (rolling).
 class MedicineScheduler {
-  static const int _scheduleDays = 14;
+  // 7-day rolling window (was 14). Pending notifications on Android cap at
+  // 500 and on iOS at 64 — with late-reminders we now schedule up to 2× per
+  // dose, so shrinking the horizon keeps even power users under the iOS cap.
+  static const int _scheduleDays = 7;
+  // How long after a scheduled slot we fire a "still need to take X?" reminder
+  // if the user hasn't responded. Mirrors `_missedGrace` on the home screen.
+  static const Duration _lateGrace = Duration(minutes: 30);
+  // Only schedule late reminders for today + tomorrow — anything further out
+  // will be rescheduled on next app-open before the grace window matters,
+  // and keeps the pending-notification count bounded.
+  static const int _lateReminderHorizonDays = 2;
 
   /// Unique notification ID from medicine ID + day + dose index.
   static int _notificationId(String medicineId, int dayOffset, int doseIndex) {
     return medicineId.hashCode ^ (dayOffset * 100 + doseIndex);
+  }
+
+  /// ID for the paired "late dose" reminder that fires after the grace window.
+  /// Must be deterministic so we can cancel it when the primary dose is handled.
+  static int _lateNotificationId(
+      String medicineId, int dayOffset, int doseIndex) {
+    // XOR a sentinel into the bottom bits so it can never collide with the
+    // primary notification ID.
+    return (_notificationId(medicineId, dayOffset, doseIndex)) ^ 0x5A5A5A;
+  }
+
+  static String _fmt(DateTime t) {
+    final h = t.hour > 12 ? t.hour - 12 : (t.hour == 0 ? 12 : t.hour);
+    final m = t.minute.toString().padLeft(2, '0');
+    final ampm = t.hour >= 12 ? 'PM' : 'AM';
+    return '$h:$m $ampm';
   }
 
   /// Parse dose times from a schedule string like "Daily · 3× · After meal".
@@ -112,6 +138,28 @@ class MedicineScheduler {
           body:
               'Dose ${doseIdx + 1} of ${doseTimes.length} · ${medicine.schedule}',
         );
+
+        // "Late dose" check-in — fires `_lateGrace` after the scheduled time
+        // unless the user has taken/skipped/snoozed the dose (cancelDose /
+        // cancelForMedicine removes it first).
+        //
+        // Throttled to avoid blowing past iOS's 64-notification cap:
+        //   - only today + tomorrow (further days re-schedule on app-open)
+        //   - skipped for low-stock/critical medicines (the primary is already
+        //     loud + non-dismissible and a late follow-up adds noise)
+        final lateFire = scheduledTime.add(_lateGrace);
+        final withinHorizon = day < _lateReminderHorizonDays;
+        if (lateFire.isAfter(now) && withinHorizon && !medicine.isLowStock) {
+          await service.scheduleNotification(
+            id: _lateNotificationId(medicine.id, day, doseIdx),
+            title: '⏰ Still need your ${medicine.name}?',
+            body:
+                'It was due at ${_fmt(scheduledTime)}. Tap to log it now.',
+            scheduledTime: lateFire,
+            payload:
+                '${medicine.id}|$doseIdx|${scheduledTime.toIso8601String()}',
+          );
+        }
       }
     }
 
@@ -128,6 +176,7 @@ class MedicineScheduler {
       for (int doseIdx = 0; doseIdx < doseTimes.length; doseIdx++) {
         final notifId = _notificationId(medicine.id, day, doseIdx);
         await service.cancel(notifId);
+        await service.cancel(_lateNotificationId(medicine.id, day, doseIdx));
         await alarm.cancel(notifId);
       }
     }
@@ -157,6 +206,8 @@ class MedicineScheduler {
 
     final notifId = _notificationId(medicineId, dayOffset, doseIdx);
     await NotificationService.instance.cancel(notifId);
+    await NotificationService.instance
+        .cancel(_lateNotificationId(medicineId, dayOffset, doseIdx));
     await MedicineAlarmService.instance.cancel(notifId);
   }
 

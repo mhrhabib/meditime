@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:meditime/core/storage/app_database.dart';
+import 'package:meditime/features/history/domain/entities/dose_log.dart';
 
 abstract class HistoryRemoteDataSource {
   Future<List<DoseLogTableData>> fetchDelta(int since);
@@ -33,7 +34,7 @@ class HistoryRemoteDataSourceImpl implements HistoryRemoteDataSource {
       medicineId: json['medicine_id'],
       medicineName: json['medicine_name'],
       logDateTime: DateTime.parse(json['log_date_time']),
-      status: json['status'],
+      status: _parseStatus(json['status']),
       note: json['note'],
       scheduledDateTime: json['scheduled_date_time'] != null 
           ? DateTime.parse(json['scheduled_date_time']) 
@@ -54,7 +55,7 @@ class HistoryRemoteDataSourceImpl implements HistoryRemoteDataSource {
       'medicine_id': data.medicineId,
       'medicine_name': data.medicineName,
       'log_date_time': data.logDateTime.toIso8601String(),
-      'status': data.status,
+      'status': _statusToJson(data.status),
       'note': data.note,
       'scheduled_date_time': data.scheduledDateTime?.toIso8601String(),
       // sync
@@ -64,6 +65,26 @@ class HistoryRemoteDataSourceImpl implements HistoryRemoteDataSource {
       'deleted_at': _tsToIso(data.deletedAt),
       'last_writer_device_id': data.lastWriterDeviceId,
     };
+  }
+
+  // Supabase stores `status` as text (enum name). Local DB stores it as the
+  // `DoseStatus.index` int. Coerce in both directions, tolerating either form.
+  int _parseStatus(dynamic v) {
+    if (v is int) return v;
+    if (v is String) {
+      final asInt = int.tryParse(v);
+      if (asInt != null) return asInt;
+      final byName = DoseStatus.values.indexWhere((e) => e.name == v);
+      if (byName >= 0) return byName;
+    }
+    return 0;
+  }
+
+  String _statusToJson(int index) {
+    if (index >= 0 && index < DoseStatus.values.length) {
+      return DoseStatus.values[index].name;
+    }
+    return DoseStatus.taken.name;
   }
 
   int? _tsToMillis(dynamic v) {

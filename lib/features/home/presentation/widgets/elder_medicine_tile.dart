@@ -21,6 +21,8 @@ class ElderMedicineTile extends StatelessWidget {
   final VoidCallback? onSkip;
   final VoidCallback? onSnooze;
   final VoidCallback? onTakeEarly;
+  // Retroactively log a missed dose as taken ("I actually took it").
+  final VoidCallback? onLogLate;
 
   const ElderMedicineTile({
     super.key,
@@ -39,6 +41,7 @@ class ElderMedicineTile extends StatelessWidget {
     this.onSkip,
     this.onSnooze,
     this.onTakeEarly,
+    this.onLogLate,
   });
 
   @override
@@ -85,7 +88,7 @@ class ElderMedicineTile extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (imagePath != null) ...[
+              if (imagePath != null && File(imagePath!).existsSync()) ...[
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12.r),
                   child: Image.file(
@@ -93,33 +96,43 @@ class ElderMedicineTile extends StatelessWidget {
                     width: 50.r,
                     height: 50.r,
                     fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => SizedBox(
+                      width: 50.r,
+                      height: 50.r,
+                      child: Icon(Icons.medication_rounded,
+                          size: 28.r, color: cs.outline),
+                    ),
                   ),
                 ),
                 SizedBox(width: 12.w),
               ],
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
-                decoration: BoxDecoration(
-                  color: accentContainer,
-                  borderRadius: BorderRadius.circular(14.r),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.access_time_rounded, size: 22.r, color: accent),
-                    SizedBox(width: 8.w),
-                    Text(
-                      time,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.w800,
-                        color: accent,
+              Flexible(
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                  decoration: BoxDecoration(
+                    color: accentContainer,
+                    borderRadius: BorderRadius.circular(14.r),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.access_time_rounded, size: 22.r, color: accent),
+                      SizedBox(width: 8.w),
+                      Flexible(
+                        child: Text(
+                          time,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 20.sp,
+                            fontWeight: FontWeight.w800,
+                            color: accent,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               const Spacer(),
@@ -355,6 +368,33 @@ class ElderMedicineTile extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ] else if (isMissed && onLogLate != null) ...[
+            SizedBox(height: 16.h),
+            SizedBox(
+              height: 52.h,
+              child: OutlinedButton.icon(
+                onPressed: onLogLate,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: StatusColors.getTaken(context),
+                  side: BorderSide(
+                      color:
+                          StatusColors.getTaken(context).withValues(alpha: 0.6),
+                      width: 1.5.w),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                  ),
+                ),
+                icon: Icon(Icons.history_rounded, size: 22.r),
+                label: Text(
+                  'I actually took it',
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
             ),
           ],
         ],

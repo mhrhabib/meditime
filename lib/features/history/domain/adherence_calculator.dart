@@ -58,9 +58,9 @@ class AdherenceCalculator {
     final currentPct = _percentage(currentWeekEvents);
     final prevPct = _percentage(prevWeekEvents);
 
-    final taken = currentWeekEvents.where((e) => e.status == DoseStatus.taken).length;
-    final missed = currentWeekEvents.where((e) => e.status == DoseStatus.missed).length;
-    final skipped = currentWeekEvents.where((e) => e.status == DoseStatus.skipped).length;
+    final taken = currentWeekEvents.where((e) => e.status == DoseEventStatus.taken).length;
+    final missed = currentWeekEvents.where((e) => e.status == DoseEventStatus.missed).length;
+    final skipped = currentWeekEvents.where((e) => e.status == DoseEventStatus.skipped).length;
 
     return AdherenceResult(
       weeklyPercentage: currentPct,
@@ -75,7 +75,7 @@ class AdherenceCalculator {
 
   static double _percentage(Iterable<DoseEvent> events) {
     if (events.isEmpty) return 0;
-    final taken = events.where((e) => e.status == DoseStatus.taken).length;
+    final taken = events.where((e) => e.status == DoseEventStatus.taken).length;
     return (taken / events.length) * 100;
   }
 

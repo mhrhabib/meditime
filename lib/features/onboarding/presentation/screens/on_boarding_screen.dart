@@ -65,9 +65,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final profileCubit = context.read<ProfileCubit>();
     final onboardingCubit = context.read<OnboardingCubit>();
 
-    // Promote the onboarding data into a real Profile so the app stops
-    // showing "Guest". Only create one if the user actually entered a name
-    // and doesn't already have a profile (handles replay / skip-through).
+    // Onboarding is only reachable post-auth when the user has no profiles on
+    // the server (gated by the splash screen). Create the profile from what
+    // they entered — guard only against truly empty names / skip-through.
     final trimmedName = _name.trim();
     if (trimmedName.isNotEmpty && profileCubit.state.profiles.isEmpty) {
       await profileCubit.addProfile(

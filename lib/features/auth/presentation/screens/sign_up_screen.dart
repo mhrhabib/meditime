@@ -45,7 +45,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return BlocListener<AuthCubit, AuthState>(
       listener: (ctx, state) {
         if (state is AuthAuthenticated) {
-          ctx.go('/');
+          // Route through splash so it can sync and decide between
+          // onboarding (new user) and home (returning user with profiles).
+          ctx.go('/splash');
         } else if (state is AuthError) {
           ScaffoldMessenger.of(ctx).showSnackBar(
             SnackBar(

@@ -28,7 +28,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       final msg = e.toString();
       if (msg.contains("Could not find the 'age' column") || msg.contains('column "age"')) {
         try {
-          final safeSel = 'id,name,initials,gender,account_id,updated_at,deleted_at,last_writer_device_id';
+          const safeSel = 'id,name,initials,gender,account_id,updated_at,deleted_at,last_writer_device_id';
           var safeQuery = _client.from(_table).select(safeSel);
           if (since > 0) safeQuery = safeQuery.gt('updated_at', DateTime.fromMillisecondsSinceEpoch(since).toUtc().toIso8601String());
           final response = await safeQuery.order('updated_at', ascending: true);

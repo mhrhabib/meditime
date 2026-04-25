@@ -12,6 +12,7 @@ import 'package:meditime/features/medicines/presentation/cubit/medicine_cubit.da
 import 'package:meditime/features/prescriptions/presentation/cubit/prescription_cubit.dart';
 import 'package:meditime/features/reminders/presentation/cubit/settings_cubit.dart';
 import 'package:meditime/features/notifications/presentation/cubit/notification_cubit.dart';
+import 'package:meditime/core/sync/scheduling_service.dart';
 import 'package:meditime/core/sync/sync_service.dart';
 
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -36,8 +37,12 @@ class _MediTimeAppState extends State<MediTimeApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // Trigger sync on app resume
+      // Pull latest data…
       SyncService.instance.sync();
+      // …and roll the notification window forward. Throttled internally, so
+      // calling on every resume is safe. Independent of sync so it still
+      // runs when the user is offline.
+      SchedulingService.instance.scheduleWatchedIfStale();
     }
   }
 

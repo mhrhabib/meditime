@@ -86,7 +86,6 @@ class FcmService {
       await Supabase.instance.client.from('fcm_tokens').upsert({
         'user_id': user.id,
         'token': token,
-        'updated_at': DateTime.now().toIso8601String(),
       }, onConflict: 'user_id, token');
       
       debugPrint('[FcmService] Token saved to Supabase');

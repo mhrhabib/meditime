@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:meditime/core/sync/sync_service.dart';
+import 'package:meditime/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:meditime/features/auth/presentation/cubit/auth_state.dart';
 import 'package:meditime/features/onboarding/presentation/cubit/onboarding_cubit.dart';
+import 'package:meditime/features/profile/presentation/cubit/profile_cubit.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -25,21 +29,49 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     final onboardingCubit = context.read<OnboardingCubit>();
-
-    // Wait for the cubit to finish loading if it hasn't already
     if (!onboardingCubit.state.isLoaded) {
-      await onboardingCubit.stream.firstWhere((state) => state.isLoaded);
+      await onboardingCubit.stream.firstWhere((s) => s.isLoaded);
     }
 
     if (!mounted) return;
 
-    final state = onboardingCubit.state;
-
-    if (state.hasCompletedOnboarding) {
-      context.go('/');
-    } else {
-      context.go('/onboarding');
+    // Not authenticated → straight to sign-in.
+    final authState = context.read<AuthCubit>().state;
+    if (authState is! AuthAuthenticated) {
+      context.go('/sign-in');
+      return;
     }
+
+    // Authenticated → pull remote state so we can trust profile existence.
+    // If sync fails (offline / transient), fall back to whatever is local.
+    try {
+      await SyncService.instance
+          .sync(immediate: true)
+          .timeout(const Duration(seconds: 8));
+    } catch (_) {
+      // ignore — decide based on local state
+    }
+
+    if (!mounted) return;
+
+    // Give the watch stream a tick to propagate synced rows into cubit state.
+    final profileCubit = context.read<ProfileCubit>();
+    if (profileCubit.state.profiles.isEmpty) {
+      await profileCubit.stream
+          .firstWhere((s) => s.profiles.isNotEmpty)
+          .timeout(const Duration(milliseconds: 500),
+              onTimeout: () => profileCubit.state);
+    }
+
+    if (!mounted) return;
+
+    final hasProfiles = profileCubit.state.profiles.isNotEmpty;
+    if (hasProfiles && !onboardingCubit.state.hasCompletedOnboarding) {
+      await onboardingCubit.completeOnboarding();
+    }
+
+    if (!mounted) return;
+    context.go(hasProfiles ? '/' : '/onboarding');
   }
 
   @override

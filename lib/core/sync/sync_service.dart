@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:meditime/core/storage/app_database.dart';
 import 'package:meditime/features/history/data/datasources/history_remote_datasource.dart';
@@ -112,7 +113,12 @@ class SyncService {
       final local = await _db.getMedicineById(remote.id);
       if (shouldUpdateLocal(local?.updatedAt, local?.lastWriterDeviceId,
           remote.updatedAt, remote.lastWriterDeviceId)) {
-        await _db.insertMedicine(remote);
+        // image_path is device-local — don't let a remote pull wipe out
+        // a local image. Preserve whatever this device already had.
+        final merged = remote.copyWith(
+          imagePath: Value(local?.imagePath),
+        );
+        await _db.insertMedicine(merged);
       }
     }
 

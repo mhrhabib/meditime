@@ -1,6 +1,9 @@
 import 'package:equatable/equatable.dart';
 
-enum DoseStatus {
+/// Derived per-scheduled-slot status. "missed" is a derived state — it has no
+/// persisted DoseLog row; we infer it from `scheduledTime + grace < now` and
+/// the absence of any taken/skipped log for that slot.
+enum DoseEventStatus {
   taken,
   missed,
   skipped,
@@ -12,7 +15,7 @@ class DoseEvent extends Equatable {
   final String medicineId;
   final DateTime scheduledTime;
   final DateTime? actualTime;
-  final DoseStatus status;
+  final DoseEventStatus status;
   final String? missedReason;
   final String? note;
 
